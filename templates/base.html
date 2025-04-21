@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}휴가관리시스템{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Heroicons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            light: '#4a9fff',
+                            DEFAULT: '#1a73e8',
+                            dark: '#0c5dcb',
+                        },
+                        secondary: {
+                            light: '#f1f5f9',
+                            DEFAULT: '#e2e8f0',
+                            dark: '#94a3b8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* 추가 스타일 */
+        .sidebar-link.active {
+            background-color: #e2e8f0;
+            color: #1a73e8;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .sidebar.show {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 250px;
+                z-index: 50;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen">
+        <!-- 사이드바 메뉴 -->
+        <aside 
+            x-data="{open: false}"
+            :class="{'show': open}"
+            class="sidebar bg-white shadow-md w-64 flex-shrink-0 h-full overflow-y-auto md:block" 
+            id="sidebar">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-bold text-primary">휴가관리시스템</h1>
+                    <button 
+                        @click="open = false"
+                        class="text-gray-500 md:hidden">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <nav class="p-4">
+                <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">메뉴</p>
+                <ul>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin() %}
+                            <!-- 관리자 메뉴 -->
+                            <li class="mb-1">
+                                <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                                    <i class="fas fa-tachometer-alt w-5 mr-2"></i>
+                                    <span>대시보드</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('admin.manage_employees') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'admin.manage_employees' %}active{% endif %}">
+                                    <i class="fas fa-users w-5 mr-2"></i>
+                                    <span>직원 관리</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('admin.manage_vacations') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'admin.manage_vacations' %}active{% endif %}">
+                                    <i class="fas fa-calendar-check w-5 mr-2"></i>
+                                    <span>휴가 관리</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('admin.manage_holidays') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'admin.manage_holidays' %}active{% endif %}">
+                                    <i class="fas fa-calendar-alt w-5 mr-2"></i>
+                                    <span>공휴일 관리</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <!-- 일반 직원 메뉴 -->
+                            <li class="mb-1">
+                                <a href="{{ url_for('employee.dashboard') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'employee.dashboard' %}active{% endif %}">
+                                    <i class="fas fa-tachometer-alt w-5 mr-2"></i>
+                                    <span>대시보드</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('employee.request_vacation') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'employee.request_vacation' %}active{% endif %}">
+                                    <i class="fas fa-calendar-plus w-5 mr-2"></i>
+                                    <span>휴가 신청</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('employee.my_vacations') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'employee.my_vacations' %}active{% endif %}">
+                                    <i class="fas fa-history w-5 mr-2"></i>
+                                    <span>내 휴가 내역</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <!-- 로그아웃 -->
+                        <li class="mt-8">
+                            <a href="{{ url_for('auth.logout') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary text-red-600">
+                                <i class="fas fa-sign-out-alt w-5 mr-2"></i>
+                                <span>로그아웃</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <!-- 로그인 전 메뉴 -->
+                        <li class="mb-1">
+                            <a href="{{ url_for('auth.login') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'auth.login' %}active{% endif %}">
+                                <i class="fas fa-sign-in-alt w-5 mr-2"></i>
+                                <span>로그인</span>
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a href="{{ url_for('auth.register') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'auth.register' %}active{% endif %}">
+                                <i class="fas fa-user-plus w-5 mr-2"></i>
+                                <span>회원가입</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- 메인 콘텐츠 -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- 상단 헤더 -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between h-16 px-4 md:px-6">
+                    <div class="flex items-center">
+                        <button 
+                            x-data
+                            @click="document.getElementById('sidebar').classList.toggle('show')"
+                            class="text-gray-500 hover:text-gray-700 mr-4 md:hidden">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        
+                        <h2 class="text-lg font-medium text-gray-800">{% block page_title %}{% endblock %}</h2>
+                    </div>
+                    
+                    {% if current_user.is_authenticated %}
+                    <div class="flex items-center">
+                        <span class="hidden md:block mr-3 text-sm text-gray-700">
+                            <span class="text-gray-500">안녕하세요,</span>
+                            <span class="font-medium">{{ current_user.name }}</span>님
+                        </span>
+                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <span class="font-medium text-sm">{{ current_user.name[0] }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </header>
+            
+            <!-- 메인 콘텐츠 영역 -->
+            <main class="flex-1 overflow-y-auto py-6 px-4 md:px-6 bg-gray-50">
+                <!-- 알림 메시지 -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div x-data="{show: true}" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-4">
+                                <div class="rounded-md p-4 border {% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% elif category == 'danger' %}bg-red-50 border-red-200 text-red-700{% elif category == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            {% if category == 'success' %}
+                                                <i class="fas fa-check-circle"></i>
+                                            {% elif category == 'danger' %}
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            {% elif category == 'warning' %}
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm">{{ message }}</p>
+                                        </div>
+                                        <div class="ml-auto pl-3">
+                                            <div class="-mx-1.5 -my-1.5">
+                                                <button @click="show = false" class="inline-flex rounded-md p-1.5 {% if category == 'success' %}text-green-500 hover:bg-green-100{% elif category == 'danger' %}text-red-500 hover:bg-red-100{% elif category == 'warning' %}text-yellow-500 hover:bg-yellow-100{% else %}text-blue-500 hover:bg-blue-100{% endif %} focus:outline-none">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- 페이지 내용 -->
+                {% block content %}{% endblock %}
+            </main>
+            
+            <!-- 푸터 -->
+            <footer class="bg-white border-t border-gray-200 p-4 text-center text-xs text-gray-500">
+                <p>&copy; {{ now.year }} 휴가관리시스템. All rights reserved.</p>
+            </footer>
+        </div>
+    </div>
+    
+    {% block modal %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

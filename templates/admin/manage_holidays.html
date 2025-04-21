@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}공휴일 관리 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}공휴일 관리{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- 공휴일 등록 폼 -->
+    <div class="md:col-span-1">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-800">공휴일 등록</h2>
+                <p class="text-sm text-gray-500 mt-1">새 공휴일을 추가합니다.</p>
+            </div>
+            
+            <div class="p-6">
+                <form method="POST" action="{{ url_for('admin.manage_holidays') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.date.id }}" class="block text-sm font-medium text-gray-700 mb-1">날짜 <span class="text-red-500">*</span></label>
+                        {{ form.date(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                        {% if form.date.errors %}
+                            {% for error in form.date.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="{{ form.name.id }}" class="block text-sm font-medium text-gray-700 mb-1">공휴일명 <span class="text-red-500">*</span></label>
+                        {{ form.name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    {{ form.submit(class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+                </form>
+            </div>
+        </div>
+        
+        <!-- 휴가 계산 정보 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-800">공휴일 활용 정보</h2>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">
+                    휴가일수 계산 시 등록된 공휴일은 자동으로 제외됩니다.
+                </p>
+                
+                <div class="text-sm text-gray-600">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>주말(토, 일요일)은 자동 제외</li>
+                        <li>공휴일이 주말과 겹치는 경우 중복 계산 없음</li>
+                        <li>대체 공휴일은 별도 등록 필요</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 공휴일 목록 -->
+    <div class="md:col-span-2">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-medium text-gray-800">{{ year }}년 공휴일 목록</h2>
+                    <p class="text-sm text-gray-500 mt-1">총 {{ holidays|length }}개의 공휴일</p>
+                </div>
+                
+                <div>
+                    <select id="yearSelect" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                        {% for y in range(now.year - 3, now.year + 2) %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            {% if holidays %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">공휴일명</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">요일</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for holiday in holidays %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ holiday.date.strftime('%Y-%m-%d') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ holiday.name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {% set weekday = holiday.date.strftime('%A') %}
+                                        {% if weekday == 'Monday' %}
+                                            월요일
+                                        {% elif weekday == 'Tuesday' %}
+                                            화요일
+                                        {% elif weekday == 'Wednesday' %}
+                                            수요일
+                                        {% elif weekday == 'Thursday' %}
+                                            목요일
+                                        {% elif weekday == 'Friday' %}
+                                            금요일
+                                        {% elif weekday == 'Saturday' %}
+                                            <span class="text-blue-600">토요일</span>
+                                        {% else %}
+                                            <span class="text-red-600">일요일</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <form method="POST" action="{{ url_for('admin.delete_holiday', holiday_id=holiday.id) }}" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                                            <button type="submit" class="text-red-600 hover:text-red-900">
+                                                <i class="fas fa-trash-alt mr-1"></i> 삭제
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-12 px-4">
+                    <div class="text-gray-400">
+                        <i class="fas fa-calendar-times text-5xl mb-4"></i>
+                        <p class="text-lg">{{ year }}년에 등록된 공휴일이 없습니다.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 연도 선택 변경 시 페이지 이동
+        document.getElementById('yearSelect').addEventListener('change', function() {
+            const year = this.value;
+            window.location.href = "{{ url_for('admin.manage_holidays') }}" + "?year=" + year;
+        });
+    });
+</script>
+{% endblock %}

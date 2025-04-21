@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}대시보드 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}대시보드{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-2xl font-bold mb-6">휴가관리시스템에 오신 것을 환영합니다.</h1>
+    
+    {% if current_user.is_authenticated %}
+        {% if current_user.is_admin() %}
+            <p class="mb-4">관리자 기능을 사용하려면 좌측 메뉴를 이용하세요.</p>
+            <div class="mt-6">
+                <a href="{{ url_for('admin.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    관리자 대시보드
+                </a>
+            </div>
+        {% else %}
+            <p class="mb-4">휴가 신청 및 내역 조회는 좌측 메뉴를 이용하세요.</p>
+            <div class="mt-6 space-x-4">
+                <a href="{{ url_for('employee.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    직원 대시보드
+                </a>
+                <a href="{{ url_for('employee.request_vacation') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fas fa-calendar-plus mr-2"></i>
+                    휴가 신청
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="mb-6">시스템을 이용하려면 로그인하세요.</p>
+        <div class="space-x-4">
+            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                로그인
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <i class="fas fa-user-plus mr-2"></i>
+                회원가입
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

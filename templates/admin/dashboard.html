@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}관리자 대시보드 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}관리자 대시보드{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- 통계 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-blue-100 text-primary flex items-center justify-center">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-500">총 직원 수</h3>
+                    <p class="text-2xl font-semibold">{{ total_employees }}명</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+                    <i class="fas fa-clock text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-500">대기 휴가</h3>
+                    <p class="text-2xl font-semibold">{{ pending_requests }}건</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                    <i class="fas fa-check text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-500">승인 휴가</h3>
+                    <p class="text-2xl font-semibold">{{ approved_requests }}건</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                    <i class="fas fa-times text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-500">반려 휴가</h3>
+                    <p class="text-2xl font-semibold">{{ rejected_requests }}건</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 차트 영역 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- 부서별 휴가 사용 현황 차트 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-medium text-gray-800 mb-4">부서별 휴가 사용 현황</h2>
+            <div>
+                <canvas id="deptVacationChart" height="250"></canvas>
+            </div>
+        </div>
+        
+        <!-- 월별 휴가 신청 추이 차트 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-medium text-gray-800 mb-4">월별 휴가 신청 ({{ current_year }})</h2>
+            <div>
+                <canvas id="monthlyVacationChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 최근 휴가 신청 내역 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium text-gray-800">최근 휴가 신청 내역</h2>
+            <a href="{{ url_for('admin.manage_vacations') }}" class="text-sm text-primary hover:text-primary-dark font-medium">
+                모두 보기 <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        {% if recent_requests %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직원</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">부서</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">시작일</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">종료일</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">일수</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">유형</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for request in recent_requests %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                                            {{ request.user.name[0] }}
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">{{ request.user.name }}</div>
+                                            <div class="text-xs text-gray-500">{{ request.user.position or '' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.user.department or '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.days }}일</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.type }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if request.status == '대기중' %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">대기중</span>
+                                    {% elif request.status == '승인됨' %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">승인됨</span>
+                                    {% else %}
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">반려됨</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if request.status == '대기중' %}
+                                        <a href="{{ url_for('admin.process_vacation', request_id=request.id) }}" class="text-primary hover:text-primary-dark">
+                                            처리하기
+                                        </a>
+                                    {% else %}
+                                        <span class="text-gray-400">처리완료</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-12 px-4">
+                <div class="text-gray-400">
+                    <i class="fas fa-calendar-times text-5xl mb-4"></i>
+                    <p class="text-lg">휴가 신청 내역이 없습니다.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 부서별 휴가 데이터 
+        const deptCtx = document.getElementById('deptVacationChart').getContext('2d');
+        
+        const deptChart = new Chart(deptCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    {% for dept in dept_stats %}
+                        '{{ dept.department or "미지정" }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: '사용 휴가',
+                    backgroundColor: '#1a73e8',
+                    data: [
+                        {% for dept in dept_stats %}
+                            {{ dept.used or 0 }},
+                        {% endfor %}
+                    ]
+                }, {
+                    label: '총 휴가',
+                    backgroundColor: '#e2e8f0',
+                    data: [
+                        {% for dept in dept_stats %}
+                            {{ dept.total or 0 }},
+                        {% endfor %}
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '휴가일수'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 월별 휴가 신청 데이터 (임의 데이터)
+        const monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // 각 월별 초기값
+        
+        const monthlyCtx = document.getElementById('monthlyVacationChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                datasets: [{
+                    label: '휴가 신청 건수',
+                    backgroundColor: 'rgba(26, 115, 232, 0.2)',
+                    borderColor: '#1a73e8',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1a73e8',
+                    data: monthlyData,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: '건수'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

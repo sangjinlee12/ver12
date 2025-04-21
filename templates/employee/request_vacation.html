@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}휴가 신청 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}휴가 신청{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-medium text-gray-800 mb-6">휴가 신청서</h2>
+        
+        <form method="POST" action="{{ url_for('employee.request_vacation') }}" id="vacationForm">
+            {{ form.hidden_tag() }}
+            {{ form.days }}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="{{ form.start_date.id }}" class="block text-sm font-medium text-gray-700 mb-1">시작일 <span class="text-red-500">*</span></label>
+                    {{ form.start_date(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.start_date.errors %}
+                        {% for error in form.start_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.end_date.id }}" class="block text-sm font-medium text-gray-700 mb-1">종료일 <span class="text-red-500">*</span></label>
+                    {{ form.end_date(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.end_date.errors %}
+                        {% for error in form.end_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="{{ form.type.id }}" class="block text-sm font-medium text-gray-700 mb-1">휴가 유형 <span class="text-red-500">*</span></label>
+                {{ form.type(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                {% if form.type.errors %}
+                    {% for error in form.type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="mb-6">
+                <label for="{{ form.reason.id }}" class="block text-sm font-medium text-gray-700 mb-1">휴가 사유</label>
+                {{ form.reason(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary", rows="3") }}
+            </div>
+            
+            <div class="bg-gray-50 p-4 mb-6 rounded-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-700">계산된 휴가 일수</h3>
+                        <p class="text-2xl font-bold text-primary" id="calculatedDays">0일</p>
+                    </div>
+                    <button type="button" id="calculateBtn" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-1 px-3 rounded-md">
+                        <i class="fas fa-calculator mr-1"></i> 일수 계산
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    휴가 일수는 주말 및 공휴일을 제외하고 계산됩니다.
+                </p>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <a href="{{ url_for('employee.dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-arrow-left mr-1"></i> 돌아가기
+                </a>
+                {{ form.submit(class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDateInput = document.getElementById('{{ form.start_date.id }}');
+        const endDateInput = document.getElementById('{{ form.end_date.id }}');
+        const typeSelect = document.getElementById('{{ form.type.id }}');
+        const daysHiddenInput = document.getElementById('{{ form.days.id }}');
+        const calculatedDaysElement = document.getElementById('calculatedDays');
+        const calculateBtn = document.getElementById('calculateBtn');
+        
+        // 유형이 반차일 경우 종료일을 시작일과 동일하게 설정
+        typeSelect.addEventListener('change', function() {
+            if (this.value === '반차(오전)' || this.value === '반차(오후)') {
+                endDateInput.value = startDateInput.value;
+                endDateInput.disabled = true;
+                
+                // 반차는 0.5일로 고정
+                calculatedDaysElement.textContent = '0.5일';
+                daysHiddenInput.value = '0.5';
+            } else {
+                endDateInput.disabled = false;
+                calculateVacationDays();
+            }
+        });
+        
+        // 날짜 변경 시 자동 계산
+        startDateInput.addEventListener('change', calculateVacationDays);
+        endDateInput.addEventListener('change', calculateVacationDays);
+        
+        // 계산 버튼 클릭 시 계산
+        calculateBtn.addEventListener('click', calculateVacationDays);
+        
+        // 휴가 일수 계산 함수
+        function calculateVacationDays() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const type = typeSelect.value;
+            
+            if (!startDate || !endDate) return;
+            
+            // 반차인 경우 0.5일로 고정
+            if (type === '반차(오전)' || type === '반차(오후)') {
+                calculatedDaysElement.textContent = '0.5일';
+                daysHiddenInput.value = '0.5';
+                return;
+            }
+            
+            // API를 통해 휴가 일수 계산
+            fetch('/employee/calculate-vacation-days', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    type: type
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                calculatedDaysElement.textContent = data.days + '일';
+                daysHiddenInput.value = data.days;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                calculatedDaysElement.textContent = '계산 오류';
+            });
+        }
+        
+        // 폼 제출 전 유효성 검사
+        document.getElementById('vacationForm').addEventListener('submit', function(e) {
+            if (!daysHiddenInput.value || daysHiddenInput.value === '0') {
+                e.preventDefault();
+                alert('휴가 일수가 0일입니다. 날짜를 확인해주세요.');
+            }
+        });
+        
+        // 초기 계산
+        if (startDateInput.value && endDateInput.value) {
+            calculateVacationDays();
+        }
+    });
+</script>
+{% endblock %}

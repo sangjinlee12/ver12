@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}로그인 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}로그인{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <!-- 로고 및 환영 메시지 -->
+    <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-primary mb-2">휴가관리시스템</h1>
+        <p class="text-gray-500">계정 정보로 로그인하세요</p>
+    </div>
+    
+    <!-- 로그인 폼 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-4">
+                <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700 mb-1">아이디</label>
+                {{ form.username(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="mb-6">
+                <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+                {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                {{ form.submit(class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+            </div>
+        </form>
+    </div>
+    
+    <!-- 회원가입 링크 -->
+    <div class="text-center mt-4">
+        <p class="text-sm text-gray-600">
+            아직 계정이 없으신가요? 
+            <a href="{{ url_for('auth.register') }}" class="text-primary hover:text-primary-dark font-medium">회원가입</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

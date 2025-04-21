@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}휴가일수 설정 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}휴가일수 설정{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-800">직원 휴가일수 설정</h2>
+            <p class="text-sm text-gray-500 mt-1">직원의 연간 휴가일수를 설정합니다.</p>
+        </div>
+        
+        <div class="p-6">
+            <!-- 직원 정보 -->
+            <div class="flex items-center mb-6">
+                <div class="h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center text-lg">
+                    {{ user.name[0] }}
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">{{ user.name }}</h3>
+                    <div class="text-sm text-gray-500">
+                        {{ user.department or '부서 미지정' }} / {{ user.position or '직급 미지정' }}
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('admin.set_vacation_days') }}">
+                {{ form.hidden_tag() }}
+                {{ form.user_id }}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="{{ form.year.id }}" class="block text-sm font-medium text-gray-700 mb-1">연도</label>
+                        {{ form.year(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                        {% if form.year.errors %}
+                            {% for error in form.year.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.total_days.id }}" class="block text-sm font-medium text-gray-700 mb-1">총 휴가일수</label>
+                        {{ form.total_days(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                        {% if form.total_days.errors %}
+                            {% for error in form.total_days.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-md mb-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">휴가 규정 안내</h4>
+                    <ul class="text-xs text-gray-600 list-disc list-inside space-y-1">
+                        <li>1년 미만 근무자: 월 1일(최대 11일)</li>
+                        <li>1년 이상 2년 미만: 15일</li>
+                        <li>3년 이상: 매 2년마다 1일 추가(최대 25일)</li>
+                        <li>입사일 기준 근속연수에 따라 자동계산 가능</li>
+                    </ul>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <a href="{{ url_for('admin.manage_employees') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-arrow-left mr-1"></i> 직원 목록으로 돌아가기
+                    </a>
+                    {{ form.submit(class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

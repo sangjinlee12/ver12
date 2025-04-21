@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}회원가입 - 휴가관리시스템{% endblock %}
+
+{% block page_title %}회원가입{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <!-- 환영 메시지 -->
+    <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-primary mb-2">휴가관리시스템</h1>
+        <p class="text-gray-500">새 계정을 생성하여 시스템을 이용하세요</p>
+    </div>
+    
+    <!-- 회원가입 폼 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700 mb-1">아이디 <span class="text-red-500">*</span></label>
+                    {{ form.username(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.username.errors %}
+                        {% for error in form.username.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.email.id }}" class="block text-sm font-medium text-gray-700 mb-1">이메일 <span class="text-red-500">*</span></label>
+                    {{ form.email(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.name.id }}" class="block text-sm font-medium text-gray-700 mb-1">이름 <span class="text-red-500">*</span></label>
+                    {{ form.name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.name.errors %}
+                        {% for error in form.name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.department.id }}" class="block text-sm font-medium text-gray-700 mb-1">부서</label>
+                    {{ form.department(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.position.id }}" class="block text-sm font-medium text-gray-700 mb-1">직급</label>
+                    {{ form.position(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-700 mb-1">비밀번호 <span class="text-red-500">*</span></label>
+                    {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.password_confirm.id }}" class="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인 <span class="text-red-500">*</span></label>
+                    {{ form.password_confirm(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.password_confirm.errors %}
+                        {% for error in form.password_confirm.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                {{ form.submit(class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+            </div>
+        </form>
+    </div>
+    
+    <!-- 로그인 링크 -->
+    <div class="text-center mt-4">
+        <p class="text-sm text-gray-600">
+            이미 계정이 있으신가요? 
+            <a href="{{ url_for('auth.login') }}" class="text-primary hover:text-primary-dark font-medium">로그인</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

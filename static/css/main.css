@@ -1,0 +1,232 @@
+/**
+ * 휴가관리시스템 기본 스타일
+ */
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 테이블 스타일 */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 폼 요소 포커스 효과 */
+input:focus, select:focus, textarea:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: -1px;
+}
+
+/* 페이지 전환 애니메이션 */
+.page-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+}
+
+/* 모달 애니메이션 */
+.modal-enter {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+.modal-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 200ms, transform 200ms;
+}
+
+/* 알림 메시지 애니메이션 */
+.alert-enter {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.alert-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+}
+
+.alert-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.alert-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 300ms, transform 300ms;
+}
+
+/* 버튼 스타일 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 150ms ease-in-out;
+}
+
+.btn-primary {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #0c5dcb;
+}
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e1;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+/* 배지(badge) 스타일 */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+}
+
+.badge-yellow {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-green {
+    background-color: #d1fae5;
+    color: #047857;
+}
+
+.badge-red {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+/* 로딩 스피너 */
+.spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid rgba(203, 213, 225, 0.3);
+    border-radius: 50%;
+    border-top-color: #1a73e8;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 프린트 스타일 */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        background-color: #ffffff;
+    }
+    
+    .print-container {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .print-header h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+    
+    .print-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .print-table th,
+    .print-table td {
+        border: 1px solid #e2e8f0;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    .print-table th {
+        background-color: #f8fafc;
+    }
+    
+    .print-footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #64748b;
+    }
+}
+
+/* 반응형 유틸리티 */
+@media (max-width: 640px) {
+    .hidden-sm {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .hidden-md {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hidden-lg {
+        display: none !important;
+    }
+}
