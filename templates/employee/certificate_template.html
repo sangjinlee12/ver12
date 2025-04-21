@@ -1,130 +1,99 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>재직증명서</title>
     <style>
-        @page {
-            size: A4;
-            margin: 2cm;
-        }
         body {
-            font-family: 'Malgun Gothic', Arial, sans-serif;
-            margin: 0;
+            font-family: Arial, sans-serif;
+            margin: 40px;
             padding: 0;
-            color: #333;
-            line-height: 1.6;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
+        h1 {
             text-align: center;
-            margin-bottom: 50px;
+            font-size: 24px;
+            margin-bottom: 40px;
         }
-        .title {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            letter-spacing: 5px;
-        }
-        .content {
-            margin-bottom: 50px;
-        }
-        .info-table {
+        table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
         }
-        .info-table th, .info-table td {
-            border: 1px solid #ddd;
-            padding: 10px 15px;
-            text-align: left;
+        table, th, td {
+            border: 1px solid black;
         }
-        .info-table th {
-            background-color: #f5f5f5;
+        th {
+            background-color: #f2f2f2;
             width: 120px;
-            font-weight: normal;
-        }
-        .signature {
+            padding: 8px;
             text-align: center;
-            margin-top: 80px;
         }
-        .signature-date {
-            margin-bottom: 40px;
+        td {
+            padding: 8px;
         }
-        .company-name {
-            font-size: 22px;
+        .center {
+            text-align: center;
+        }
+        .date {
+            margin-top: 50px;
+            text-align: center;
+        }
+        .company {
+            text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 18px;
+            margin-top: 20px;
         }
-        .stamp-area {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto;
-            border: 1px dashed #ccc;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .ceo {
             text-align: center;
-            font-size: 12px;
+            margin-top: 10px;
+        }
+        .stamp {
+            text-align: center;
+            margin-top: 20px;
             color: #999;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">재 직 증 명 서</h1>
-        </div>
-        
-        <div class="content">
-            <table class="info-table">
-                <tr>
-                    <th>성명</th>
-                    <td>{{ user.name }}</td>
-                </tr>
-                <tr>
-                    <th>소속</th>
-                    <td>{{ company.name if company else '주식회사 에스에스전력' }} {{ user.department }}</td>
-                </tr>
-                <tr>
-                    <th>직위</th>
-                    <td>{{ user.position }}</td>
-                </tr>
-                <tr>
-                    <th>재직기간</th>
-                    <td>{{ user.hire_date.strftime('%Y년 %m월 %d일') if user.hire_date else user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
-                </tr>
-                <tr>
-                    <th>용도</th>
-                    <td>{{ certificate.purpose }}</td>
-                </tr>
-            </table>
-            
-            <p>
-                위와 같이 재직하고 있음을 증명합니다.
-            </p>
-        </div>
-        
-        <div class="signature">
-            <p class="signature-date">
-                {{ today.strftime('%Y년 %m월 %d일') }}
-            </p>
-            <p class="company-name">{{ company.name if company else '주식회사 에스에스전력' }}</p>
-            <p>대표이사 {{ company.ceo_name if company else '' }}</p>
-            <div class="stamp-area">
-                {% if company and company.stamp_image %}
-                <img src="{{ company.stamp_image }}" alt="직인" style="max-width: 70px; max-height: 70px;">
-                {% else %}
-                (직인 생략)
-                {% endif %}
-            </div>
-        </div>
-    </div>
+    <h1>재직증명서</h1>
+    
+    <table>
+        <tr>
+            <th>성명</th>
+            <td>{{ user.name }}</td>
+        </tr>
+        <tr>
+            <th>소속</th>
+            <td>{{ company.name if company else '주식회사 에스에스전력' }} {{ user.department }}</td>
+        </tr>
+        <tr>
+            <th>직위</th>
+            <td>{{ user.position }}</td>
+        </tr>
+        <tr>
+            <th>재직기간</th>
+            <td>{{ user.hire_date.strftime('%Y년 %m월 %d일') if user.hire_date else user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
+        </tr>
+        <tr>
+            <th>용도</th>
+            <td>{{ certificate.purpose }}</td>
+        </tr>
+    </table>
+    
+    <p class="center">위와 같이 재직하고 있음을 증명합니다.</p>
+    
+    <p class="date">{{ today.strftime('%Y년 %m월 %d일') }}</p>
+    
+    <p class="company">{{ company.name if company else '주식회사 에스에스전력' }}</p>
+    <p class="ceo">대표이사 {{ company.ceo_name if company else '' }}</p>
+    
+    <p class="stamp">
+        {% if company and company.stamp_image %}
+        <img src="{{ company.stamp_image }}" alt="직인" style="max-width: 70px; max-height: 70px;">
+        {% else %}
+        (직인 생략)
+        {% endif %}
+    </p>
 </body>
 </html>

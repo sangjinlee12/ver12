@@ -271,8 +271,16 @@ def download_certificate(certificate_id):
         today=datetime.now().date()
     )
     
-    # PDF 생성
-    pdf = HTML(string=html_content).write_pdf()
+    # 임시 HTML 파일 생성
+    with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
+        f.write(html_content.encode('utf-8'))
+        temp_html_path = f.name
+    
+    # PDF 생성 - 파일로부터 생성
+    pdf = HTML(filename=temp_html_path).write_pdf()
+    
+    # 임시 파일 삭제
+    os.unlink(temp_html_path)
     
     # PDF 응답 생성
     response = make_response(pdf)
