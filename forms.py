@@ -23,8 +23,28 @@ class RegisterForm(FlaskForm):
         DataRequired('비밀번호 확인을 입력하세요.'),
         EqualTo('password', message='비밀번호가 일치하지 않습니다.')
     ])
-    department = StringField('부서')
-    position = StringField('직급')
+    department = SelectField('부서', choices=[
+        ('', '선택해주세요'),
+        ('공사팀', '공사팀'),
+        ('공무팀', '공무팀'),
+        ('경리부', '경리부'),
+        ('인사팀', '인사팀'),
+        ('총무팀', '총무팀'),
+        ('영업팀', '영업팀'),
+        ('안전팀', '안전팀'),
+        ('품질팀', '품질팀')
+    ])
+    position = SelectField('직급', choices=[
+        ('', '선택해주세요'),
+        ('대표', '대표'),
+        ('이사', '이사'),
+        ('소장', '소장'),
+        ('부장', '부장'),
+        ('차장', '차장'),
+        ('과장', '과장'),
+        ('대리', '대리'),
+        ('사원', '사원')
+    ])
     submit = SubmitField('회원가입')
 
 
