@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_login import login_required, current_user
 from app import db
-from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm
+from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm
 from functools import wraps
 from datetime import datetime
 import csv
@@ -296,3 +296,68 @@ def delete_holiday(holiday_id):
     db.session.commit()
     flash('공휴일이 삭제되었습니다.', 'success')
     return redirect(url_for('admin.manage_holidays'))
+
+
+@admin_bp.route('/certificates')
+@login_required
+@admin_required
+def manage_certificates():
+    """재직증명서 관리 페이지"""
+    status_filter = request.args.get('status', 'all')
+    
+    # 기본 쿼리
+    query = db.session.query(
+        EmploymentCertificate,
+        User.name,
+        User.department,
+        User.position
+    ).join(User, User.id == EmploymentCertificate.user_id)
+    
+    # 상태 필터링
+    if status_filter != 'all':
+        query = query.filter(EmploymentCertificate.status == status_filter)
+    
+    # 정렬 (최신순)
+    certificates = query.order_by(EmploymentCertificate.created_at.desc()).all()
+    
+    return render_template(
+        'admin/manage_certificates.html',
+        certificates=certificates,
+        status_filter=status_filter
+    )
+
+
+@admin_bp.route('/certificates/<int:certificate_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def process_certificate(certificate_id):
+    """재직증명서 승인/반려 처리"""
+    certificate = EmploymentCertificate.query.get_or_404(certificate_id)
+    form = CertificateApprovalForm()
+    
+    if form.validate_on_submit():
+        certificate.status = form.status.data
+        certificate.comments = form.comments.data
+        certificate.approved_by = current_user.id
+        certificate.approval_date = datetime.now()
+        
+        # 발급완료일 경우 발급일 기록
+        if form.status.data == CertificateStatus.ISSUED:
+            certificate.issued_date = datetime.now().date()
+        
+        db.session.commit()
+        flash('재직증명서 요청이 처리되었습니다.', 'success')
+        return redirect(url_for('admin.manage_certificates'))
+    
+    # GET 요청 처리
+    form.certificate_id.data = certificate_id
+    
+    # 신청자 정보 조회
+    user = User.query.get(certificate.user_id)
+    
+    return render_template(
+        'admin/process_certificate.html',
+        form=form,
+        certificate=certificate,
+        user=user
+    )

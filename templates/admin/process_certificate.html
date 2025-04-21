@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}재직증명서 처리 - 에스에스전력 휴가관리시스템{% endblock %}
+
+{% block page_title %}재직증명서 처리{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- 뒤로가기 버튼 -->
+    <div class="mb-6">
+        <a href="{{ url_for('admin.manage_certificates') }}" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-arrow-left mr-1"></i> 목록으로 돌아가기
+        </a>
+    </div>
+    
+    <!-- 신청 정보 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">재직증명서 신청 상세</h3>
+        
+        <div class="grid grid-cols-1 gap-4 mb-6">
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">신청자</h4>
+                    <p class="mt-1">{{ user.name }}</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">부서</h4>
+                    <p class="mt-1">{{ user.department or '-' }}</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">직급</h4>
+                    <p class="mt-1">{{ user.position or '-' }}</p>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">사용 목적</h4>
+                <p class="mt-1">{{ certificate.purpose }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">신청일</h4>
+                    <p class="mt-1">{{ certificate.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">상태</h4>
+                    <p class="mt-1">
+                        {% if certificate.status == '대기중' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ certificate.status }}
+                            </span>
+                        {% elif certificate.status == '발급완료' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ certificate.status }}
+                            </span>
+                        {% elif certificate.status == '반려됨' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                {{ certificate.status }}
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            {% if certificate.status != '대기중' %}
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500">처리자</h4>
+                        <p class="mt-1">{{ certificate.approver.name if certificate.approver else '-' }}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500">처리일</h4>
+                        <p class="mt-1">{{ certificate.approval_date.strftime('%Y-%m-%d %H:%M') if certificate.approval_date else '-' }}</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500">코멘트</h4>
+                    <p class="mt-1">{{ certificate.comments or '-' }}</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if certificate.status == '대기중' %}
+            <!-- 처리 폼 -->
+            <form method="POST" action="{{ url_for('admin.process_certificate', certificate_id=certificate.id) }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-4">
+                    <label for="{{ form.status.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        처리 상태 <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.status(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
+                    {% if form.status.errors %}
+                        {% for error in form.status.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div class="mb-6">
+                    <label for="{{ form.comments.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        코멘트
+                    </label>
+                    {{ form.comments(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary", rows=3) }}
+                    {% if form.comments.errors %}
+                        {% for error in form.comments.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-end">
+                    {{ form.submit(class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors") }}
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
