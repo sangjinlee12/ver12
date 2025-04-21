@@ -29,7 +29,7 @@ class User(UserMixin, db.Model):
     
     # 관계 설정
     vacation_days = db.relationship('VacationDays', backref='user', uselist=False)
-    vacation_requests = db.relationship('VacationRequest', backref='user')
+    vacation_requests = db.relationship('VacationRequest', backref='user', foreign_keys='VacationRequest.user_id')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
