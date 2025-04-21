@@ -7,8 +7,13 @@ from datetime import datetime
 from utils import get_vacation_days_count, check_overlapping_vacation
 import tempfile
 import os
-from weasyprint import HTML
 import urllib.parse
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import cm
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -261,32 +266,95 @@ def download_certificate(certificate_id):
     
     # 회사 정보 가져오기
     company_info = CompanyInfo.query.first()
+    company_name = company_info.name if company_info else '주식회사 에스에스전력'
+    ceo_name = company_info.ceo_name if company_info else '대표이사'
     
-    # 재직증명서 HTML 생성
-    html_content = render_template(
-        'employee/certificate_template.html',
-        user=current_user,
-        certificate=certificate,
-        company=company_info,
-        today=datetime.now().date()
-    )
+    # PDF 생성 (Reportlab 사용)
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4  # A4 크기
     
-    # 임시 HTML 파일 생성
-    with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
-        f.write(html_content.encode('utf-8'))
-        temp_html_path = f.name
+    # 제목
+    p.setFont('Helvetica-Bold', 24)
+    p.drawCentredString(width/2, height - 3*cm, '재직증명서')
     
-    # PDF 생성 - 파일로부터 생성
-    pdf = HTML(filename=temp_html_path).write_pdf()
+    # 인적사항
+    p.setFont('Helvetica', 12)
+    y_position = height - 6*cm
     
-    # 임시 파일 삭제
-    os.unlink(temp_html_path)
+    # 테이블 시작
+    p.setFont('Helvetica-Bold', 11)
+    p.drawString(3*cm, y_position, '성명:')
+    p.setFont('Helvetica', 11)
+    p.drawString(6*cm, y_position, current_user.name)
+    y_position -= 1*cm
+    
+    p.setFont('Helvetica-Bold', 11)
+    p.drawString(3*cm, y_position, '소속:')
+    p.setFont('Helvetica', 11)
+    p.drawString(6*cm, y_position, f'{company_name} {current_user.department or ""}')
+    y_position -= 1*cm
+    
+    p.setFont('Helvetica-Bold', 11)
+    p.drawString(3*cm, y_position, '직위:')
+    p.setFont('Helvetica', 11)
+    p.drawString(6*cm, y_position, current_user.position or "")
+    y_position -= 1*cm
+    
+    hire_date_str = ""
+    if current_user.hire_date:
+        hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+    else:
+        hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+    
+    p.setFont('Helvetica-Bold', 11)
+    p.drawString(3*cm, y_position, '재직기간:')
+    p.setFont('Helvetica', 11)
+    p.drawString(6*cm, y_position, f'{hire_date_str} ~ 현재')
+    y_position -= 1*cm
+    
+    p.setFont('Helvetica-Bold', 11)
+    p.drawString(3*cm, y_position, '용도:')
+    p.setFont('Helvetica', 11)
+    p.drawString(6*cm, y_position, certificate.purpose)
+    y_position -= 2*cm
+    
+    # 증명문
+    p.setFont('Helvetica', 12)
+    p.drawString(3*cm, y_position, '위와 같이 재직하고 있음을 증명합니다.')
+    y_position -= 3*cm
+    
+    # 발급일
+    today = datetime.now().date()
+    p.drawCentredString(width/2, y_position, f'{today.year}년 {today.month}월 {today.day}일')
+    y_position -= 2*cm
+    
+    # 회사명 및 대표자
+    p.setFont('Helvetica-Bold', 14)
+    p.drawCentredString(width/2, y_position, company_name)
+    y_position -= 1*cm
+    
+    p.setFont('Helvetica', 12)
+    p.drawCentredString(width/2, y_position, f'대표이사 {ceo_name}')
+    y_position -= 1.5*cm
+    
+    # 직인 위치 (원으로 표시)
+    p.circle(width/2, y_position, 1*cm)
+    p.setFont('Helvetica', 10)
+    p.drawCentredString(width/2, y_position, '(직인 생략)')
+    
+    # PDF 완성
+    p.showPage()
+    p.save()
     
     # PDF 응답 생성
-    response = make_response(pdf)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+    
+    response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     
-    # 파일명을 영문으로 생성하고 인코딩
+    # 파일명 생성 및 인코딩
     filename = f'certificate_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
     encoded_filename = urllib.parse.quote(filename)
     response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
