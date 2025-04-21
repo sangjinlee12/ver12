@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
 from app import db
-from models import VacationDays, VacationRequest, VacationStatus, EmploymentCertificate, CertificateStatus
+from models import VacationDays, VacationRequest, VacationStatus, EmploymentCertificate, CertificateStatus, CompanyInfo
 from forms import VacationRequestForm, EmploymentCertificateRequestForm
 from datetime import datetime
 from utils import get_vacation_days_count, check_overlapping_vacation
@@ -258,11 +258,15 @@ def download_certificate(certificate_id):
         flash('아직 발급되지 않은 재직증명서입니다.', 'warning')
         return redirect(url_for('employee.my_certificates'))
     
+    # 회사 정보 가져오기
+    company_info = CompanyInfo.query.first()
+    
     # 재직증명서 HTML 생성
     html_content = render_template(
         'employee/certificate_template.html',
         user=current_user,
         certificate=certificate,
+        company=company_info,
         today=datetime.now().date()
     )
     

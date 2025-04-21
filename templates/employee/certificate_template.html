@@ -90,7 +90,7 @@
                 </tr>
                 <tr>
                     <th>소속</th>
-                    <td>주식회사 에스에스전력 {{ user.department }}</td>
+                    <td>{{ company.name if company else '주식회사 에스에스전력' }} {{ user.department }}</td>
                 </tr>
                 <tr>
                     <th>직위</th>
@@ -98,7 +98,7 @@
                 </tr>
                 <tr>
                     <th>재직기간</th>
-                    <td>{{ user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
+                    <td>{{ user.hire_date.strftime('%Y년 %m월 %d일') if user.hire_date else user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
                 </tr>
                 <tr>
                     <th>용도</th>
@@ -115,10 +115,14 @@
             <p class="signature-date">
                 {{ today.strftime('%Y년 %m월 %d일') }}
             </p>
-            <p class="company-name">주식회사 에스에스전력</p>
-            <p>대표이사</p>
+            <p class="company-name">{{ company.name if company else '주식회사 에스에스전력' }}</p>
+            <p>대표이사 {{ company.ceo_name if company else '' }}</p>
             <div class="stamp-area">
+                {% if company and company.stamp_image %}
+                <img src="{{ company.stamp_image }}" alt="직인" style="max-width: 70px; max-height: 70px;">
+                {% else %}
                 (직인 생략)
+                {% endif %}
             </div>
         </div>
     </div>
