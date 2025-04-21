@@ -116,3 +116,23 @@ class CertificateApprovalForm(FlaskForm):
     ], validators=[DataRequired('상태를 선택하세요.')])
     comments = TextAreaField('코멘트')
     submit = SubmitField('처리')
+
+
+class CompanyInfoForm(FlaskForm):
+    """회사 정보 관리 폼"""
+    name = StringField('회사명', validators=[DataRequired('회사명을 입력하세요.')])
+    ceo_name = StringField('대표자명', validators=[DataRequired('대표자명을 입력하세요.')])
+    registration_number = StringField('사업자등록번호')
+    address = StringField('회사 주소')
+    phone = StringField('전화번호')
+    fax = StringField('팩스번호')
+    website = StringField('웹사이트')
+    stamp_image = TextAreaField('직인 이미지 (base64)')
+    submit = SubmitField('저장')
+
+
+class EmployeeHireDateForm(FlaskForm):
+    """직원 입사일 설정 폼"""
+    user_id = HiddenField('사용자 ID')
+    hire_date = DateField('입사일', validators=[DataRequired('입사일을 선택하세요.')], format='%Y-%m-%d')
+    submit = SubmitField('저장')

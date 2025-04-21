@@ -14,6 +14,24 @@ class VacationStatus:
     APPROVED = '승인됨'
     REJECTED = '반려됨'
 
+class CompanyInfo(db.Model):
+    """회사 정보 모델"""
+    __tablename__ = 'company_info'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # 회사명
+    ceo_name = db.Column(db.String(50), nullable=False)  # 대표자명
+    registration_number = db.Column(db.String(30))  # 사업자등록번호
+    address = db.Column(db.String(200))  # 회사 주소
+    phone = db.Column(db.String(20))  # 전화번호
+    fax = db.Column(db.String(20))  # 팩스번호
+    website = db.Column(db.String(100))  # 웹사이트
+    stamp_image = db.Column(db.Text)  # 직인 이미지 (base64)
+    
+    def __repr__(self):
+        return f'<CompanyInfo {self.name}>'
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
@@ -25,6 +43,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default=Role.EMPLOYEE)  # 역할 (직원/관리자)
     department = db.Column(db.String(50))  # 부서
     position = db.Column(db.String(50))  # 직급
+    hire_date = db.Column(db.Date)  # 입사일
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     # 관계 설정

@@ -116,6 +116,12 @@
                                     <span>재직증명서 관리</span>
                                 </a>
                             </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('admin.manage_company_info') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'admin.manage_company_info' %}active{% endif %}">
+                                    <i class="fas fa-building w-5 mr-2"></i>
+                                    <span>회사 정보 관리</span>
+                                </a>
+                            </li>
                         {% else %}
                             <!-- 일반 직원 메뉴 -->
                             <li class="mb-1">

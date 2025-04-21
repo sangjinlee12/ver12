@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_login import login_required, current_user
 from app import db
-from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm
+from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm
 from functools import wraps
 from datetime import datetime
 import csv
@@ -361,3 +361,91 @@ def process_certificate(certificate_id):
         certificate=certificate,
         user=user
     )
+
+
+@admin_bp.route('/company-info', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_company_info():
+    """회사 정보 관리 페이지"""
+    # 회사 정보 가져오기 (없으면 빈 객체 생성)
+    company_info = CompanyInfo.query.first()
+    form = CompanyInfoForm()
+    
+    if form.validate_on_submit():
+        # 회사 정보가 없으면 새로 생성
+        if not company_info:
+            company_info = CompanyInfo()
+            db.session.add(company_info)
+        
+        # 폼 데이터 할당
+        company_info.name = form.name.data
+        company_info.ceo_name = form.ceo_name.data
+        company_info.registration_number = form.registration_number.data
+        company_info.address = form.address.data
+        company_info.phone = form.phone.data
+        company_info.fax = form.fax.data
+        company_info.website = form.website.data
+        company_info.stamp_image = form.stamp_image.data
+        
+        db.session.commit()
+        flash('회사 정보가 성공적으로 저장되었습니다.', 'success')
+        return redirect(url_for('admin.manage_company_info'))
+    
+    # GET 요청 처리 또는 폼 초기화
+    if company_info:
+        form.name.data = company_info.name
+        form.ceo_name.data = company_info.ceo_name
+        form.registration_number.data = company_info.registration_number
+        form.address.data = company_info.address
+        form.phone.data = company_info.phone
+        form.fax.data = company_info.fax
+        form.website.data = company_info.website
+        form.stamp_image.data = company_info.stamp_image
+    
+    return render_template(
+        'admin/manage_company_info.html',
+        form=form,
+        company_info=company_info
+    )
+
+
+@admin_bp.route('/employees/hire-date', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def set_hire_date():
+    """직원 입사일 설정"""
+    form = EmployeeHireDateForm()
+    
+    if form.validate_on_submit():
+        user_id = form.user_id.data
+        hire_date = form.hire_date.data
+        
+        # 해당 직원 정보 가져오기
+        user = User.query.get_or_404(user_id)
+        
+        # 입사일 업데이트
+        user.hire_date = hire_date
+        db.session.commit()
+        
+        flash(f'직원 {user.name}의 입사일이 설정되었습니다.', 'success')
+        return redirect(url_for('admin.manage_employees'))
+    
+    # GET 요청 처리
+    user_id = request.args.get('user_id', type=int)
+    
+    if user_id:
+        user = User.query.get_or_404(user_id)
+        form.user_id.data = user_id
+        
+        # 기존 입사일 있으면 폼에 설정
+        if user.hire_date:
+            form.hire_date.data = user.hire_date
+        
+        return render_template(
+            'admin/set_hire_date.html',
+            form=form,
+            user=user
+        )
+    
+    return redirect(url_for('admin.manage_employees'))
