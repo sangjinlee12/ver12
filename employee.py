@@ -8,6 +8,7 @@ from utils import get_vacation_days_count, check_overlapping_vacation
 import tempfile
 import os
 from weasyprint import HTML
+import urllib.parse
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -276,7 +277,11 @@ def download_certificate(certificate_id):
     # PDF 응답 생성
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
+    
+    # 파일명을 영문으로 생성하고 인코딩
+    filename = f'certificate_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
+    encoded_filename = urllib.parse.quote(filename)
+    response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
     
     return response
 
