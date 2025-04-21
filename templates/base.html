@@ -136,6 +136,18 @@
                                     <span>내 휴가 내역</span>
                                 </a>
                             </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('employee.request_certificate') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'employee.request_certificate' %}active{% endif %}">
+                                    <i class="fas fa-file-alt w-5 mr-2"></i>
+                                    <span>재직증명서 신청</span>
+                                </a>
+                            </li>
+                            <li class="mb-1">
+                                <a href="{{ url_for('employee.my_certificates') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'employee.my_certificates' %}active{% endif %}">
+                                    <i class="fas fa-file-download w-5 mr-2"></i>
+                                    <span>내 재직증명서</span>
+                                </a>
+                            </li>
                         {% endif %}
 
                         <!-- 로그아웃 -->
