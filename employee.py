@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
 from app import db
-from models import VacationDays, VacationRequest, VacationStatus
-from forms import VacationRequestForm
+from models import VacationDays, VacationRequest, VacationStatus, EmploymentCertificate, CertificateStatus
+from forms import VacationRequestForm, EmploymentCertificateRequestForm
 from datetime import datetime
 from utils import get_vacation_days_count, check_overlapping_vacation
+import tempfile
+import os
+from weasyprint import HTML
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -202,3 +205,97 @@ def calculate_vacation_days():
         days = get_vacation_days_count(start_date, end_date)
     
     return jsonify({'days': days})
+
+
+@employee_bp.route('/request-certificate', methods=['GET', 'POST'])
+@login_required
+def request_certificate():
+    """재직증명서 신청 페이지"""
+    form = EmploymentCertificateRequestForm()
+    
+    if form.validate_on_submit():
+        # 재직증명서 신청 저장
+        certificate = EmploymentCertificate(
+            user_id=current_user.id,
+            purpose=form.purpose.data,
+            status=CertificateStatus.PENDING
+        )
+        
+        db.session.add(certificate)
+        db.session.commit()
+        
+        flash('재직증명서 신청이 완료되었습니다.', 'success')
+        return redirect(url_for('employee.my_certificates'))
+    
+    return render_template('employee/request_certificate.html', form=form)
+
+
+@employee_bp.route('/my-certificates')
+@login_required
+def my_certificates():
+    """내 재직증명서 신청 내역 페이지"""
+    # 재직증명서 신청 내역 (최신순)
+    certificates = EmploymentCertificate.query.filter_by(
+        user_id=current_user.id
+    ).order_by(EmploymentCertificate.created_at.desc()).all()
+    
+    return render_template('employee/my_certificates.html', certificates=certificates)
+
+
+@employee_bp.route('/download-certificate/<int:certificate_id>')
+@login_required
+def download_certificate(certificate_id):
+    """재직증명서 다운로드"""
+    certificate = EmploymentCertificate.query.get_or_404(certificate_id)
+    
+    # 권한 확인
+    if certificate.user_id != current_user.id:
+        flash('권한이 없습니다.', 'danger')
+        return redirect(url_for('employee.my_certificates'))
+    
+    # 발급완료 상태인지 확인
+    if certificate.status != CertificateStatus.ISSUED:
+        flash('아직 발급되지 않은 재직증명서입니다.', 'warning')
+        return redirect(url_for('employee.my_certificates'))
+    
+    # 재직증명서 HTML 생성
+    html_content = render_template(
+        'employee/certificate_template.html',
+        user=current_user,
+        certificate=certificate,
+        today=datetime.now().date()
+    )
+    
+    # PDF 생성
+    pdf = HTML(string=html_content).write_pdf()
+    
+    # PDF 응답 생성
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
+    
+    return response
+
+
+@employee_bp.route('/cancel-certificate/<int:certificate_id>', methods=['POST'])
+@login_required
+def cancel_certificate(certificate_id):
+    """재직증명서 신청 취소"""
+    certificate = EmploymentCertificate.query.get_or_404(certificate_id)
+    
+    # 권한 확인
+    if certificate.user_id != current_user.id:
+        flash('권한이 없습니다.', 'danger')
+        return redirect(url_for('employee.my_certificates'))
+    
+    # 대기 중인 신청만 취소 가능
+    if certificate.status != CertificateStatus.PENDING:
+        flash('대기 중인 재직증명서 신청만 취소할 수 있습니다.', 'danger')
+        return redirect(url_for('employee.my_certificates'))
+    
+    # 취소 처리
+    db.session.delete(certificate)
+    db.session.commit()
+    
+    flash('재직증명서 신청이 취소되었습니다.', 'success')
+    return redirect(url_for('employee.my_certificates'))

@@ -87,6 +87,38 @@ class VacationRequest(db.Model):
         return f'<VacationRequest {self.id} {self.user_id} {self.status}>'
 
 
+# 재직증명서 상태 정의
+class CertificateStatus:
+    PENDING = '대기중'
+    ISSUED = '발급완료'
+    REJECTED = '반려됨'
+
+
+class EmploymentCertificate(db.Model):
+    """재직증명서 모델"""
+    __tablename__ = 'employment_certificates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    purpose = db.Column(db.String(200), nullable=False)  # 사용 목적
+    issued_date = db.Column(db.Date)  # 발급일
+    status = db.Column(db.String(20), nullable=False, default=CertificateStatus.PENDING)  # 상태
+    
+    # 관리자 승인/반려 정보
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))  # 승인/반려한 관리자
+    approval_date = db.Column(db.DateTime)  # 승인/반려 날짜
+    comments = db.Column(db.Text)  # 관리자 코멘트
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)  # 신청 날짜
+    
+    # 관계 설정
+    user = db.relationship('User', foreign_keys=[user_id], backref='certificates')
+    approver = db.relationship('User', foreign_keys=[approved_by])
+    
+    def __repr__(self):
+        return f'<EmploymentCertificate {self.id} {self.user_id} {self.status}>'
+
+
 class Holiday(db.Model):
     """공휴일 관리 모델"""
     __tablename__ = 'holidays'

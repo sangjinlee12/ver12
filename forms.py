@@ -96,3 +96,23 @@ class HolidayForm(FlaskForm):
     date = DateField('날짜', validators=[DataRequired('날짜를 선택하세요.')], format='%Y-%m-%d')
     name = StringField('공휴일명', validators=[DataRequired('공휴일명을 입력하세요.')])
     submit = SubmitField('등록')
+
+
+class EmploymentCertificateRequestForm(FlaskForm):
+    """재직증명서 신청 폼"""
+    purpose = StringField('사용 목적', validators=[
+        DataRequired('사용 목적을 입력하세요.'), 
+        Length(max=200, message='사용 목적은 200자를 초과할 수 없습니다.')
+    ])
+    submit = SubmitField('재직증명서 신청')
+
+
+class CertificateApprovalForm(FlaskForm):
+    """재직증명서 승인/반려 폼"""
+    certificate_id = HiddenField('요청 ID')
+    status = SelectField('상태', choices=[
+        ('발급완료', '발급'),
+        ('반려됨', '반려')
+    ], validators=[DataRequired('상태를 선택하세요.')])
+    comments = TextAreaField('코멘트')
+    submit = SubmitField('처리')
