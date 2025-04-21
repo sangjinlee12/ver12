@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}휴가관리시스템{% endblock %}</title>
+    <title>{% block title %}에스에스전력 휴가관리시스템{% endblock %}</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
@@ -68,7 +68,10 @@
             id="sidebar">
             <div class="p-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
-                    <h1 class="text-xl font-bold text-primary">휴가관리시스템</h1>
+                    <div>
+                        <h1 class="text-lg font-bold text-primary">에스에스전력</h1>
+                        <h2 class="text-sm font-medium text-primary-dark">휴가관리시스템</h2>
+                    </div>
                     <button 
                         @click="open = false"
                         class="text-gray-500 md:hidden">
@@ -228,7 +231,7 @@
             
             <!-- 푸터 -->
             <footer class="bg-white border-t border-gray-200 p-4 text-center text-xs text-gray-500">
-                <p>&copy; {{ now.year }} 휴가관리시스템. All rights reserved.</p>
+                <p>&copy; {{ now.year }} 주식회사 에스에스전력 제작. All rights reserved.</p>
             </footer>
         </div>
     </div>
