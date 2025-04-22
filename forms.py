@@ -127,7 +127,7 @@ class CompanyInfoForm(FlaskForm):
     phone = StringField('전화번호')
     fax = StringField('팩스번호')
     website = StringField('웹사이트')
-    stamp_image = TextAreaField('직인 이미지 (base64)')
+    stamp_image = TextAreaField('직인 이미지')
     submit = SubmitField('저장')
 
 
