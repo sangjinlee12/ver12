@@ -446,7 +446,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
 
-    # 회사명과 도장 이미지 추가 (회사 이름 옆에 도장 배치)
+    # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     company_p.paragraph_format.space_before = Pt(5)
@@ -458,28 +458,22 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_run.font.bold = True
     company_run.font.size = Pt(14)
     
-    # 공백 추가 (회사명과 도장 사이)
-    company_p.add_run("  ").font.name = '맑은 고딕'
-    
-    # 도장 이미지 추가 (회사명 옆에)
-    if company_info and company_info.stamp_image:
-        try:
-            # 도장 이미지가 있으면 사용
-            stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
-            stamp_io = io.BytesIO(stamp_data)
-            company_p.add_run().add_picture(stamp_io, width=Cm(2.0), height=Cm(2.0))
-        except Exception as e:
-            print(f"도장 이미지 삽입 오류: {str(e)}")
-    
-    # 대표이사 이름 (중앙 정렬)
+    # 대표이사 이름과 직인 생략 문구 (중앙 정렬)
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     ceo_p.paragraph_format.space_before = Pt(5)
     ceo_p.paragraph_format.space_after = Pt(20)
+    
+    # 대표이사 이름
     ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.size = Pt(14)  # 글씨 크기 키우기
+    ceo_run.font.size = Pt(14)  # 글씨 크기
     ceo_run.font.bold = True    # 글씨 굵게
+    
+    # 직인생략 텍스트 추가 (작은 글씨)
+    seal_run = ceo_p.add_run(" (직인 생략)")
+    seal_run.font.name = '맑은 고딕'
+    seal_run.font.size = Pt(9)  # 작은 글씨 크기
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -681,17 +675,13 @@ def download_certificate(certificate_id):
                 
                 <p class="date">{today_str}</p>
                 
-                <div style="text-align: center; margin-top: 5px; margin-bottom: 10px;">
-                    <span style="font-size: 18px; font-weight: bold; display: inline-block; vertical-align: middle;">{company_name}</span>
-                    <span style="display: inline-block; vertical-align: middle; margin-left: 10px;">
-                        <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image and ',' in company_info.stamp_image else ''}" 
-                            style="max-width: 70px; max-height: 70px; vertical-align: middle;" 
-                            onerror="this.style.display='none';" />
-                    </span>
+                <div style="text-align: center; margin-top: 5px; margin-bottom: 5px;">
+                    <span style="font-size: 18px; font-weight: bold;">{company_name}</span>
                 </div>
                 
                 <div style="text-align: center; margin-top: 5px; margin-bottom: 30px;">
                     <span style="font-size: 16px; font-weight: bold;">대표이사 {ceo_name}</span>
+                    <span style="font-size: 9px; color: #666; margin-left: 5px;">(직인 생략)</span>
                 </div>
             </body>
             </html>
