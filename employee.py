@@ -16,6 +16,12 @@ import docx
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
+from docx.enum.section import WD_SECTION
+from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.section import WD_ORIENT
+from docx.enum.table import WD_TABLE_ALIGNMENT
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -582,114 +588,136 @@ def download_certificate(certificate_id):
                         font-weight: normal;
                         font-style: normal;
                     }}
+                    @page {{
+                        size: A4;
+                        margin: 0;
+                    }}
                     body {{
                         font-family: 'NanumGothicCustom', Arial, sans-serif;
                         margin: 40px;
                         padding: 0;
                         line-height: 1.5;
+                        position: relative;
+                        min-height: 100vh;
+                    }}
+                    .issue-date {{
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        font-size: 12px;
+                        color: #666;
                     }}
                     h1 {{
                         text-align: center;
                         font-size: 24px;
                         margin-bottom: 40px;
-                        letter-spacing: 5px;
+                        margin-top: 20px;
                         border-bottom: 1px solid #000;
                         padding-bottom: 10px;
                     }}
                     table {{
                         width: 100%;
                         border-collapse: collapse;
-                        margin-bottom: 30px;
+                        margin-bottom: 40px;
                     }}
                     table, th, td {{
                         border: 1px solid black;
                     }}
                     th {{
-                        width: 15%;
-                        padding: 10px 8px;
+                        background-color: #f2f2f2;
+                        width: 120px;
+                        padding: 8px;
                         text-align: center;
-                        font-weight: normal;
                     }}
                     td {{
-                        padding: 10px 8px;
+                        padding: 8px;
                         text-align: center;
                     }}
-                    .text-black {{
-                        color: #000000;
-                        font-weight: bold;
-                    }}
-                    .center-text {{
+                    .center {{
                         text-align: center;
-                        margin: 30px 0;
+                        font-size: 16px;
+                        margin-top: 40px;
+                        margin-bottom: 40px;
                     }}
-                    .signature-table {{
-                        width: 60%;
-                        margin: 100px auto 0;
-                        border-collapse: collapse;
-                    }}
-                    .company-info {{
+                    .date {{
                         text-align: center;
                         margin-top: 50px;
+                        margin-bottom: 30px;
+                    }}
+                    .company {{
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 18px;
+                        margin-top: 20px;
+                    }}
+                    .signature-area {{
+                        display: flex;
+                        justify-content: flex-end;
+                        align-items: flex-end;
+                        margin-top: 30px;
+                    }}
+                    .ceo-info {{
+                        text-align: right;
+                        margin-right: 20px;
+                        font-size: 16px;
+                    }}
+                    .stamp {{
+                        text-align: center;
+                        margin-left: 10px;
+                        position: relative;
                     }}
                     .stamp-img {{
-                        width: 60px;
-                        height: 60px;
-                        display: inline-block;
+                        max-width: 70px;
+                        max-height: 70px;
+                        position: relative;
+                        margin-left: 10px;
                         vertical-align: middle;
                     }}
                 </style>
             </head>
             <body>
+                <div class="issue-date">발급일: {today_str}</div>
+                
                 <h1>재직증명서</h1>
                 
                 <table>
                     <tr>
-                        <th>성 명</th>
-                        <td style="width: 35%"><span class="text-black">{current_user.name}</span></td>
+                        <th>성명</th>
+                        <td>{current_user.name}</td>
                         <th>주민등록번호</th>
-                        <td><span class="text-black">9xxxxx-1xxxxxx</span></td>
+                        <td>******-*******</td>
                     </tr>
                     <tr>
-                        <th>주 소</th>
-                        <td colspan="3"></td>
+                        <th>소속</th>
+                        <td>{company_name} {current_user.department or ''}</td>
+                        <th>직위</th>
+                        <td>{current_user.position or '사원'}</td>
                     </tr>
                     <tr>
-                        <th>소 속</th>
-                        <td><span class="text-black">{current_user.department or '영업팀'}</span></td>
-                        <th>직 위</th>
-                        <td><span class="text-black">{current_user.position or '팀장'}</span></td>
+                        <th>재직기간</th>
+                        <td colspan="3">{hire_date_str} ~ 현재</td>
                     </tr>
                     <tr>
-                        <th>기 간</th>
-                        <td colspan="3"><span class="text-black">{hire_date_str.replace('년', '년 ').replace('월', '월 ').replace('일', '일')}~현재</span></td>
+                        <th>용도</th>
+                        <td colspan="3">{certificate.purpose}</td>
                     </tr>
                 </table>
                 
-                <p class="center-text">상기와 같이 재직 중임을 증명함</p>
+                <p class="center">상기인은 위와 같이 재직하고 있음을 증명합니다.</p>
                 
-                <p style="text-align: center; margin: 40px 0;">
-                    용도 : 재직
-                </p>
+                <p class="date">{today_str}</p>
                 
-                <div style="text-align: center; margin-top: 120px;">
-                    회사명 : {company_name}<br>
-                    발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
+                <p class="company">{company_name}</p>
+                
+                <div style="text-align: right; margin-top: 40px;">
+                    <span style="display: inline-block; margin-right: 20px;">대표이사 {ceo_name}</span>
+                    <span style="display: inline-block;">
+                        <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image and ',' in company_info.stamp_image else ''}" 
+                            class="stamp-img" 
+                            onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
+                        <span style="display:none;">(직인 생략)</span>
+                    </span>
                 </div>
-                
-                <table class="signature-table" style="border: 1px solid black;">
-                    <tr>
-                        <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
-                            대표이사
-                        </td>
-                        <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
-                            {ceo_name} 
-                            <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
-                                class="stamp-img" style="margin-left: 10px;" 
-                                onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
-                            <span style="display:none;">(인)</span>
-                        </td>
-                    </tr>
-                </table>
             </body>
             </html>
             """
