@@ -6,6 +6,54 @@
 
 {% block content %}
 <div>
+    <!-- 직원 대량 업로드 섹션 -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+        <div class="p-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-800">직원 대량 등록</h2>
+            <p class="text-sm text-gray-500 mt-1">엑셀 파일을 업로드하여 여러 직원을 한 번에 등록할 수 있습니다.</p>
+        </div>
+        <div class="p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <form action="{{ url_for('admin.upload_employees') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+                        {{ upload_form.hidden_tag() }}
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-1">
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ upload_form.file.label }}</label>
+                                    {{ upload_form.file(class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none") }}
+                                </div>
+                                {% if upload_form.file.errors %}
+                                    <div class="text-red-500 text-xs mt-1">
+                                        {% for error in upload_form.file.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ upload_form.submit(class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.download_employee_template') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <i class="fas fa-download mr-2"></i> 샘플 파일 다운로드
+                    </a>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">엑셀 파일 형식</h3>
+                <div class="text-xs text-gray-600 space-y-1">
+                    <p>• <strong>필수 항목</strong>: username(아이디), name(이름), password(비밀번호), email(이메일), department(부서), position(직급)</p>
+                    <p>• <strong>선택 항목</strong>: hire_date(입사일, YYYY-MM-DD 형식)</p>
+                    <p>• 샘플 파일을 다운로드하여 형식을 확인하세요.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 직원 목록 테이블 -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <div class="p-4 border-b border-gray-200">
