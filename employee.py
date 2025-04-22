@@ -494,14 +494,14 @@ def create_docx_certificate(certificate, current_user, company_info):
             # 도장 이미지가 있으면 사용
             stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
             stamp_io = io.BytesIO(stamp_data)
-            signature_line.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+            p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
         except Exception as e:
             print(f"도장 이미지 삽입 오류: {str(e)}")
             # 오류 시 (인) 텍스트로 대체
-            signature_line.add_run("(인)").font.name = '맑은 고딕'
+            p.add_run("(인)").font.name = '맑은 고딕'
     else:
         # 도장 이미지가 없으면 (인) 텍스트 표시
-        signature_line.add_run("(인)").font.name = '맑은 고딕'
+        p.add_run("(인)").font.name = '맑은 고딕'
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
