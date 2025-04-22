@@ -312,13 +312,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 워드 문서 생성
     doc = docx.Document()
     
-    # 페이지 여백 설정 (단위: cm)
+    # 페이지 여백 설정 (단위: cm) - 여백 축소
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(2.54)
-        section.bottom_margin = Cm(2.54)
-        section.left_margin = Cm(2.54)
-        section.right_margin = Cm(2.54)
+        section.top_margin = Cm(1.5)
+        section.bottom_margin = Cm(1.5)
+        section.left_margin = Cm(2)
+        section.right_margin = Cm(2)
     
     # 스타일 설정
     style = doc.styles['Normal']
@@ -419,27 +419,24 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 증명 문구 추가
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.paragraph_format.space_before = Pt(30)
-    p_confirm.paragraph_format.space_after = Pt(30)
+    p_confirm.paragraph_format.space_before = Pt(15)
+    p_confirm.paragraph_format.space_after = Pt(15)
     confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
     confirm_run.font.name = '맑은 고딕'
-    
-    # 여백 추가
-    doc.add_paragraph()
-    doc.add_paragraph()
     
     # 날짜 추가 (증명 문구와 회사 정보 사이에 위치)
     date_p = doc.add_paragraph()
     date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    date_p.paragraph_format.space_before = Pt(40)
-    date_p.paragraph_format.space_after = Pt(40)
+    date_p.paragraph_format.space_before = Pt(20)
+    date_p.paragraph_format.space_after = Pt(20)
     date_run = date_p.add_run(today_str)
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
     
-    # 추가 여백 (회사 정보를 더 아래로 내림)
-    for _ in range(4):
-        doc.add_paragraph()
+    # 추가 여백 (적당한 간격)
+    empty_p = doc.add_paragraph()
+    empty_p.paragraph_format.space_before = Pt(10)
+    empty_p.paragraph_format.space_after = Pt(10)
     
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
