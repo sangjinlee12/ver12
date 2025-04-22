@@ -266,8 +266,8 @@ def download_certificate(certificate_id):
     
     # 회사 정보 가져오기
     company_info = CompanyInfo.query.first()
-    company_name = company_info.name if company_info else '주식회사 에스에스전력'
-    ceo_name = company_info.ceo_name if company_info else '대표이사'
+    company_name = company_info.name if company_info else '(Company Name)'
+    ceo_name = company_info.ceo_name if company_info else '(CEO Name)'
     
     # PDF 생성 (Reportlab 사용)
     buffer = io.BytesIO()
@@ -276,7 +276,7 @@ def download_certificate(certificate_id):
     
     # 제목
     p.setFont('Helvetica-Bold', 24)
-    p.drawCentredString(width/2, height - 3*cm, '재직증명서')
+    p.drawCentredString(width/2, height - 3*cm, 'CERTIFICATE OF EMPLOYMENT')
     
     # 인적사항
     p.setFont('Helvetica', 12)
@@ -284,49 +284,49 @@ def download_certificate(certificate_id):
     
     # 테이블 시작
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, '성명:')
+    p.drawString(3*cm, y_position, 'Name:')
     p.setFont('Helvetica', 11)
     p.drawString(6*cm, y_position, current_user.name)
     y_position -= 1*cm
     
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, '소속:')
+    p.drawString(3*cm, y_position, 'Department:')
     p.setFont('Helvetica', 11)
     p.drawString(6*cm, y_position, f'{company_name} {current_user.department or ""}')
     y_position -= 1*cm
     
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, '직위:')
+    p.drawString(3*cm, y_position, 'Position:')
     p.setFont('Helvetica', 11)
     p.drawString(6*cm, y_position, current_user.position or "")
     y_position -= 1*cm
     
     hire_date_str = ""
     if current_user.hire_date:
-        hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+        hire_date_str = current_user.hire_date.strftime('%Y-%m-%d')
     else:
-        hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+        hire_date_str = current_user.created_at.strftime('%Y-%m-%d')
     
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, '재직기간:')
+    p.drawString(3*cm, y_position, 'Period:')
     p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, f'{hire_date_str} ~ 현재')
+    p.drawString(6*cm, y_position, f'{hire_date_str} ~ Present')
     y_position -= 1*cm
     
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, '용도:')
+    p.drawString(3*cm, y_position, 'Purpose:')
     p.setFont('Helvetica', 11)
     p.drawString(6*cm, y_position, certificate.purpose)
     y_position -= 2*cm
     
     # 증명문
     p.setFont('Helvetica', 12)
-    p.drawString(3*cm, y_position, '위와 같이 재직하고 있음을 증명합니다.')
+    p.drawString(3*cm, y_position, 'This is to certify that the above information is true and correct.')
     y_position -= 3*cm
     
     # 발급일
     today = datetime.now().date()
-    p.drawCentredString(width/2, y_position, f'{today.year}년 {today.month}월 {today.day}일')
+    p.drawCentredString(width/2, y_position, f'{today.year}-{today.month:02d}-{today.day:02d}')
     y_position -= 2*cm
     
     # 회사명 및 대표자
@@ -335,13 +335,13 @@ def download_certificate(certificate_id):
     y_position -= 1*cm
     
     p.setFont('Helvetica', 12)
-    p.drawCentredString(width/2, y_position, f'대표이사 {ceo_name}')
+    p.drawCentredString(width/2, y_position, f'CEO {ceo_name}')
     y_position -= 1.5*cm
     
     # 직인 위치 (원으로 표시)
     p.circle(width/2, y_position, 1*cm)
     p.setFont('Helvetica', 10)
-    p.drawCentredString(width/2, y_position, '(직인 생략)')
+    p.drawCentredString(width/2, y_position, '(Seal)')
     
     # PDF 완성
     p.showPage()
