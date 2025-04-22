@@ -2,7 +2,7 @@ services:
   - type: web
     name: sselectric-vacation-system
     env: python
-    buildCommand: pip install -r requirements-render.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --reuse-port main:app
     plan: free
     envVars:
