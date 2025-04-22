@@ -445,47 +445,52 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_name_run = company_p.add_run(f"회사명 :    {company_name}")
     company_name_run.font.name = '맑은 고딕'
     
-    # 회사 정보와 대표이사 정보를 텍스트 위치 조정으로 처리
-    doc.add_paragraph()  # 간격을 위한 빈 문단
+    # 용도와 회사 정보 추가
     doc.add_paragraph()  # 간격을 위한 빈 문단
     
-    # 회사명 텍스트를 오른쪽으로 배치
+    # 용도
+    purpose_line = doc.add_paragraph()
+    purpose_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    purpose_line.add_run('용도 : 재직').font.name = '맑은 고딕'
+    
+    # 여백 추가
+    for _ in range(3):
+        doc.add_paragraph()
+    
+    # 회사명
     company_line = doc.add_paragraph()
     company_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
     company_line.add_run('회사명 : ').font.name = '맑은 고딕'
     company_line.add_run(company_name).font.name = '맑은 고딕'
     
-    # 발급일 추가
-    issue_date_line = doc.add_paragraph()
-    issue_date_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    issue_date_line.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
+    # 페이지 나누기
+    doc.add_page_break()
     
-    # 이미지 정렬을 위한 빈 줄
-    doc.add_paragraph()
+    # 간격 추가
+    for _ in range(10):
+        doc.add_paragraph()
     
-    # 대표이사와 도장 한 줄에 배치
+    # 대표이사와 도장이 있는 테이블 생성
     signature_table = doc.add_table(rows=1, cols=2)
-    signature_table.style = 'Table Grid'
-    signature_table.autofit = True
+    signature_table.style = 'Table Grid'  # 테두리 있는 스타일
+    signature_table.autofit = False
+    signature_table.width = Cm(12)  # 테이블 너비 설정
     
-    # 테두리 제거
-    for cell in signature_table.rows[0].cells:
-        for border in ['top', 'left', 'bottom', 'right']:
-            try:
-                setattr(cell._element.tcPr.tcBorders, border, None)
-            except:
-                pass
+    # 테이블 가운데 정렬
+    for row in signature_table.rows:
+        for cell in row.cells:
+            cell.width = Cm(6)  # 셀 너비 균등하게
     
-    # 대표이사 셀
+    # 대표이사 텍스트 셀
     cell = signature_table.cell(0, 0)
     p = cell.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    p.add_run('대표이사 : ').font.name = '맑은 고딕'
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run('대표이사').font.name = '맑은 고딕'
     
     # 대표자 이름 및 도장 이미지 셀
     cell = signature_table.cell(0, 1)
     p = cell.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run(ceo_name + '  ').font.name = '맑은 고딕'
     
     # 도장 이미지 삽입
@@ -502,6 +507,14 @@ def create_docx_certificate(certificate, current_user, company_info):
     else:
         # 도장 이미지가 없으면 (인) 텍스트 표시
         p.add_run("(인)").font.name = '맑은 고딕'
+    
+    # 발급일자를 하단에 추가
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    issue_date_p = doc.add_paragraph()
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    issue_date_p.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
@@ -669,29 +682,36 @@ def download_certificate(certificate_id):
                 <p class="purpose">용도 : <span class="text-black">{certificate.purpose}</span></p>
                 
                 <div class="company-info">
-                    <p style="text-align: center; margin-bottom: 15px;">
-                        회사명 : {company_name}
+                    <p style="text-align: center; margin-bottom: 60px;">
+                        용도 : 재직
                     </p>
                     
-                    <table style="border: none; width: 250px; margin: 20px auto 0;">
-                        <tr style="border: none;">
-                            <td colspan="2" style="border: none; text-align: center; padding-bottom: 30px;">
-                                발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
+                    <p style="text-align: center; margin-bottom: 80px;">
+                        회사명 : {company_name}
+                    </p>
+                </div>
+                
+                <div style="page-break-before: always;"></div>
+                
+                <div style="margin-top: 150px;">
+                    <table style="width: 70%; margin: 0 auto; border: 1px solid black; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
+                                대표이사
                             </td>
-                        </tr>
-                        <tr style="border: none;">
-                            <td style="border: none; text-align: right; padding-right: 10px; vertical-align: middle; width: 40%;">
-                                대표이사 :
-                            </td>
-                            <td style="border: none; text-align: left; vertical-align: middle; width: 60%; white-space: nowrap;">
-                                {ceo_name}
+                            <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
+                                {ceo_name} 
                                 <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
-                                    style="width: 50px; height: 50px; display: inline-block; vertical-align: middle; margin-left: 15px;" 
+                                    style="width: 60px; height: 60px; display: inline-block; vertical-align: middle; margin-left: 10px;" 
                                     onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
                                 <span style="display:none;">(인)</span>
                             </td>
                         </tr>
                     </table>
+                    
+                    <p style="text-align: center; margin-top: 100px;">
+                        발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
+                    </p>
                 </div>
             </body>
             </html>
