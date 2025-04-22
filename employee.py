@@ -427,22 +427,16 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 여백 추가
     doc.add_paragraph()
     doc.add_paragraph()
-    doc.add_paragraph()
     
-    # 간격을 위한 빈 문단
-    doc.add_paragraph()
-    
-    # 여백 추가
-    for _ in range(3):
-        doc.add_paragraph()
-    
-    # 날짜 추가
+    # 날짜 추가 (증명 문구와 회사 정보 사이에 위치)
     date_p = doc.add_paragraph()
     date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    date_p.paragraph_format.space_before = Pt(40)
+    date_p.paragraph_format.space_after = Pt(40)
     date_run = date_p.add_run(today_str)
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
-
+    
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
