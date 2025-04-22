@@ -439,25 +439,32 @@ def create_docx_certificate(certificate, current_user, company_info):
     doc.add_paragraph()
     doc.add_paragraph()
     
-    # 주소 부분
-    address_p = doc.add_paragraph()
-    address_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    address_run = address_p.add_run(f"주소 : (         )")
-    address_run.font.name = '맑은 고딕'
-    
     # 회사명
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_name_run = company_p.add_run(f"회사명 :    ○ ○ 컴퍼니")
+    company_name_run = company_p.add_run(f"회사명 :    {company_name}")
     company_name_run.font.name = '맑은 고딕'
-    company_name_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
     
-    # 대표자
+    # 대표자 및 도장 이미지
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_run = ceo_p.add_run(f"대표이사 :    박대표       (인)")
+    ceo_run = ceo_p.add_run(f"대표이사 :    {ceo_name}       ")
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    
+    # 도장 이미지 삽입
+    if company_info and company_info.stamp_image:
+        try:
+            # 도장 이미지가 있으면 사용
+            stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
+            stamp_io = io.BytesIO(stamp_data)
+            ceo_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+        except Exception as e:
+            print(f"도장 이미지 삽입 오류: {str(e)}")
+            # 오류 시 (인) 텍스트로 대체
+            ceo_p.add_run("(인)").font.name = '맑은 고딕'
+    else:
+        # 도장 이미지가 없으면 (인) 텍스트 표시
+        ceo_p.add_run("(인)").font.name = '맑은 고딕'
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
@@ -575,8 +582,8 @@ def download_certificate(certificate_id):
                         height: 25px;
                         line-height: 25px;
                     }}
-                    .red-text {{
-                        color: #FF0000;
+                    .text-black {{
+                        color: #000000;
                         font-weight: bold;
                     }}
                     .center-text {{
@@ -587,19 +594,10 @@ def download_certificate(certificate_id):
                         text-align: left;
                         margin-top: 100px;
                         margin-left: 80px;
-                        color: #FF0000;
                     }}
                     .company-info {{
                         text-align: center;
                         margin-top: 80px;
-                    }}
-                    .company-name {{
-                        color: #FF0000;
-                        margin: 10px 0;
-                    }}
-                    .ceo-name {{
-                        color: #FF0000;
-                        margin: 10px 0;
                     }}
                 </style>
             </head>
@@ -609,9 +607,9 @@ def download_certificate(certificate_id):
                 <table>
                     <tr>
                         <th>성 명</th>
-                        <td style="width: 25%"><span class="red-text">{current_user.name}</span></td>
+                        <td style="width: 25%"><span class="text-black">{current_user.name}</span></td>
                         <th>주민등록번호</th>
-                        <td><span class="red-text">9xxxxx-1xxxxxx</span></td>
+                        <td><span class="text-black">9xxxxx-1xxxxxx</span></td>
                     </tr>
                     <tr>
                         <th>주 소</th>
@@ -619,24 +617,23 @@ def download_certificate(certificate_id):
                     </tr>
                     <tr>
                         <th>소 속</th>
-                        <td><span class="red-text">{company_info.name if company_info and company_info.name else current_user.department or '영업팀'}</span></td>
+                        <td><span class="text-black">{current_user.department or '영업팀'}</span></td>
                         <th>직 위</th>
-                        <td><span class="red-text">{current_user.position or '팀장'}</span></td>
+                        <td><span class="text-black">{current_user.position or '팀장'}</span></td>
                     </tr>
                     <tr>
                         <th>기 간</th>
-                        <td colspan="3"><span class="red-text">{hire_date_str.replace('년', '년 ').replace('월', '월 ').replace('일', '일')}~현재</span></td>
+                        <td colspan="3"><span class="text-black">{hire_date_str.replace('년', '년 ').replace('월', '월 ').replace('일', '일')}~현재</span></td>
                     </tr>
                 </table>
                 
                 <p class="center-text">상기와 같이 재직 중임을 증명함</p>
                 
-                <p class="purpose">용도 : <span class="red-text">{certificate.purpose}</span></p>
+                <p class="purpose">용도 : <span class="text-black">{certificate.purpose}</span></p>
                 
                 <div class="company-info">
-                    <p>주소 : (         )</p>
-                    <p class="company-name">회사명 :    ○ ○ 컴퍼니</p>
-                    <p class="ceo-name">대표이사 :    박대표       (인)</p>
+                    <p>회사명 : {company_name}</p>
+                    <p>대표이사 : {ceo_name} <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" style="width: 50px; height: 50px; vertical-align: middle;" onerror="this.style.display='none';this.nextSibling.style.display='inline';" /><span style="display:none;">(인)</span></p>
                 </div>
             </body>
             </html>
