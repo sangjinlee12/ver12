@@ -1,0 +1,9 @@
+libpango-1.0-0
+libpangoft2-1.0-0
+libffi-dev
+libjpeg-dev
+libopenjp2-7-dev
+libcairo2
+fonts-nanum
+fonts-nanum-coding
+fonts-nanum-extra
