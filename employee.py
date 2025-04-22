@@ -437,6 +437,10 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
     
+    # 추가 여백 (회사 정보를 더 아래로 내림)
+    for _ in range(4):
+        doc.add_paragraph()
+    
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -664,6 +668,9 @@ def download_certificate(certificate_id):
                 <p class="center">상기인은 위와 같이 재직하고 있음을 증명합니다.</p>
                 
                 <p class="date">{today_str}</p>
+                
+                <!-- 추가 여백 -->
+                <div style="margin-top: 120px;"></div>
                 
                 <div style="text-align: center; margin-top: 5px; margin-bottom: 5px;">
                     <span style="font-size: 18px; font-weight: bold;">{company_name}</span>
