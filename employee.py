@@ -15,6 +15,7 @@ import base64
 import docx
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -390,11 +391,23 @@ def create_docx_certificate(certificate, current_user, company_info):
     cell.paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
     cell.paragraphs[0].runs[0].font.bold = True
     
-    # 모든 셀 가운데 정렬과 여백 설정
+    # 모든 셀 가운데 정렬(수평, 수직 모두)과 여백 설정
     for row in table.rows:
+        # 행 높이 설정 - 더 넓은 여백을 위해
+        row.height = Cm(1.2)
+        row.height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
+        
         for cell in row.cells:
+            # 셀 수직 정렬 - 중앙
+            cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER = 1
+            
             for paragraph in cell.paragraphs:
+                # 단락 수평 정렬 - 중앙
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                # 단락 간격 설정
+                paragraph.space_before = Pt(0)
+                paragraph.space_after = Pt(0)
+                
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
     
@@ -550,13 +563,17 @@ def download_certificate(certificate_id):
                     }}
                     th {{
                         width: 15%;
-                        padding: 8px;
+                        padding: 15px 8px;
                         text-align: center;
                         font-weight: normal;
+                        height: 25px;
+                        line-height: 25px;
                     }}
                     td {{
-                        padding: 8px;
+                        padding: 15px 8px;
                         text-align: center;
+                        height: 25px;
+                        line-height: 25px;
                     }}
                     .red-text {{
                         color: #FF0000;
