@@ -365,7 +365,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 2행: 소속, 직위
     row = table.rows[1]
     row.cells[0].text = '소속'
-    row.cells[1].text = f"{company_name} {current_user.department or ''}"
+    row.cells[1].text = current_user.department or ''
     row.cells[2].text = '직위'
     row.cells[3].text = current_user.position or '사원'
     
@@ -389,15 +389,27 @@ def create_docx_certificate(certificate, current_user, company_info):
     
     # 모든 셀 정렬과 여백 설정
     for row in table.rows:
-        row.height = Cm(1.0)
+        row.height = Cm(1.2)  # 더 높은 행 높이로 설정
         row.height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
         
         for cell in row.cells:
+            # 셀 수직 정렬 중앙
+            try:
+                tc = cell._element.tcPr
+                tc.append(parse_xml(f'<w:vAlign {nsdecls("w")} w:val="center"/>'))
+            except Exception as e:
+                print(f"셀 수직 정렬 오류: {str(e)}")
+                
             # 셀 텍스트 가운데 정렬
             for paragraph in cell.paragraphs:
+                # 단락 스타일 설정
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                paragraph.space_before = Pt(6)  # 단락 위 여백
+                paragraph.space_after = Pt(6)   # 단락 아래 여백
+                
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
+                    run.font.size = Pt(11)      # 일관된 글자 크기
                 
             # 헤더 셀 배경색 설정
             if cell.text in ['성명', '주민등록번호', '소속', '직위', '재직기간', '용도']:
@@ -442,14 +454,18 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_run.font.bold = True
     company_run.font.size = Pt(14)
     
-    # 대표이사 서명 (표 없이 오른쪽 정렬)
-    signature_p = doc.add_paragraph()
-    signature_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    signature_p.paragraph_format.space_before = Pt(20)
+    # 대표이사 이름 (중앙 정렬)
+    ceo_p = doc.add_paragraph()
+    ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ceo_p.paragraph_format.space_before = Pt(5)
+    ceo_p.paragraph_format.space_after = Pt(20)
+    ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
+    ceo_run.font.name = '맑은 고딕'
     
-    # 대표이사 이름 추가
-    signature_run = signature_p.add_run(f"대표이사 {ceo_name}")
-    signature_run.font.name = '맑은 고딕'
+    # 도장 이미지 삽입 (오른쪽 정렬)
+    stamp_p = doc.add_paragraph()
+    stamp_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    stamp_p.paragraph_format.space_before = Pt(10)
     
     # 도장 이미지 삽입 (옆에 붙여서)
     if company_info and company_info.stamp_image:
@@ -457,13 +473,12 @@ def create_docx_certificate(certificate, current_user, company_info):
             # 도장 이미지가 있으면 사용
             stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
             stamp_io = io.BytesIO(stamp_data)
-            signature_p.add_run("  ").font.name = '맑은 고딕'  # 공백 추가
-            signature_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+            stamp_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
         except Exception as e:
             print(f"도장 이미지 삽입 오류: {str(e)}")
     else:
         # 도장 이미지가 없으면 공백만 추가
-        signature_p.add_run("  ").font.name = '맑은 고딕'
+        stamp_p.add_run(" ")  # 도장 없는 경우
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -647,7 +662,7 @@ def download_certificate(certificate_id):
                     </tr>
                     <tr>
                         <th>소속</th>
-                        <td>{company_name} {current_user.department or ''}</td>
+                        <td>{current_user.department or ''}</td>
                         <th>직위</th>
                         <td>{current_user.position or '사원'}</td>
                     </tr>
@@ -666,9 +681,9 @@ def download_certificate(certificate_id):
                 <p class="date">{today_str}</p>
                 
                 <p class="company">{company_name}</p>
+                <p style="text-align: center; margin-top: 5px; margin-bottom: 30px;">대표이사 {ceo_name}</p>
                 
-                <div style="text-align: right; margin-top: 40px;">
-                    <span style="display: inline-block; margin-right: 20px;">대표이사 {ceo_name}</span>
+                <div style="text-align: right; margin-top: 30px;">
                     <span style="display: inline-block; vertical-align: middle;">
                         <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image and ',' in company_info.stamp_image else ''}" 
                             class="stamp-img" 
