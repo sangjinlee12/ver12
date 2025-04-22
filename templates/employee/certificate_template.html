@@ -4,20 +4,36 @@
     <meta charset="UTF-8">
     <title>재직증명서</title>
     <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 40px;
             padding: 0;
+            position: relative;
+            min-height: 100vh;
+        }
+        .issue-date {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
         }
         h1 {
             text-align: center;
             font-size: 24px;
             margin-bottom: 40px;
+            margin-top: 20px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         table, th, td {
             border: 1px solid black;
@@ -33,10 +49,14 @@
         }
         .center {
             text-align: center;
+            font-size: 16px;
+            margin-top: 40px;
+            margin-bottom: 40px;
         }
         .date {
-            margin-top: 50px;
             text-align: center;
+            margin-top: 50px;
+            margin-bottom: 30px;
         }
         .company {
             text-align: center;
@@ -44,56 +64,74 @@
             font-size: 18px;
             margin-top: 20px;
         }
-        .ceo {
-            text-align: center;
-            margin-top: 10px;
+        .signature-area {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            margin-top: 30px;
+        }
+        .ceo-info {
+            text-align: right;
+            margin-right: 20px;
+            font-size: 16px;
         }
         .stamp {
             text-align: center;
-            margin-top: 20px;
-            color: #999;
+            margin-left: 10px;
+            position: relative;
+        }
+        .stamp img {
+            max-width: 70px;
+            max-height: 70px;
+            position: absolute;
+            right: 0;
+            bottom: -20px;
         }
     </style>
 </head>
 <body>
+    <div class="issue-date">발급일: {{ today.strftime('%Y년 %m월 %d일') }}</div>
+    
     <h1>재직증명서</h1>
     
     <table>
         <tr>
             <th>성명</th>
             <td>{{ user.name }}</td>
+            <th>주민등록번호</th>
+            <td>******-*******</td>
         </tr>
         <tr>
             <th>소속</th>
             <td>{{ company.name if company else '주식회사 에스에스전력' }} {{ user.department }}</td>
-        </tr>
-        <tr>
             <th>직위</th>
             <td>{{ user.position }}</td>
         </tr>
         <tr>
             <th>재직기간</th>
-            <td>{{ user.hire_date.strftime('%Y년 %m월 %d일') if user.hire_date else user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
+            <td colspan="3">{{ user.hire_date.strftime('%Y년 %m월 %d일') if user.hire_date else user.created_at.strftime('%Y년 %m월 %d일') }} ~ 현재</td>
         </tr>
         <tr>
             <th>용도</th>
-            <td>{{ certificate.purpose }}</td>
+            <td colspan="3">{{ certificate.purpose }}</td>
         </tr>
     </table>
     
-    <p class="center">위와 같이 재직하고 있음을 증명합니다.</p>
+    <p class="center">상기인은 위와 같이 재직하고 있음을 증명합니다.</p>
     
     <p class="date">{{ today.strftime('%Y년 %m월 %d일') }}</p>
     
     <p class="company">{{ company.name if company else '주식회사 에스에스전력' }}</p>
-    <p class="ceo">대표이사 {{ company.ceo_name if company else '' }}</p>
     
-    <p class="stamp">
-        {% if company and company.stamp_image %}
-        <img src="{{ company.stamp_image }}" alt="직인" style="max-width: 70px; max-height: 70px;">
-        {% else %}
-        (직인 생략)
-        {% endif %}
-    </p>
+    <div class="signature-area">
+        <div class="ceo-info">대표이사 {{ company.ceo_name if company and company.ceo_name else '김대표' }}</div>
+        <div class="stamp">
+            {% if company and company.stamp_image %}
+            <img src="{{ company.stamp_image }}" alt="직인">
+            {% else %}
+            (직인 생략)
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
