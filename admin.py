@@ -100,7 +100,7 @@ def upload_employees():
                 df = pd.read_excel(file_path, engine='xlrd')
             
             # 필수 열 확인
-            required_columns = ['username', 'name', 'password', 'email', 'department', 'position']
+            required_columns = ['username', 'name', 'password', 'email', 'resident_id_first', 'resident_id_last_digit', 'department', 'position']
             missing_columns = [col for col in required_columns if col not in df.columns]
             
             if missing_columns:
@@ -119,6 +119,8 @@ def upload_employees():
                     name = str(row['name']).strip()
                     password = str(row['password']).strip()
                     email = str(row['email']).strip()
+                    resident_id_first = str(row['resident_id_first']).strip()
+                    resident_id_last_digit = str(row['resident_id_last_digit']).strip()
                     department = str(row['department']).strip()
                     position = str(row['position']).strip()
                     
@@ -145,6 +147,8 @@ def upload_employees():
                         username=username,
                         email=email,
                         name=name,
+                        resident_id_first=resident_id_first,
+                        resident_id_last_digit=resident_id_last_digit,
                         department=department,
                         position=position,
                         hire_date=hire_date,
@@ -191,12 +195,12 @@ def download_employee_template():
     """직원 대량 등록 샘플 엑셀 파일 다운로드"""
     # 엑셀 파일 생성
     df = pd.DataFrame(columns=[
-        'username', 'name', 'password', 'email', 'department', 'position', 'hire_date'
+        'username', 'name', 'password', 'email', 'resident_id_first', 'resident_id_last_digit', 'department', 'position', 'hire_date'
     ])
     
     # 샘플 데이터 추가
-    df.loc[0] = ['employee1', '홍길동', 'password123', 'employee1@example.com', '영업팀', '사원', '2025-01-02']
-    df.loc[1] = ['employee2', '김철수', 'password123', 'employee2@example.com', '공사팀', '대리', '2024-09-15']
+    df.loc[0] = ['employee1', '홍길동', 'password123', 'employee1@example.com', '900101', '1', '영업팀', '사원', '2025-01-02']
+    df.loc[1] = ['employee2', '김철수', 'password123', 'employee2@example.com', '910215', '2', '공사팀', '대리', '2024-09-15']
     
     # BytesIO 객체에 엑셀 파일 저장
     output = io.BytesIO()
