@@ -72,7 +72,10 @@
                                         <button type="submit" class="text-red-600 hover:text-red-900">취소</button>
                                     </form>
                                 {% elif certificate.status == '발급완료' %}
-                                    <a href="{{ url_for('employee.download_certificate', certificate_id=certificate.id) }}" class="text-primary hover:text-primary-dark">다운로드</a>
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('employee.download_certificate', certificate_id=certificate.id) }}" class="text-primary hover:text-primary-dark">PDF</a>
+                                        <a href="{{ url_for('employee.download_certificate', certificate_id=certificate.id, format='docx') }}" class="text-primary hover:text-primary-dark">Word</a>
+                                    </div>
                                 {% endif %}
                             </td>
                         </tr>

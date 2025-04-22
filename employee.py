@@ -12,6 +12,9 @@ import io
 from weasyprint import HTML
 from PIL import Image, ImageDraw, ImageFont
 import base64
+import docx
+from docx.shared import Pt, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -285,6 +288,92 @@ def text_to_image(text, font_size=24, width=None, text_color=(0, 0, 0), bg_color
     return img_byte.getvalue()
 
 
+def create_docx_certificate(certificate, current_user, company_info):
+    """워드 파일로 재직증명서 생성"""
+    company_name = company_info.name if company_info else '주식회사 에스에스전력'
+    ceo_name = company_info.ceo_name if company_info else '대표이사'
+    
+    today = datetime.now().date()
+    today_str = f"{today.year}년 {today.month}월 {today.day}일"
+    
+    hire_date_str = ""
+    if current_user.hire_date:
+        hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+    else:
+        hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+    
+    # 워드 문서 생성
+    doc = docx.Document()
+    
+    # 스타일 설정
+    style = doc.styles['Normal']
+    style.font.name = '맑은 고딕'
+    style.font.size = Pt(12)
+    
+    # 제목 추가
+    title = doc.add_heading('재직증명서', level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 표 생성
+    table = doc.add_table(rows=5, cols=2)
+    table.style = 'Table Grid'
+    
+    # 표 너비 설정
+    for cell in table.columns[0].cells:
+        cell.width = Cm(3)
+    
+    # 표 내용 채우기
+    headers = ['성명', '소속', '직위', '재직기간', '용도']
+    values = [
+        current_user.name,
+        f"{company_name} {current_user.department or ''}",
+        current_user.position or '',
+        f"{hire_date_str} ~ 현재",
+        certificate.purpose
+    ]
+    
+    # 표에 데이터 추가
+    for i, (header, value) in enumerate(zip(headers, values)):
+        # 헤더 셀
+        header_cell = table.cell(i, 0)
+        header_cell.text = header
+        header_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # 값 셀
+        value_cell = table.cell(i, 1)
+        value_cell.text = value
+    
+    # 본문 텍스트
+    doc.add_paragraph()
+    p = doc.add_paragraph('위와 같이 재직하고 있음을 증명합니다.')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 날짜
+    doc.add_paragraph()
+    date_p = doc.add_paragraph(today_str)
+    date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 회사명
+    doc.add_paragraph()
+    company_p = doc.add_paragraph(company_name)
+    company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 대표자
+    ceo_p = doc.add_paragraph(f"대표이사 {ceo_name}")
+    ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 직인 위치
+    stamp_p = doc.add_paragraph('(직인 생략)')
+    stamp_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 문서를 메모리에 저장
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    return buffer
+
+
 @employee_bp.route('/download-certificate/<int:certificate_id>')
 @login_required
 def download_certificate(certificate_id):
@@ -303,30 +392,157 @@ def download_certificate(certificate_id):
     
     # 회사 정보 가져오기
     company_info = CompanyInfo.query.first()
+    company_name = company_info.name if company_info else '주식회사 에스에스전력'
+    ceo_name = company_info.ceo_name if company_info else '대표이사'
     
-    # HTML 템플릿 렌더링
-    today = datetime.now().date()
-    html_content = render_template(
-        'employee/certificate_template.html',
-        user=current_user,
-        certificate=certificate,
-        company=company_info,
-        today=today
-    )
+    # 파일 형식 결정 (기본: PDF)
+    file_format = request.args.get('format', 'pdf').lower()
     
-    # HTML을 PDF로 변환 (WeasyPrint 사용)
-    pdf = HTML(string=html_content).write_pdf()
-    
-    # PDF 응답 생성
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    
-    # 파일명 생성 및 인코딩
-    filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
-    encoded_filename = urllib.parse.quote(filename)
-    response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
-    
-    return response
+    try:
+        if file_format == 'docx':
+            # 워드 문서 생성
+            buffer = create_docx_certificate(certificate, current_user, company_info)
+            
+            # 응답 생성
+            response = make_response(buffer.getvalue())
+            response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            
+            # 파일명 생성 및 인코딩
+            filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.docx'
+            encoded_filename = urllib.parse.quote(filename)
+            response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
+            
+            return response
+        else:
+            # PDF 생성
+            today = datetime.now().date()
+            today_str = f"{today.year}년 {today.month}월 {today.day}일"
+            
+            hire_date_str = ""
+            if current_user.hire_date:
+                hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+            else:
+                hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+            
+            # 직접 HTML 문자열 구성
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>재직증명서</title>
+                <style>
+                    @font-face {{
+                        font-family: 'NanumGothic';
+                        src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumGothic@latest/NanumGothic.ttf');
+                    }}
+                    body {{
+                        font-family: 'NanumGothic', sans-serif;
+                        margin: 40px;
+                        padding: 0;
+                    }}
+                    h1 {{
+                        text-align: center;
+                        font-size: 24px;
+                        margin-bottom: 40px;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 30px;
+                    }}
+                    table, th, td {{
+                        border: 1px solid black;
+                    }}
+                    th {{
+                        background-color: #f2f2f2;
+                        width: 120px;
+                        padding: 8px;
+                        text-align: center;
+                    }}
+                    td {{
+                        padding: 8px;
+                    }}
+                    .center {{
+                        text-align: center;
+                    }}
+                    .date {{
+                        margin-top: 50px;
+                        text-align: center;
+                    }}
+                    .company {{
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 18px;
+                        margin-top: 20px;
+                    }}
+                    .ceo {{
+                        text-align: center;
+                        margin-top: 10px;
+                    }}
+                    .stamp {{
+                        text-align: center;
+                        margin-top: 20px;
+                        color: #999;
+                    }}
+                </style>
+            </head>
+            <body>
+                <h1>재직증명서</h1>
+                
+                <table>
+                    <tr>
+                        <th>성명</th>
+                        <td>{current_user.name}</td>
+                    </tr>
+                    <tr>
+                        <th>소속</th>
+                        <td>{company_name} {current_user.department or ''}</td>
+                    </tr>
+                    <tr>
+                        <th>직위</th>
+                        <td>{current_user.position or ''}</td>
+                    </tr>
+                    <tr>
+                        <th>재직기간</th>
+                        <td>{hire_date_str} ~ 현재</td>
+                    </tr>
+                    <tr>
+                        <th>용도</th>
+                        <td>{certificate.purpose}</td>
+                    </tr>
+                </table>
+                
+                <p class="center">위와 같이 재직하고 있음을 증명합니다.</p>
+                
+                <p class="date">{today_str}</p>
+                
+                <p class="company">{company_name}</p>
+                <p class="ceo">대표이사 {ceo_name}</p>
+                
+                <p class="stamp">(직인 생략)</p>
+            </body>
+            </html>
+            """
+            
+            # HTML을 PDF로 변환 (WeasyPrint 사용)
+            pdf = HTML(string=html).write_pdf()
+            
+            # PDF 응답 생성
+            response = make_response(pdf)
+            response.headers['Content-Type'] = 'application/pdf'
+            
+            # 파일명 생성 및 인코딩
+            filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
+            encoded_filename = urllib.parse.quote(filename)
+            response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
+            
+            return response
+    except Exception as e:
+        # 오류 발생 시 로그 출력 및 처리
+        print(f"파일 생성 오류: {str(e)}")
+        flash('파일 생성 중 오류가 발생했습니다.', 'danger')
+        return redirect(url_for('employee.my_certificates'))
 
 
 @employee_bp.route('/cancel-certificate/<int:certificate_id>', methods=['POST'])
