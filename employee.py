@@ -446,15 +446,32 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
 
-    # 회사명 추가
+    # 회사명과 도장 이미지 추가 (회사 이름 옆에 도장 배치)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_p.paragraph_format.space_before = Pt(5)
+    company_p.paragraph_format.space_after = Pt(5)
+    
+    # 회사명 추가
     company_run = company_p.add_run(company_name)
     company_run.font.name = '맑은 고딕'
     company_run.font.bold = True
     company_run.font.size = Pt(14)
     
-    # 대표이사 이름과 도장 (중앙 정렬)
+    # 공백 추가 (회사명과 도장 사이)
+    company_p.add_run("  ").font.name = '맑은 고딕'
+    
+    # 도장 이미지 추가 (회사명 옆에)
+    if company_info and company_info.stamp_image:
+        try:
+            # 도장 이미지가 있으면 사용
+            stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
+            stamp_io = io.BytesIO(stamp_data)
+            company_p.add_run().add_picture(stamp_io, width=Cm(2.0), height=Cm(2.0))
+        except Exception as e:
+            print(f"도장 이미지 삽입 오류: {str(e)}")
+    
+    # 대표이사 이름 (중앙 정렬)
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     ceo_p.paragraph_format.space_before = Pt(5)
@@ -463,20 +480,6 @@ def create_docx_certificate(certificate, current_user, company_info):
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Pt(14)  # 글씨 크기 키우기
     ceo_run.font.bold = True    # 글씨 굵게
-    
-    # 도장 이미지 추가 (같은 문단 안에)
-    if company_info and company_info.stamp_image:
-        try:
-            # 도장 이미지가 있으면 사용
-            stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
-            stamp_io = io.BytesIO(stamp_data)
-            ceo_p.add_run("  ").font.name = '맑은 고딕'  # 공백 추가
-            ceo_p.add_run().add_picture(stamp_io, width=Cm(2.0), height=Cm(2.0))
-        except Exception as e:
-            print(f"도장 이미지 삽입 오류: {str(e)}")
-    else:
-        # 도장 이미지가 없으면 공백만 추가
-        ceo_p.add_run("  ").font.name = '맑은 고딕'  # 공백 추가
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -678,14 +681,17 @@ def download_certificate(certificate_id):
                 
                 <p class="date">{today_str}</p>
                 
-                <p class="company">{company_name}</p>
-                <div style="text-align: center; margin-top: 5px; margin-bottom: 30px;">
-                    <span style="font-size: 16px; font-weight: bold;">대표이사 {ceo_name}</span>
+                <div style="text-align: center; margin-top: 5px; margin-bottom: 10px;">
+                    <span style="font-size: 18px; font-weight: bold; display: inline-block; vertical-align: middle;">{company_name}</span>
                     <span style="display: inline-block; vertical-align: middle; margin-left: 10px;">
                         <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image and ',' in company_info.stamp_image else ''}" 
                             style="max-width: 70px; max-height: 70px; vertical-align: middle;" 
                             onerror="this.style.display='none';" />
                     </span>
+                </div>
+                
+                <div style="text-align: center; margin-top: 5px; margin-bottom: 30px;">
+                    <span style="font-size: 16px; font-weight: bold;">대표이사 {ceo_name}</span>
                 </div>
             </body>
             </html>
