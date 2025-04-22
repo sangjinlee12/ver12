@@ -325,18 +325,29 @@ def create_docx_certificate(certificate, current_user, company_info):
     style.font.name = '맑은 고딕'
     style.font.size = Pt(12)
     
+    # 발급일 추가 (오른쪽 상단)
+    issue_date_p = doc.add_paragraph()
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    issue_date_run = issue_date_p.add_run(f'발급일: {today_str}')
+    issue_date_run.font.name = '맑은 고딕'
+    issue_date_run.font.size = Pt(10)
+    
     # 제목 추가 - 가운데 정렬, 큰 글씨
     title = doc.add_heading('', level=0)
-    title_run = title.add_run('재 직 증 명 서')
+    title_run = title.add_run('재직증명서')
     title_run.font.name = '맑은 고딕'
     title_run.font.size = Pt(18)
     title_run.font.bold = True
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # 여백 추가
-    doc.add_paragraph()
+    # 제목 밑줄 추가
+    border_p = doc.add_paragraph()
+    border_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    border_run = border_p.add_run('____________________')
+    border_run.font.size = Pt(14)
+    border_p.paragraph_format.space_after = Pt(20)
     
-    # 표 생성 - 샘플 양식과 동일하게 4x3 표로 구성
+    # 표 생성
     table = doc.add_table(rows=4, cols=4)
     table.style = 'Table Grid'
     
@@ -346,99 +357,63 @@ def create_docx_certificate(certificate, current_user, company_info):
     
     # 1행: 성명, 주민등록번호
     row = table.rows[0]
-    row.cells[0].text = '성 명'
-    row.cells[0].width = Cm(2)
+    row.cells[0].text = '성명'
     row.cells[1].text = current_user.name
-    row.cells[1].width = Cm(5)
-    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
-    row.cells[1].paragraphs[0].runs[0].font.bold = True
     row.cells[2].text = '주민등록번호'
-    row.cells[2].width = Cm(3)
-    row.cells[3].text = '9xxxxx-1xxxxxx'
-    row.cells[3].width = Cm(6)
-    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
-    row.cells[3].paragraphs[0].runs[0].font.bold = True
+    row.cells[3].text = '******-*******'
     
-    # 2행: 주소 (병합 셀)
+    # 2행: 소속, 직위
     row = table.rows[1]
-    row.cells[0].text = '주 소'
-    row.cells[0].width = Cm(2)
-    # 주소 셀 병합 (2, 3, 4번 셀)
-    cell = row.cells[1]
-    cell.merge(row.cells[2])
-    cell.merge(row.cells[3])
-    cell.text = ""  # 주소는 비워둠
+    row.cells[0].text = '소속'
+    row.cells[1].text = f"{company_name} {current_user.department or ''}"
+    row.cells[2].text = '직위'
+    row.cells[3].text = current_user.position or '사원'
     
-    # 3행: 소속, 직위, 팀장
+    # 3행: 재직기간
     row = table.rows[2]
-    row.cells[0].text = '소 속'
-    row.cells[0].width = Cm(2)
-    row.cells[1].text = current_user.department or '영업팀'
-    row.cells[1].width = Cm(5)
-    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
-    row.cells[1].paragraphs[0].runs[0].font.bold = True
-    row.cells[2].text = '직 위'
-    row.cells[2].width = Cm(3)
-    row.cells[3].text = current_user.position or '팀장'
-    row.cells[3].width = Cm(6)
-    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
-    row.cells[3].paragraphs[0].runs[0].font.bold = True
-    
-    # 4행: 기간 (병합 셀)
-    row = table.rows[3]
-    row.cells[0].text = '기 간'
-    row.cells[0].width = Cm(2)
-    # 기간 셀 병합 (2, 3, 4번 셀)
+    row.cells[0].text = '재직기간'
+    # 재직기간 셀 병합
     cell = row.cells[1]
     cell.merge(row.cells[2])
     cell.merge(row.cells[3])
-    duration_text = f"{hire_date_str}~현재"
-    cell.text = duration_text
-    cell.paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
-    cell.paragraphs[0].runs[0].font.bold = True
+    cell.text = f"{hire_date_str} ~ 현재"
     
-    # 모든 셀 가운데 정렬(수평, 수직 모두)과 여백 설정
+    # 4행: 용도
+    row = table.rows[3]
+    row.cells[0].text = '용도'
+    # 용도 셀 병합
+    cell = row.cells[1]
+    cell.merge(row.cells[2])
+    cell.merge(row.cells[3])
+    cell.text = certificate.purpose if certificate and certificate.purpose else '재직증명용'
+    
+    # 모든 셀 정렬과 여백 설정
     for row in table.rows:
-        # 행 높이 설정 - 더 넓은 여백을 위해
-        row.height = Cm(1.2)
+        row.height = Cm(1.0)
         row.height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
         
         for cell in row.cells:
-            # 셀 수직 정렬 - 중앙
-            cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER = 1
-            
+            # 셀 텍스트 가운데 정렬
             for paragraph in cell.paragraphs:
-                # 단락 수평 정렬 - 중앙
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                # 단락 간격 설정
-                paragraph.space_before = Pt(0)
-                paragraph.space_after = Pt(0)
-                
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
+                
+            # 헤더 셀 배경색 설정
+            if cell.text in ['성명', '주민등록번호', '소속', '직위', '재직기간', '용도']:
+                try:
+                    shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="F2F2F2"/>')
+                    cell._element.get_or_add_tcPr().append(shading)
+                except Exception as e:
+                    print(f"셀 배경색 설정 오류: {str(e)}")
     
-    # 여백 추가
-    doc.add_paragraph()
-    doc.add_paragraph()
-    
-    # 본문 텍스트
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run('상기와 같이 재직 중임을 증명함')
-    run.font.name = '맑은 고딕'
-    
-    # 날짜 부분을 위한 여백
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    
-    # 용도
-    usage_p = doc.add_paragraph()
-    usage_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    usage_p.paragraph_format.left_indent = Cm(2)
-    usage_run = usage_p.add_run(f"용도 : {certificate.purpose}")
-    usage_run.font.name = '맑은 고딕'
-    usage_run.font.color.rgb = docx.shared.RGBColor(0, 0, 0)
+    # 증명 문구 추가
+    p_confirm = doc.add_paragraph()
+    p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_confirm.paragraph_format.space_before = Pt(30)
+    p_confirm.paragraph_format.space_after = Pt(30)
+    confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
+    confirm_run.font.name = '맑은 고딕'
     
     # 여백 추가
     doc.add_paragraph()
@@ -452,60 +427,43 @@ def create_docx_certificate(certificate, current_user, company_info):
     for _ in range(3):
         doc.add_paragraph()
     
-    # 회사명 및 발급일자 추가
-    company_info_p = doc.add_paragraph()
-    company_info_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_info_p.add_run(f"회사명 : {company_name}").font.name = '맑은 고딕'
+    # 날짜 추가
+    date_p = doc.add_paragraph()
+    date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    date_run = date_p.add_run(today_str)
+    date_run.font.name = '맑은 고딕'
+    date_run.font.size = Pt(12)
+
+    # 회사명 추가
+    company_p = doc.add_paragraph()
+    company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_run = company_p.add_run(company_name)
+    company_run.font.name = '맑은 고딕'
+    company_run.font.bold = True
+    company_run.font.size = Pt(14)
     
-    issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    issue_date_p.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
+    # 대표이사 서명 (표 없이 오른쪽 정렬)
+    signature_p = doc.add_paragraph()
+    signature_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    signature_p.paragraph_format.space_before = Pt(20)
     
-    # 간격 추가
-    for _ in range(3):
-        doc.add_paragraph()
+    # 대표이사 이름 추가
+    signature_run = signature_p.add_run(f"대표이사 {ceo_name}")
+    signature_run.font.name = '맑은 고딕'
     
-    # 대표이사와 도장이 있는 테이블 생성
-    signature_table = doc.add_table(rows=1, cols=2)
-    signature_table.style = 'Table Grid'  # 테두리 있는 스타일
-    signature_table.autofit = False
-    signature_table.width = Cm(10)  # 테이블 너비 설정
-    
-    # 테이블 가운데 정렬을 위한 설정
-    last_paragraph = doc.paragraphs[-1]
-    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    # 테이블 셀 너비 설정
-    for row in signature_table.rows:
-        for cell in row.cells:
-            cell.width = Cm(5)  # 셀 너비 균등하게
-    
-    # 대표이사 텍스트 셀
-    cell = signature_table.cell(0, 0)
-    p = cell.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run('대표이사').font.name = '맑은 고딕'
-    
-    # 대표자 이름 및 도장 이미지 셀
-    cell = signature_table.cell(0, 1)
-    p = cell.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run(ceo_name + '  ').font.name = '맑은 고딕'
-    
-    # 도장 이미지 삽입
+    # 도장 이미지 삽입 (옆에 붙여서)
     if company_info and company_info.stamp_image:
         try:
             # 도장 이미지가 있으면 사용
             stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
             stamp_io = io.BytesIO(stamp_data)
-            p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+            signature_p.add_run("  ").font.name = '맑은 고딕'  # 공백 추가
+            signature_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
         except Exception as e:
             print(f"도장 이미지 삽입 오류: {str(e)}")
-            # 오류 시 (인) 텍스트로 대체
-            p.add_run("(인)").font.name = '맑은 고딕'
     else:
-        # 도장 이미지가 없으면 (인) 텍스트 표시
-        p.add_run("(인)").font.name = '맑은 고딕'
+        # 도장 이미지가 없으면 공백만 추가
+        signature_p.add_run("  ").font.name = '맑은 고딕'
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -711,11 +669,10 @@ def download_certificate(certificate_id):
                 
                 <div style="text-align: right; margin-top: 40px;">
                     <span style="display: inline-block; margin-right: 20px;">대표이사 {ceo_name}</span>
-                    <span style="display: inline-block;">
+                    <span style="display: inline-block; vertical-align: middle;">
                         <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image and ',' in company_info.stamp_image else ''}" 
                             class="stamp-img" 
-                            onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
-                        <span style="display:none;">(직인 생략)</span>
+                            onerror="this.style.display='none';" />
                     </span>
                 </div>
             </body>
