@@ -312,13 +312,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 워드 문서 생성
     doc = docx.Document()
     
-    # 페이지 여백 설정 (단위: cm) - 여백 축소
+    # 페이지 여백 설정 (단위: cm) - 여백 더 축소
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(1.5)
-        section.bottom_margin = Cm(1.5)
-        section.left_margin = Cm(2)
-        section.right_margin = Cm(2)
+        section.top_margin = Cm(1.0)  # 상단 여백 축소
+        section.bottom_margin = Cm(1.0)  # 하단 여백 축소
+        section.left_margin = Cm(2.0)
+        section.right_margin = Cm(2.0)
     
     # 스타일 설정
     style = doc.styles['Normal']
@@ -435,11 +435,11 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.size = Pt(12)
     date_run.font.bold = True  # 날짜를 굵게 표시
     
-    # 추가 여백 - 더 많은 공간을 추가하여 회사정보가 하단에 위치하도록 함
-    for i in range(10):  # 충분한 여백 추가
+    # 추가 여백 - 더 많은 공간을 추가하되 페이지를 넘기지 않도록 조정
+    for i in range(5):  # 여백 더 줄이기 (6에서 5으로 감소)
         empty_p = doc.add_paragraph()
-        empty_p.paragraph_format.space_before = Pt(12)
-        empty_p.paragraph_format.space_after = Pt(12)
+        empty_p.paragraph_format.space_before = Pt(8)  # 여백 줄이기
+        empty_p.paragraph_format.space_after = Pt(8)   # 여백 줄이기
     
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
