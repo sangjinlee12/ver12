@@ -340,12 +340,9 @@ def create_docx_certificate(certificate, current_user, company_info):
     title_run.font.bold = True
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # 제목 밑줄 추가
-    border_p = doc.add_paragraph()
-    border_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    border_run = border_p.add_run('____________________')
-    border_run.font.size = Pt(14)
-    border_p.paragraph_format.space_after = Pt(20)
+    # 제목 아래 여백 추가
+    space_p = doc.add_paragraph()
+    space_p.paragraph_format.space_after = Pt(20)
     
     # 표 생성
     table = doc.add_table(rows=4, cols=4)
@@ -580,7 +577,6 @@ def download_certificate(certificate_id):
                         font-size: 24px;
                         margin-bottom: 40px;
                         margin-top: 20px;
-                        border-bottom: 1px solid #000;
                         padding-bottom: 10px;
                     }}
                     table {{
