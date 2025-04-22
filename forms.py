@@ -16,6 +16,14 @@ class RegisterForm(FlaskForm):
     username = StringField('아이디', validators=[DataRequired('아이디를 입력하세요.'), Length(min=4, max=20, message='아이디는 4-20자 사이여야 합니다.')])
     email = StringField('이메일', validators=[DataRequired('이메일을 입력하세요.'), Email('올바른 이메일 형식이 아닙니다.')])
     name = StringField('이름', validators=[DataRequired('이름을 입력하세요.')])
+    resident_id_first = StringField('주민번호 앞자리', validators=[
+        DataRequired('주민번호 앞자리를 입력하세요.'),
+        Length(min=6, max=6, message='주민번호 앞자리는 6자리여야 합니다.')
+    ])
+    resident_id_last_digit = StringField('주민번호 뒷자리 첫번째 숫자', validators=[
+        DataRequired('주민번호 뒷자리 첫번째 숫자를 입력하세요.'),
+        Length(min=1, max=1, message='주민번호 뒷자리 첫번째 숫자만 입력하세요.')
+    ])
     password = PasswordField('비밀번호', validators=[
         DataRequired('비밀번호를 입력하세요.'),
         Length(min=6, message='비밀번호는 최소 6자 이상이어야 합니다.')

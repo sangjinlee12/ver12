@@ -59,6 +59,8 @@ def register():
             username=form.username.data,
             email=form.email.data,
             name=form.name.data,
+            resident_id_first=form.resident_id_first.data,
+            resident_id_last_digit=form.resident_id_last_digit.data,
             department=form.department.data,
             position=form.position.data,
             role=role

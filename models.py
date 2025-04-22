@@ -40,6 +40,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     name = db.Column(db.String(100), nullable=False)  # 사용자 실명
+    resident_id_first = db.Column(db.String(6))  # 주민번호 앞자리
+    resident_id_last_digit = db.Column(db.String(1))  # 주민번호 뒷자리 첫번째 숫자
     role = db.Column(db.String(20), nullable=False, default=Role.EMPLOYEE)  # 역할 (직원/관리자)
     department = db.Column(db.String(50))  # 부서
     position = db.Column(db.String(50))  # 직급
