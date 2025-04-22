@@ -445,11 +445,33 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_name_run = company_p.add_run(f"회사명 :    {company_name}")
     company_name_run.font.name = '맑은 고딕'
     
-    # 대표자 및 도장 이미지
-    ceo_p = doc.add_paragraph()
-    ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_run = ceo_p.add_run(f"대표이사 :    {ceo_name}       ")
+    # 대표자와 도장 이미지를 위한 표 생성
+    table = doc.add_table(rows=1, cols=2)
+    table.style = 'Table Grid'
+    table.autofit = False
+    table.allow_autofit = False
+    
+    # 테이블 경계선 제거
+    for cell in table.rows[0].cells:
+        for paragraph in cell.paragraphs:
+            for border in ['top', 'left', 'bottom', 'right']:
+                setattr(cell.border, border, docx.shared.Pt(0))
+    
+    # 대표자 이름 셀
+    ceo_cell = table.cell(0, 0)
+    ceo_cell.width = Cm(10)
+    ceo_cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER
+    ceo_p = ceo_cell.paragraphs[0]
+    ceo_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    ceo_run = ceo_p.add_run(f"대표이사 :    {ceo_name}  ")
     ceo_run.font.name = '맑은 고딕'
+    
+    # 도장 이미지 셀
+    stamp_cell = table.cell(0, 1)
+    stamp_cell.width = Cm(3)
+    stamp_cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER
+    stamp_p = stamp_cell.paragraphs[0]
+    stamp_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     
     # 도장 이미지 삽입
     if company_info and company_info.stamp_image:
@@ -457,14 +479,14 @@ def create_docx_certificate(certificate, current_user, company_info):
             # 도장 이미지가 있으면 사용
             stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
             stamp_io = io.BytesIO(stamp_data)
-            ceo_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+            stamp_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
         except Exception as e:
             print(f"도장 이미지 삽입 오류: {str(e)}")
             # 오류 시 (인) 텍스트로 대체
-            ceo_p.add_run("(인)").font.name = '맑은 고딕'
+            stamp_p.add_run("(인)").font.name = '맑은 고딕'
     else:
         # 도장 이미지가 없으면 (인) 텍스트 표시
-        ceo_p.add_run("(인)").font.name = '맑은 고딕'
+        stamp_p.add_run("(인)").font.name = '맑은 고딕'
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
@@ -633,7 +655,15 @@ def download_certificate(certificate_id):
                 
                 <div class="company-info">
                     <p>회사명 : {company_name}</p>
-                    <p>대표이사 : {ceo_name} <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" style="width: 50px; height: 50px; vertical-align: middle;" onerror="this.style.display='none';this.nextSibling.style.display='inline';" /><span style="display:none;">(인)</span></p>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                        <div style="text-align: right; min-width: 100px;">대표이사 : {ceo_name}</div>
+                        <div style="margin-top: 5px;">
+                            <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
+                                style="width: 50px; height: 50px; display: inline-block;" 
+                                onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
+                            <span style="display:none;">(인)</span>
+                        </div>
+                    </div>
                 </div>
             </body>
             </html>
