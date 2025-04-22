@@ -298,73 +298,153 @@ def create_docx_certificate(certificate, current_user, company_info):
     
     hire_date_str = ""
     if current_user.hire_date:
-        hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+        hire_date_str = current_user.hire_date.strftime('20%y년 %m월 %d일')
     else:
-        hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+        hire_date_str = current_user.created_at.strftime('20%y년 %m월 %d일')
     
     # 워드 문서 생성
     doc = docx.Document()
+    
+    # 페이지 여백 설정 (단위: cm)
+    sections = doc.sections
+    for section in sections:
+        section.top_margin = Cm(2.54)
+        section.bottom_margin = Cm(2.54)
+        section.left_margin = Cm(2.54)
+        section.right_margin = Cm(2.54)
     
     # 스타일 설정
     style = doc.styles['Normal']
     style.font.name = '맑은 고딕'
     style.font.size = Pt(12)
     
-    # 제목 추가
-    title = doc.add_heading('재직증명서', level=1)
+    # 제목 추가 - 가운데 정렬, 큰 글씨
+    title = doc.add_heading('', level=0)
+    title_run = title.add_run('재 직 증 명 서')
+    title_run.font.name = '맑은 고딕'
+    title_run.font.size = Pt(18)
+    title_run.font.bold = True
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # 표 생성
-    table = doc.add_table(rows=5, cols=2)
+    # 여백 추가
+    doc.add_paragraph()
+    
+    # 표 생성 - 샘플 양식과 동일하게 4x3 표로 구성
+    table = doc.add_table(rows=4, cols=4)
     table.style = 'Table Grid'
     
     # 표 너비 설정
-    for cell in table.columns[0].cells:
-        cell.width = Cm(3)
+    table.autofit = False
+    table.width = Cm(16)  # A4 너비는 약 21cm, 여백 제외하면 약 16cm
     
-    # 표 내용 채우기
-    headers = ['성명', '소속', '직위', '재직기간', '용도']
-    values = [
-        current_user.name,
-        f"{company_name} {current_user.department or ''}",
-        current_user.position or '',
-        f"{hire_date_str} ~ 현재",
-        certificate.purpose
-    ]
+    # 1행: 성명, 주민등록번호
+    row = table.rows[0]
+    row.cells[0].text = '성 명'
+    row.cells[0].width = Cm(2)
+    row.cells[1].text = current_user.name
+    row.cells[1].width = Cm(5)
+    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[1].paragraphs[0].runs[0].font.bold = True
+    row.cells[2].text = '주민등록번호'
+    row.cells[2].width = Cm(3)
+    row.cells[3].text = '9xxxxx-1xxxxxx'
+    row.cells[3].width = Cm(6)
+    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[3].paragraphs[0].runs[0].font.bold = True
     
-    # 표에 데이터 추가
-    for i, (header, value) in enumerate(zip(headers, values)):
-        # 헤더 셀
-        header_cell = table.cell(i, 0)
-        header_cell.text = header
-        header_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        # 값 셀
-        value_cell = table.cell(i, 1)
-        value_cell.text = value
+    # 2행: 주소 (병합 셀)
+    row = table.rows[1]
+    row.cells[0].text = '주 소'
+    row.cells[0].width = Cm(2)
+    # 주소 셀 병합 (2, 3, 4번 셀)
+    cell = row.cells[1]
+    cell.merge(row.cells[2])
+    cell.merge(row.cells[3])
+    cell.text = ""  # 주소는 비워둠
+    
+    # 3행: 소속, 직위, 팀장
+    row = table.rows[2]
+    row.cells[0].text = '소 속'
+    row.cells[0].width = Cm(2)
+    row.cells[1].text = company_info.name if company_info and company_info.name else current_user.department or '영업팀'
+    row.cells[1].width = Cm(5)
+    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[1].paragraphs[0].runs[0].font.bold = True
+    row.cells[2].text = '직 위'
+    row.cells[2].width = Cm(3)
+    row.cells[3].text = current_user.position or '팀장'
+    row.cells[3].width = Cm(6)
+    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[3].paragraphs[0].runs[0].font.bold = True
+    
+    # 4행: 기간 (병합 셀)
+    row = table.rows[3]
+    row.cells[0].text = '기 간'
+    row.cells[0].width = Cm(2)
+    # 기간 셀 병합 (2, 3, 4번 셀)
+    cell = row.cells[1]
+    cell.merge(row.cells[2])
+    cell.merge(row.cells[3])
+    duration_text = f"{hire_date_str}~현재"
+    cell.text = duration_text
+    cell.paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    cell.paragraphs[0].runs[0].font.bold = True
+    
+    # 모든 셀 가운데 정렬과 여백 설정
+    for row in table.rows:
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for run in paragraph.runs:
+                    run.font.name = '맑은 고딕'
+    
+    # 여백 추가
+    doc.add_paragraph()
+    doc.add_paragraph()
     
     # 본문 텍스트
-    doc.add_paragraph()
-    p = doc.add_paragraph('위와 같이 재직하고 있음을 증명합니다.')
+    p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run('상기와 같이 재직 중임을 증명함')
+    run.font.name = '맑은 고딕'
     
-    # 날짜
+    # 날짜 부분을 위한 여백
     doc.add_paragraph()
-    date_p = doc.add_paragraph(today_str)
-    date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 용도
+    usage_p = doc.add_paragraph()
+    usage_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    usage_p.paragraph_format.left_indent = Cm(2)
+    usage_run = usage_p.add_run(f"용도 : {certificate.purpose}")
+    usage_run.font.name = '맑은 고딕'
+    usage_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    
+    # 여백 추가
+    doc.add_paragraph()
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 주소 부분
+    address_p = doc.add_paragraph()
+    address_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    address_run = address_p.add_run(f"주소 : (         )")
+    address_run.font.name = '맑은 고딕'
     
     # 회사명
-    doc.add_paragraph()
-    company_p = doc.add_paragraph(company_name)
+    company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_name_run = company_p.add_run(f"회사명 :    ○ ○ 컴퍼니")
+    company_name_run.font.name = '맑은 고딕'
+    company_name_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
     
     # 대표자
-    ceo_p = doc.add_paragraph(f"대표이사 {ceo_name}")
+    ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    # 직인 위치
-    stamp_p = doc.add_paragraph('(직인 생략)')
-    stamp_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ceo_run = ceo_p.add_run(f"대표이사 :    박대표       (인)")
+    ceo_run.font.name = '맑은 고딕'
+    ceo_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
@@ -414,15 +494,25 @@ def download_certificate(certificate_id):
             
             return response
         else:
+            # 로컬 폰트 파일 읽기
+            font_path = './static/fonts/NanumGothic.ttf'
+            font_data = ""
+            try:
+                with open(font_path, 'rb') as f:
+                    font_data = base64.b64encode(f.read()).decode('utf-8')
+            except Exception as e:
+                print(f"폰트 로드 오류: {str(e)}")
+                font_data = ""
+            
             # PDF 생성
             today = datetime.now().date()
             today_str = f"{today.year}년 {today.month}월 {today.day}일"
             
             hire_date_str = ""
             if current_user.hire_date:
-                hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
+                hire_date_str = current_user.hire_date.strftime('20%y년 %m월 %d일')
             else:
-                hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
+                hire_date_str = current_user.created_at.strftime('20%y년 %m월 %d일')
             
             # 직접 HTML 문자열 구성
             html = f"""
@@ -433,18 +523,22 @@ def download_certificate(certificate_id):
                 <title>재직증명서</title>
                 <style>
                     @font-face {{
-                        font-family: 'NanumGothic';
-                        src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumGothic@latest/NanumGothic.ttf');
+                        font-family: 'NanumGothicCustom';
+                        src: url('data:application/font-woff;charset=utf-8;base64,{font_data}') format('truetype');
+                        font-weight: normal;
+                        font-style: normal;
                     }}
                     body {{
-                        font-family: 'NanumGothic', sans-serif;
+                        font-family: 'NanumGothicCustom', Arial, sans-serif;
                         margin: 40px;
                         padding: 0;
+                        line-height: 1.5;
                     }}
                     h1 {{
                         text-align: center;
                         font-size: 24px;
                         margin-bottom: 40px;
+                        letter-spacing: 5px;
                     }}
                     table {{
                         width: 100%;
@@ -455,35 +549,40 @@ def download_certificate(certificate_id):
                         border: 1px solid black;
                     }}
                     th {{
-                        background-color: #f2f2f2;
-                        width: 120px;
+                        width: 15%;
                         padding: 8px;
                         text-align: center;
+                        font-weight: normal;
                     }}
                     td {{
                         padding: 8px;
-                    }}
-                    .center {{
                         text-align: center;
                     }}
-                    .date {{
-                        margin-top: 50px;
-                        text-align: center;
-                    }}
-                    .company {{
-                        text-align: center;
+                    .red-text {{
+                        color: #FF0000;
                         font-weight: bold;
-                        font-size: 18px;
-                        margin-top: 20px;
                     }}
-                    .ceo {{
+                    .center-text {{
                         text-align: center;
-                        margin-top: 10px;
+                        margin: 30px 0;
                     }}
-                    .stamp {{
+                    .purpose {{
+                        text-align: left;
+                        margin-top: 100px;
+                        margin-left: 80px;
+                        color: #FF0000;
+                    }}
+                    .company-info {{
                         text-align: center;
-                        margin-top: 20px;
-                        color: #999;
+                        margin-top: 80px;
+                    }}
+                    .company-name {{
+                        color: #FF0000;
+                        margin: 10px 0;
+                    }}
+                    .ceo-name {{
+                        color: #FF0000;
+                        margin: 10px 0;
                     }}
                 </style>
             </head>
@@ -492,35 +591,36 @@ def download_certificate(certificate_id):
                 
                 <table>
                     <tr>
-                        <th>성명</th>
-                        <td>{current_user.name}</td>
+                        <th>성 명</th>
+                        <td style="width: 25%"><span class="red-text">{current_user.name}</span></td>
+                        <th>주민등록번호</th>
+                        <td><span class="red-text">9xxxxx-1xxxxxx</span></td>
                     </tr>
                     <tr>
-                        <th>소속</th>
-                        <td>{company_name} {current_user.department or ''}</td>
+                        <th>주 소</th>
+                        <td colspan="3"></td>
                     </tr>
                     <tr>
-                        <th>직위</th>
-                        <td>{current_user.position or ''}</td>
+                        <th>소 속</th>
+                        <td><span class="red-text">{company_info.name if company_info and company_info.name else current_user.department or '영업팀'}</span></td>
+                        <th>직 위</th>
+                        <td><span class="red-text">{current_user.position or '팀장'}</span></td>
                     </tr>
                     <tr>
-                        <th>재직기간</th>
-                        <td>{hire_date_str} ~ 현재</td>
-                    </tr>
-                    <tr>
-                        <th>용도</th>
-                        <td>{certificate.purpose}</td>
+                        <th>기 간</th>
+                        <td colspan="3"><span class="red-text">{hire_date_str.replace('년', '년 ').replace('월', '월 ').replace('일', '일')}~현재</span></td>
                     </tr>
                 </table>
                 
-                <p class="center">위와 같이 재직하고 있음을 증명합니다.</p>
+                <p class="center-text">상기와 같이 재직 중임을 증명함</p>
                 
-                <p class="date">{today_str}</p>
+                <p class="purpose">용도 : <span class="red-text">{certificate.purpose}</span></p>
                 
-                <p class="company">{company_name}</p>
-                <p class="ceo">대표이사 {ceo_name}</p>
-                
-                <p class="stamp">(직인 생략)</p>
+                <div class="company-info">
+                    <p>주소 : (         )</p>
+                    <p class="company-name">회사명 :    ○ ○ 컴퍼니</p>
+                    <p class="ceo-name">대표이사 :    박대표       (인)</p>
+                </div>
             </body>
             </html>
             """
