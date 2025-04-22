@@ -1,0 +1,72 @@
+==> Cloning from https://github.com/sangjinlee12/lsj2421
+==> Checking out commit be816a63fe21310e8842c237ade59c40e267d600 in branch main
+==> Using Python version 3.11.11 (default)
+==> Docs on specifying a Python version: https://render.com/docs/python-version
+==> Using Poetry version 1.7.1 (default)
+==> Docs on specifying a Poetry version: https://render.com/docs/poetry-version
+==> Running build command 'pip install -r requirements.txt'...
+Collecting email-validator==2.1.1 (from -r requirements.txt (line 1))
+  Downloading email_validator-2.1.1-py3-none-any.whl.metadata (26 kB)
+Collecting Flask==2.2.3 (from -r requirements.txt (line 2))
+  Downloading Flask-2.2.3-py3-none-any.whl.metadata (3.9 kB)
+Collecting Flask-Login==0.6.3 (from -r requirements.txt (line 3))
+  Downloading Flask_Login-0.6.3-py3-none-any.whl.metadata (5.8 kB)
+Collecting Flask-SQLAlchemy==3.1.1 (from -r requirements.txt (line 4))
+  Downloading flask_sqlalchemy-3.1.1-py3-none-any.whl.metadata (3.4 kB)
+Collecting Flask-WTF==1.2.1 (from -r requirements.txt (line 5))
+  Downloading flask_wtf-1.2.1-py3-none-any.whl.metadata (3.4 kB)
+Collecting gunicorn==21.2.0 (from -r requirements.txt (line 6))
+  Downloading gunicorn-21.2.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting openpyxl==3.1.2 (from -r requirements.txt (line 7))
+  Downloading openpyxl-3.1.2-py2.py3-none-any.whl.metadata (2.5 kB)
+Collecting pandas==2.1.4 (from -r requirements.txt (line 8))
+  Downloading pandas-2.1.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (18 kB)
+Collecting Pillow==10.2.0 (from -r requirements.txt (line 9))
+  Downloading pillow-10.2.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (9.7 kB)
+Collecting psycopg2-binary==2.9.9 (from -r requirements.txt (line 10))
+  Downloading psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+Collecting python-docx==0.8.11 (from -r requirements.txt (line 11))
+  Downloading python-docx-0.8.11.tar.gz (5.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 105.2 MB/s eta 0:00:00
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting reportlab==4.1.0 (from -r requirements.txt (line 12))
+  Downloading reportlab-4.1.0-py3-none-any.whl.metadata (1.4 kB)
+Collecting SQLAlchemy==2.0.29 (from -r requirements.txt (line 13))
+  Downloading SQLAlchemy-2.0.29-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.6 kB)
+Collecting weasyprint==59.0 (from -r requirements.txt (line 14))
+  Downloading weasyprint-59.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting Werkzeug==2.2.3 (from -r requirements.txt (line 15))
+  Downloading Werkzeug-2.2.3-py3-none-any.whl.metadata (4.4 kB)
+Collecting WTForms==3.1.2 (from -r requirements.txt (line 16))
+  Downloading wtforms-3.1.2-py3-none-any.whl.metadata (5.3 kB)
+Collecting xlrd==2.0.1 (from -r requirements.txt (line 17))
+  Downloading xlrd-2.0.1-py2.py3-none-any.whl.metadata (3.4 kB)
+Collecting dnspython>=2.0.0 (from email-validator==2.1.1->-r requirements.txt (line 1))
+  Downloading dnspython-2.7.0-py3-none-any.whl.metadata (5.8 kB)
+Collecting idna>=2.0.0 (from email-validator==2.1.1->-r requirements.txt (line 1))
+  Downloading idna-3.10-py3-none-any.whl.metadata (10 kB)
+Collecting Jinja2>=3.0 (from Flask==2.2.3->-r requirements.txt (line 2))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting itsdangerous>=2.0 (from Flask==2.2.3->-r requirements.txt (line 2))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting click>=8.0 (from Flask==2.2.3->-r requirements.txt (line 2))
+  Downloading click-8.1.8-py3-none-any.whl.metadata (2.3 kB)
+INFO: pip is looking at multiple versions of flask-sqlalchemy to determine which version is compatible with other requirements. This could take a while.
+ERROR: Cannot install -r requirements.txt (line 3), -r requirements.txt (line 4) and Flask==2.2.3 because these package versions have conflicting dependencies.
+The conflict is caused by:
+    The user requested Flask==2.2.3
+    flask-login 0.6.3 depends on Flask>=1.0.4
+    flask-sqlalchemy 3.1.1 depends on flask>=2.2.5
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip attempt to solve the dependency conflict
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+[notice] A new release of pip is available: 24.0 -> 25.0.1
+[notice] To update, run: pip install --upgrade pip
+==> Build failed 😞
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
