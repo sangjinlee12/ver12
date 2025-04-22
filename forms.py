@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, DateField, IntegerField, HiddenField, FloatField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, ValidationError
 from datetime import date
@@ -136,3 +137,12 @@ class EmployeeHireDateForm(FlaskForm):
     user_id = HiddenField('사용자 ID')
     hire_date = DateField('입사일', validators=[DataRequired('입사일을 선택하세요.')], format='%Y-%m-%d')
     submit = SubmitField('저장')
+
+
+class BulkUploadForm(FlaskForm):
+    """직원 대량 업로드 폼"""
+    file = FileField('엑셀 파일', validators=[
+        DataRequired('업로드할 파일을 선택하세요.'),
+        FileAllowed(['xlsx', 'xls'], '엑셀 파일만 업로드 가능합니다.')
+    ])
+    submit = SubmitField('업로드')

@@ -439,47 +439,40 @@ def create_docx_certificate(certificate, current_user, company_info):
     doc.add_paragraph()
     doc.add_paragraph()
     
-    # 회사명
-    company_p = doc.add_paragraph()
-    company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_name_run = company_p.add_run(f"회사명 :    {company_name}")
-    company_name_run.font.name = '맑은 고딕'
-    
-    # 용도와 회사 정보 추가
-    doc.add_paragraph()  # 간격을 위한 빈 문단
-    
-    # 용도
-    purpose_line = doc.add_paragraph()
-    purpose_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    purpose_line.add_run('용도 : 재직').font.name = '맑은 고딕'
+    # 간격을 위한 빈 문단
+    doc.add_paragraph()
     
     # 여백 추가
     for _ in range(3):
         doc.add_paragraph()
     
-    # 회사명
-    company_line = doc.add_paragraph()
-    company_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_line.add_run('회사명 : ').font.name = '맑은 고딕'
-    company_line.add_run(company_name).font.name = '맑은 고딕'
+    # 회사명 및 발급일자 추가
+    company_info_p = doc.add_paragraph()
+    company_info_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_info_p.add_run(f"회사명 : {company_name}").font.name = '맑은 고딕'
     
-    # 페이지 나누기
-    doc.add_page_break()
+    issue_date_p = doc.add_paragraph()
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    issue_date_p.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
     
     # 간격 추가
-    for _ in range(10):
+    for _ in range(3):
         doc.add_paragraph()
     
     # 대표이사와 도장이 있는 테이블 생성
     signature_table = doc.add_table(rows=1, cols=2)
     signature_table.style = 'Table Grid'  # 테두리 있는 스타일
     signature_table.autofit = False
-    signature_table.width = Cm(12)  # 테이블 너비 설정
+    signature_table.width = Cm(10)  # 테이블 너비 설정
     
-    # 테이블 가운데 정렬
+    # 테이블 가운데 정렬을 위한 설정
+    last_paragraph = doc.paragraphs[-1]
+    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 테이블 셀 너비 설정
     for row in signature_table.rows:
         for cell in row.cells:
-            cell.width = Cm(6)  # 셀 너비 균등하게
+            cell.width = Cm(5)  # 셀 너비 균등하게
     
     # 대표이사 텍스트 셀
     cell = signature_table.cell(0, 0)
@@ -507,15 +500,6 @@ def create_docx_certificate(certificate, current_user, company_info):
     else:
         # 도장 이미지가 없으면 (인) 텍스트 표시
         p.add_run("(인)").font.name = '맑은 고딕'
-    
-    # 발급일자를 하단에 추가
-    doc.add_paragraph()
-    doc.add_paragraph()
-    
-    issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    issue_date_p.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
-    
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -609,6 +593,8 @@ def download_certificate(certificate_id):
                         font-size: 24px;
                         margin-bottom: 40px;
                         letter-spacing: 5px;
+                        border-bottom: 1px solid #000;
+                        padding-bottom: 10px;
                     }}
                     table {{
                         width: 100%;
@@ -620,17 +606,13 @@ def download_certificate(certificate_id):
                     }}
                     th {{
                         width: 15%;
-                        padding: 15px 8px;
+                        padding: 10px 8px;
                         text-align: center;
                         font-weight: normal;
-                        height: 25px;
-                        line-height: 25px;
                     }}
                     td {{
-                        padding: 15px 8px;
+                        padding: 10px 8px;
                         text-align: center;
-                        height: 25px;
-                        line-height: 25px;
                     }}
                     .text-black {{
                         color: #000000;
@@ -640,14 +622,20 @@ def download_certificate(certificate_id):
                         text-align: center;
                         margin: 30px 0;
                     }}
-                    .purpose {{
-                        text-align: left;
-                        margin-top: 100px;
-                        margin-left: 80px;
+                    .signature-table {{
+                        width: 60%;
+                        margin: 100px auto 0;
+                        border-collapse: collapse;
                     }}
                     .company-info {{
                         text-align: center;
-                        margin-top: 80px;
+                        margin-top: 50px;
+                    }}
+                    .stamp-img {{
+                        width: 60px;
+                        height: 60px;
+                        display: inline-block;
+                        vertical-align: middle;
                     }}
                 </style>
             </head>
@@ -657,7 +645,7 @@ def download_certificate(certificate_id):
                 <table>
                     <tr>
                         <th>성 명</th>
-                        <td style="width: 25%"><span class="text-black">{current_user.name}</span></td>
+                        <td style="width: 35%"><span class="text-black">{current_user.name}</span></td>
                         <th>주민등록번호</th>
                         <td><span class="text-black">9xxxxx-1xxxxxx</span></td>
                     </tr>
@@ -679,40 +667,29 @@ def download_certificate(certificate_id):
                 
                 <p class="center-text">상기와 같이 재직 중임을 증명함</p>
                 
-                <p class="purpose">용도 : <span class="text-black">{certificate.purpose}</span></p>
+                <p style="text-align: center; margin: 40px 0;">
+                    용도 : 재직
+                </p>
                 
-                <div class="company-info">
-                    <p style="text-align: center; margin-bottom: 60px;">
-                        용도 : 재직
-                    </p>
-                    
-                    <p style="text-align: center; margin-bottom: 80px;">
-                        회사명 : {company_name}
-                    </p>
+                <div style="text-align: center; margin-top: 120px;">
+                    회사명 : {company_name}<br>
+                    발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
                 </div>
                 
-                <div style="page-break-before: always;"></div>
-                
-                <div style="margin-top: 150px;">
-                    <table style="width: 70%; margin: 0 auto; border: 1px solid black; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
-                                대표이사
-                            </td>
-                            <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
-                                {ceo_name} 
-                                <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
-                                    style="width: 60px; height: 60px; display: inline-block; vertical-align: middle; margin-left: 10px;" 
-                                    onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
-                                <span style="display:none;">(인)</span>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <p style="text-align: center; margin-top: 100px;">
-                        발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
-                    </p>
-                </div>
+                <table class="signature-table" style="border: 1px solid black;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
+                            대표이사
+                        </td>
+                        <td style="width: 50%; text-align: center; border: 1px solid black; padding: 15px;">
+                            {ceo_name} 
+                            <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
+                                class="stamp-img" style="margin-left: 10px;" 
+                                onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
+                            <span style="display:none;">(인)</span>
+                        </td>
+                    </tr>
+                </table>
             </body>
             </html>
             """

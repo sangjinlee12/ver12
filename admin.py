@@ -1,12 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, make_response
 from flask_login import login_required, current_user
 from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm
 from functools import wraps
 from datetime import datetime
 import csv
 import io
+import os
+import tempfile
+import pandas as pd
+from werkzeug.utils import secure_filename
 from utils import get_vacation_days_count
 
 admin_bp = Blueprint('admin', __name__)
@@ -64,12 +68,148 @@ def manage_employees():
     """직원 관리 페이지"""
     employees = User.query.filter_by(role=Role.EMPLOYEE).all()
     current_year = datetime.now().year
+    upload_form = BulkUploadForm()
     
     return render_template(
         'admin/manage_employees.html',
         employees=employees,
-        current_year=current_year
+        current_year=current_year,
+        upload_form=upload_form
     )
+
+
+@admin_bp.route('/employees/upload', methods=['POST'])
+@login_required
+@admin_required
+def upload_employees():
+    """직원 대량 업로드 처리"""
+    form = BulkUploadForm()
+    
+    if form.validate_on_submit():
+        try:
+            # 업로드된 파일 처리
+            file = form.file.data
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(tempfile.gettempdir(), filename)
+            file.save(file_path)
+            
+            # 파일 확장자에 따라 적절한 pandas 함수 선택
+            if filename.endswith('.xlsx'):
+                df = pd.read_excel(file_path)
+            else:  # .xls 파일
+                df = pd.read_excel(file_path, engine='xlrd')
+            
+            # 필수 열 확인
+            required_columns = ['username', 'name', 'password', 'email', 'department', 'position']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                flash(f'엑셀 파일에 다음 열이 누락되었습니다: {", ".join(missing_columns)}', 'danger')
+                return redirect(url_for('admin.manage_employees'))
+            
+            # 성공 및 오류 카운트
+            success_count = 0
+            error_count = 0
+            error_messages = []
+            
+            # 각 행 처리
+            for idx, row in df.iterrows():
+                try:
+                    username = str(row['username']).strip()
+                    name = str(row['name']).strip()
+                    password = str(row['password']).strip()
+                    email = str(row['email']).strip()
+                    department = str(row['department']).strip()
+                    position = str(row['position']).strip()
+                    
+                    # hire_date가 있으면 처리
+                    hire_date = None
+                    if 'hire_date' in df.columns and pd.notna(row['hire_date']):
+                        try:
+                            hire_date = pd.to_datetime(row['hire_date']).date()
+                        except:
+                            hire_date = None
+                    
+                    # 이미 존재하는 사용자인지 확인
+                    existing_user = User.query.filter(
+                        (User.username == username) | (User.email == email)
+                    ).first()
+                    
+                    if existing_user:
+                        error_count += 1
+                        error_messages.append(f"행 {idx+1}: 사용자명({username}) 또는 이메일({email})이 이미 존재합니다.")
+                        continue
+                    
+                    # 새 사용자 생성
+                    new_user = User(
+                        username=username,
+                        email=email,
+                        name=name,
+                        department=department,
+                        position=position,
+                        hire_date=hire_date,
+                        role=Role.EMPLOYEE
+                    )
+                    new_user.set_password(password)
+                    db.session.add(new_user)
+                    success_count += 1
+                    
+                except Exception as e:
+                    error_count += 1
+                    error_messages.append(f"행 {idx+1}: {str(e)}")
+            
+            # 트랜잭션 완료
+            db.session.commit()
+            
+            # 결과 메시지
+            if success_count > 0:
+                flash(f'{success_count}명의 직원이 성공적으로 등록되었습니다.', 'success')
+            if error_count > 0:
+                flash(f'{error_count}명의 직원 등록에 실패했습니다.', 'warning')
+                for msg in error_messages[:10]:  # 처음 10개의 오류만 표시
+                    flash(msg, 'warning')
+                if len(error_messages) > 10:
+                    flash(f'그 외 {len(error_messages) - 10}개의 오류가 더 있습니다.', 'warning')
+            
+            # 임시 파일 삭제
+            os.remove(file_path)
+            
+        except Exception as e:
+            flash(f'파일 처리 중 오류가 발생했습니다: {str(e)}', 'danger')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{getattr(form, field).label.text}: {error}', 'danger')
+    
+    return redirect(url_for('admin.manage_employees'))
+
+
+@admin_bp.route('/employees/template')
+@login_required
+@admin_required
+def download_employee_template():
+    """직원 대량 등록 샘플 엑셀 파일 다운로드"""
+    # 엑셀 파일 생성
+    df = pd.DataFrame(columns=[
+        'username', 'name', 'password', 'email', 'department', 'position', 'hire_date'
+    ])
+    
+    # 샘플 데이터 추가
+    df.loc[0] = ['employee1', '홍길동', 'password123', 'employee1@example.com', '영업팀', '사원', '2025-01-02']
+    df.loc[1] = ['employee2', '김철수', 'password123', 'employee2@example.com', '공사팀', '대리', '2024-09-15']
+    
+    # BytesIO 객체에 엑셀 파일 저장
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
+    output.seek(0)
+    
+    # 응답 생성
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = 'attachment; filename=employee_template.xlsx'
+    
+    return response
 
 @admin_bp.route('/employees/vacation-days', methods=['GET', 'POST'])
 @login_required
