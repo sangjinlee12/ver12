@@ -445,33 +445,48 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_name_run = company_p.add_run(f"회사명 :    {company_name}")
     company_name_run.font.name = '맑은 고딕'
     
-    # 대표자와 도장 이미지를 위한 표 생성
-    table = doc.add_table(rows=1, cols=2)
-    table.style = 'Table Grid'
-    table.autofit = False
-    table.allow_autofit = False
+    # 회사 정보와 대표이사 정보를 텍스트 위치 조정으로 처리
+    doc.add_paragraph()  # 간격을 위한 빈 문단
+    doc.add_paragraph()  # 간격을 위한 빈 문단
     
-    # 테이블 경계선 제거
-    for cell in table.rows[0].cells:
-        for paragraph in cell.paragraphs:
-            for border in ['top', 'left', 'bottom', 'right']:
-                setattr(cell.border, border, docx.shared.Pt(0))
+    # 회사명 텍스트를 오른쪽으로 배치
+    company_line = doc.add_paragraph()
+    company_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_line.add_run('회사명 : ').font.name = '맑은 고딕'
+    company_line.add_run(company_name).font.name = '맑은 고딕'
     
-    # 대표자 이름 셀
-    ceo_cell = table.cell(0, 0)
-    ceo_cell.width = Cm(10)
-    ceo_cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER
-    ceo_p = ceo_cell.paragraphs[0]
-    ceo_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    ceo_run = ceo_p.add_run(f"대표이사 :    {ceo_name}  ")
-    ceo_run.font.name = '맑은 고딕'
+    # 발급일 추가
+    issue_date_line = doc.add_paragraph()
+    issue_date_line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    issue_date_line.add_run(f'발급일자 : {datetime.now().strftime("%Y년 %m월 %d일")}').font.name = '맑은 고딕'
     
-    # 도장 이미지 셀
-    stamp_cell = table.cell(0, 1)
-    stamp_cell.width = Cm(3)
-    stamp_cell.vertical_alignment = 1  # WD_ALIGN_VERTICAL.CENTER
-    stamp_p = stamp_cell.paragraphs[0]
-    stamp_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # 이미지 정렬을 위한 빈 줄
+    doc.add_paragraph()
+    
+    # 대표이사와 도장 한 줄에 배치
+    signature_table = doc.add_table(rows=1, cols=2)
+    signature_table.style = 'Table Grid'
+    signature_table.autofit = True
+    
+    # 테두리 제거
+    for cell in signature_table.rows[0].cells:
+        for border in ['top', 'left', 'bottom', 'right']:
+            try:
+                setattr(cell._element.tcPr.tcBorders, border, None)
+            except:
+                pass
+    
+    # 대표이사 셀
+    cell = signature_table.cell(0, 0)
+    p = cell.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p.add_run('대표이사 : ').font.name = '맑은 고딕'
+    
+    # 대표자 이름 및 도장 이미지 셀
+    cell = signature_table.cell(0, 1)
+    p = cell.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.add_run(ceo_name + '  ').font.name = '맑은 고딕'
     
     # 도장 이미지 삽입
     if company_info and company_info.stamp_image:
@@ -479,14 +494,14 @@ def create_docx_certificate(certificate, current_user, company_info):
             # 도장 이미지가 있으면 사용
             stamp_data = base64.b64decode(company_info.stamp_image.split(',')[-1])
             stamp_io = io.BytesIO(stamp_data)
-            stamp_p.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
+            signature_line.add_run().add_picture(stamp_io, width=Cm(1.5), height=Cm(1.5))
         except Exception as e:
             print(f"도장 이미지 삽입 오류: {str(e)}")
             # 오류 시 (인) 텍스트로 대체
-            stamp_p.add_run("(인)").font.name = '맑은 고딕'
+            signature_line.add_run("(인)").font.name = '맑은 고딕'
     else:
         # 도장 이미지가 없으면 (인) 텍스트 표시
-        stamp_p.add_run("(인)").font.name = '맑은 고딕'
+        signature_line.add_run("(인)").font.name = '맑은 고딕'
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
@@ -654,16 +669,29 @@ def download_certificate(certificate_id):
                 <p class="purpose">용도 : <span class="text-black">{certificate.purpose}</span></p>
                 
                 <div class="company-info">
-                    <p>회사명 : {company_name}</p>
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-                        <div style="text-align: right; min-width: 100px;">대표이사 : {ceo_name}</div>
-                        <div style="margin-top: 5px;">
-                            <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
-                                style="width: 50px; height: 50px; display: inline-block;" 
-                                onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
-                            <span style="display:none;">(인)</span>
-                        </div>
-                    </div>
+                    <p style="text-align: center; margin-bottom: 15px;">
+                        회사명 : {company_name}
+                    </p>
+                    
+                    <table style="border: none; width: 250px; margin: 20px auto 0;">
+                        <tr style="border: none;">
+                            <td colspan="2" style="border: none; text-align: center; padding-bottom: 30px;">
+                                발급일자 : {datetime.now().strftime('%Y년 %m월 %d일')}
+                            </td>
+                        </tr>
+                        <tr style="border: none;">
+                            <td style="border: none; text-align: right; padding-right: 10px; vertical-align: middle; width: 40%;">
+                                대표이사 :
+                            </td>
+                            <td style="border: none; text-align: left; vertical-align: middle; width: 60%; white-space: nowrap;">
+                                {ceo_name}
+                                <img src="data:image/png;base64,{company_info.stamp_image.split(',')[-1] if company_info and company_info.stamp_image else ''}" 
+                                    style="width: 50px; height: 50px; display: inline-block; vertical-align: middle; margin-left: 15px;" 
+                                    onerror="this.style.display='none';this.nextSibling.style.display='inline';" />
+                                <span style="display:none;">(인)</span>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </body>
             </html>
