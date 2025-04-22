@@ -498,191 +498,20 @@ def download_certificate(certificate_id):
     company_name = company_info.name if company_info else '주식회사 에스에스전력'
     ceo_name = company_info.ceo_name if company_info else '대표이사'
     
-    # 파일 형식 결정 (기본: PDF)
-    file_format = request.args.get('format', 'pdf').lower()
-    
     try:
-        if file_format == 'docx':
-            # 워드 문서 생성
-            buffer = create_docx_certificate(certificate, current_user, company_info)
-            
-            # 응답 생성
-            response = make_response(buffer.getvalue())
-            response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            
-            # 파일명 생성 및 인코딩
-            filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.docx'
-            encoded_filename = urllib.parse.quote(filename)
-            response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
-            
-            return response
-        else:
-            # 폰트 로딩 관련 코드 제거 - 웹 표준 폰트 사용
-            
-            # PDF 생성
-            today = datetime.now().date()
-            today_str = f"{today.year}년 {today.month}월 {today.day}일"
-            
-            hire_date_str = ""
-            if current_user.hire_date:
-                hire_date_str = current_user.hire_date.strftime('20%y년 %m월 %d일')
-            else:
-                hire_date_str = current_user.created_at.strftime('20%y년 %m월 %d일')
-            
-            # 직접 HTML 문자열 구성
-            html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>재직증명서</title>
-                <style>
-                    @page {{
-                        size: A4;
-                        margin: 0;
-                    }}
-                    body {{
-                        font-family: Arial, sans-serif;
-                        margin: 40px;
-                        padding: 0;
-                        line-height: 1.5;
-                        position: relative;
-                        height: 100%;
-                    }}
-                    .issue-date {{
-                        position: absolute;
-                        top: 10px;
-                        right: 10px;
-                        font-size: 12px;
-                        color: #666;
-                    }}
-                    h1 {{
-                        text-align: center;
-                        font-size: 24px;
-                        margin-bottom: 40px;
-                        margin-top: 20px;
-                        padding-bottom: 10px;
-                    }}
-                    table {{
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 40px;
-                    }}
-                    table, th, td {{
-                        border: 1px solid black;
-                    }}
-                    th {{
-                        background-color: #f2f2f2;
-                        width: 120px;
-                        padding: 8px;
-                        text-align: center;
-                    }}
-                    td {{
-                        padding: 8px;
-                        text-align: center;
-                    }}
-                    .center {{
-                        text-align: center;
-                        font-size: 16px;
-                        margin-top: 40px;
-                        margin-bottom: 40px;
-                    }}
-                    .date {{
-                        text-align: center;
-                        margin-top: 50px;
-                        margin-bottom: 30px;
-                    }}
-                    .company {{
-                        text-align: center;
-                        font-weight: bold;
-                        font-size: 18px;
-                        margin-top: 20px;
-                    }}
-                    .signature-area {{
-                        display: flex;
-                        justify-content: flex-end;
-                        align-items: flex-end;
-                        margin-top: 30px;
-                    }}
-                    .ceo-info {{
-                        text-align: right;
-                        margin-right: 20px;
-                        font-size: 16px;
-                    }}
-                    .stamp {{
-                        text-align: center;
-                        margin-left: 10px;
-                        position: relative;
-                    }}
-                    .stamp-img {{
-                        max-width: 70px;
-                        max-height: 70px;
-                        position: relative;
-                        margin-left: 10px;
-                        vertical-align: middle;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="issue-date">발급일: {today_str}</div>
-                
-                <h1>재직증명서</h1>
-                
-                <table>
-                    <tr>
-                        <th>성명</th>
-                        <td>{current_user.name}</td>
-                        <th>주민등록번호</th>
-                        <td>******-*******</td>
-                    </tr>
-                    <tr>
-                        <th>소속</th>
-                        <td>{current_user.department or ''}</td>
-                        <th>직위</th>
-                        <td>{current_user.position or '사원'}</td>
-                    </tr>
-                    <tr>
-                        <th>재직기간</th>
-                        <td colspan="3">{hire_date_str} ~ 현재</td>
-                    </tr>
-                    <tr>
-                        <th>용도</th>
-                        <td colspan="3">{certificate.purpose}</td>
-                    </tr>
-                </table>
-                
-                <p class="center">상기인은 위와 같이 재직하고 있음을 증명합니다.</p>
-                
-                <p class="date">{today_str}</p>
-                
-                <!-- 추가 여백 -->
-                <div style="margin-top: 120px;"></div>
-                
-                <div style="text-align: center; margin-top: 5px; margin-bottom: 5px;">
-                    <span style="font-size: 18px; font-weight: bold;">{company_name}</span>
-                </div>
-                
-                <div style="text-align: center; margin-top: 5px; margin-bottom: 30px;">
-                    <span style="font-size: 16px; font-weight: bold;">대표이사 {ceo_name}</span>
-                    <span style="font-size: 9px; color: #666; margin-left: 5px;">(직인 생략)</span>
-                </div>
-            </body>
-            </html>
-            """
-            
-            # HTML을 PDF로 변환 (WeasyPrint 사용)
-            pdf = HTML(string=html).write_pdf()
-            
-            # PDF 응답 생성
-            response = make_response(pdf)
-            response.headers['Content-Type'] = 'application/pdf'
-            
-            # 파일명 생성 및 인코딩
-            filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
-            encoded_filename = urllib.parse.quote(filename)
-            response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
-            
-            return response
+        # 워드 문서 생성
+        buffer = create_docx_certificate(certificate, current_user, company_info)
+        
+        # 응답 생성
+        response = make_response(buffer.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        
+        # 파일명 생성 및 인코딩
+        filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.docx'
+        encoded_filename = urllib.parse.quote(filename)
+        response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
+        
+        return response
     except Exception as e:
         # 오류 발생 시 로그 출력 및 처리
         print(f"파일 생성 오류: {str(e)}")
