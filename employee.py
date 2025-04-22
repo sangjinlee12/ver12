@@ -9,11 +9,9 @@ import tempfile
 import os
 import urllib.parse
 import io
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import cm
+from weasyprint import HTML
+from PIL import Image, ImageDraw, ImageFont
+import base64
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -248,6 +246,45 @@ def my_certificates():
     return render_template('employee/my_certificates.html', certificates=certificates)
 
 
+def text_to_image(text, font_size=24, width=None, text_color=(0, 0, 0), bg_color=(255, 255, 255)):
+    """텍스트를 이미지로 변환하는 함수"""
+    # 기본 폰트 (Arial)
+    try:
+        # 시스템에 설치된 폰트 사용
+        font = ImageFont.truetype("Arial", font_size)
+    except:
+        # 기본 폰트 사용
+        font = ImageFont.load_default()
+    
+    # 텍스트 크기 계산
+    test_img = Image.new('RGB', (1, 1))
+    test_draw = ImageDraw.Draw(test_img)
+    text_width, text_height = test_draw.textsize(text, font=font) if hasattr(test_draw, 'textsize') else font.getbbox(text)[2:4]
+    
+    # 이미지 크기 설정
+    if width:
+        img_width = width
+    else:
+        img_width = text_width + 20  # 여백 추가
+    img_height = text_height + 20  # 여백 추가
+    
+    # 이미지 생성
+    img = Image.new('RGB', (img_width, img_height), color=bg_color)
+    draw = ImageDraw.Draw(img)
+    
+    # 텍스트 추가 (가운데 정렬)
+    x = (img_width - text_width) // 2
+    y = (img_height - text_height) // 2
+    draw.text((x, y), text, font=font, fill=text_color)
+    
+    # 이미지를 바이트로 변환
+    img_byte = io.BytesIO()
+    img.save(img_byte, format='PNG')
+    img_byte.seek(0)
+    
+    return img_byte.getvalue()
+
+
 @employee_bp.route('/download-certificate/<int:certificate_id>')
 @login_required
 def download_certificate(certificate_id):
@@ -266,96 +303,26 @@ def download_certificate(certificate_id):
     
     # 회사 정보 가져오기
     company_info = CompanyInfo.query.first()
-    company_name = company_info.name if company_info else '(Company Name)'
-    ceo_name = company_info.ceo_name if company_info else '(CEO Name)'
     
-    # PDF 생성 (Reportlab 사용)
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4  # A4 크기
-    
-    # 제목
-    p.setFont('Helvetica-Bold', 24)
-    p.drawCentredString(width/2, height - 3*cm, 'CERTIFICATE OF EMPLOYMENT')
-    
-    # 인적사항
-    p.setFont('Helvetica', 12)
-    y_position = height - 6*cm
-    
-    # 테이블 시작
-    p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, 'Name:')
-    p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, current_user.name)
-    y_position -= 1*cm
-    
-    p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, 'Department:')
-    p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, f'{company_name} {current_user.department or ""}')
-    y_position -= 1*cm
-    
-    p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, 'Position:')
-    p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, current_user.position or "")
-    y_position -= 1*cm
-    
-    hire_date_str = ""
-    if current_user.hire_date:
-        hire_date_str = current_user.hire_date.strftime('%Y-%m-%d')
-    else:
-        hire_date_str = current_user.created_at.strftime('%Y-%m-%d')
-    
-    p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, 'Period:')
-    p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, f'{hire_date_str} ~ Present')
-    y_position -= 1*cm
-    
-    p.setFont('Helvetica-Bold', 11)
-    p.drawString(3*cm, y_position, 'Purpose:')
-    p.setFont('Helvetica', 11)
-    p.drawString(6*cm, y_position, certificate.purpose)
-    y_position -= 2*cm
-    
-    # 증명문
-    p.setFont('Helvetica', 12)
-    p.drawString(3*cm, y_position, 'This is to certify that the above information is true and correct.')
-    y_position -= 3*cm
-    
-    # 발급일
+    # HTML 템플릿 렌더링
     today = datetime.now().date()
-    p.drawCentredString(width/2, y_position, f'{today.year}-{today.month:02d}-{today.day:02d}')
-    y_position -= 2*cm
+    html_content = render_template(
+        'employee/certificate_template.html',
+        user=current_user,
+        certificate=certificate,
+        company=company_info,
+        today=today
+    )
     
-    # 회사명 및 대표자
-    p.setFont('Helvetica-Bold', 14)
-    p.drawCentredString(width/2, y_position, company_name)
-    y_position -= 1*cm
-    
-    p.setFont('Helvetica', 12)
-    p.drawCentredString(width/2, y_position, f'CEO {ceo_name}')
-    y_position -= 1.5*cm
-    
-    # 직인 위치 (원으로 표시)
-    p.circle(width/2, y_position, 1*cm)
-    p.setFont('Helvetica', 10)
-    p.drawCentredString(width/2, y_position, '(Seal)')
-    
-    # PDF 완성
-    p.showPage()
-    p.save()
+    # HTML을 PDF로 변환 (WeasyPrint 사용)
+    pdf = HTML(string=html_content).write_pdf()
     
     # PDF 응답 생성
-    pdf_data = buffer.getvalue()
-    buffer.close()
-    
-    response = make_response(pdf_data)
+    response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     
     # 파일명 생성 및 인코딩
-    filename = f'certificate_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
+    filename = f'재직증명서_{current_user.name}_{datetime.now().strftime("%Y%m%d")}.pdf'
     encoded_filename = urllib.parse.quote(filename)
     response.headers['Content-Disposition'] = f'attachment; filename={encoded_filename}'
     
