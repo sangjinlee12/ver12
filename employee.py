@@ -350,7 +350,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     row.cells[2].width = Cm(3)
     row.cells[3].text = '9xxxxx-1xxxxxx'
     row.cells[3].width = Cm(6)
-    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
     row.cells[3].paragraphs[0].runs[0].font.bold = True
     
     # 2행: 주소 (병합 셀)
@@ -367,15 +367,15 @@ def create_docx_certificate(certificate, current_user, company_info):
     row = table.rows[2]
     row.cells[0].text = '소 속'
     row.cells[0].width = Cm(2)
-    row.cells[1].text = company_info.name if company_info and company_info.name else current_user.department or '영업팀'
+    row.cells[1].text = current_user.department or '영업팀'
     row.cells[1].width = Cm(5)
-    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[1].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
     row.cells[1].paragraphs[0].runs[0].font.bold = True
     row.cells[2].text = '직 위'
     row.cells[2].width = Cm(3)
     row.cells[3].text = current_user.position or '팀장'
     row.cells[3].width = Cm(6)
-    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    row.cells[3].paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
     row.cells[3].paragraphs[0].runs[0].font.bold = True
     
     # 4행: 기간 (병합 셀)
@@ -388,7 +388,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     cell.merge(row.cells[3])
     duration_text = f"{hire_date_str}~현재"
     cell.text = duration_text
-    cell.paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    cell.paragraphs[0].runs[0].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
     cell.paragraphs[0].runs[0].font.bold = True
     
     # 모든 셀 가운데 정렬(수평, 수직 모두)과 여백 설정
@@ -432,7 +432,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     usage_p.paragraph_format.left_indent = Cm(2)
     usage_run = usage_p.add_run(f"용도 : {certificate.purpose}")
     usage_run.font.name = '맑은 고딕'
-    usage_run.font.color.rgb = docx.shared.RGBColor(255, 0, 0)
+    usage_run.font.color.rgb = docx.shared.RGBColor(0, 0, 0)
     
     # 여백 추가
     doc.add_paragraph()
