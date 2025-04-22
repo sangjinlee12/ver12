@@ -517,15 +517,7 @@ def download_certificate(certificate_id):
             
             return response
         else:
-            # 로컬 폰트 파일 읽기
-            font_path = './static/fonts/NanumGothic.ttf'
-            font_data = ""
-            try:
-                with open(font_path, 'rb') as f:
-                    font_data = base64.b64encode(f.read()).decode('utf-8')
-            except Exception as e:
-                print(f"폰트 로드 오류: {str(e)}")
-                font_data = ""
+            # 폰트 로딩 관련 코드 제거 - 웹 표준 폰트 사용
             
             # PDF 생성
             today = datetime.now().date()
@@ -545,23 +537,17 @@ def download_certificate(certificate_id):
                 <meta charset="UTF-8">
                 <title>재직증명서</title>
                 <style>
-                    @font-face {{
-                        font-family: 'NanumGothicCustom';
-                        src: url('data:application/font-woff;charset=utf-8;base64,{font_data}') format('truetype');
-                        font-weight: normal;
-                        font-style: normal;
-                    }}
                     @page {{
                         size: A4;
                         margin: 0;
                     }}
                     body {{
-                        font-family: 'NanumGothicCustom', Arial, sans-serif;
+                        font-family: Arial, sans-serif;
                         margin: 40px;
                         padding: 0;
                         line-height: 1.5;
                         position: relative;
-                        min-height: 100vh;
+                        height: 100%;
                     }}
                     .issue-date {{
                         position: absolute;
