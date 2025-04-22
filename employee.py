@@ -336,13 +336,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     title = doc.add_heading('', level=0)
     title_run = title.add_run('재직증명서')
     title_run.font.name = '맑은 고딕'
-    title_run.font.size = Pt(18)
+    title_run.font.size = Pt(20)  # 글씨 크기 증가
     title_run.font.bold = True
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # 제목 아래 여백 추가
     space_p = doc.add_paragraph()
-    space_p.paragraph_format.space_after = Pt(20)
+    space_p.paragraph_format.space_after = Pt(30)  # 더 많은 여백 추가
     
     # 표 생성
     table = doc.add_table(rows=4, cols=4)
@@ -419,10 +419,11 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 증명 문구 추가
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.paragraph_format.space_before = Pt(15)
+    p_confirm.paragraph_format.space_before = Pt(25)  # 간격 증가
     p_confirm.paragraph_format.space_after = Pt(15)
     confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
     confirm_run.font.name = '맑은 고딕'
+    confirm_run.font.size = Pt(12)  # 글자 크기 지정
     
     # 날짜 추가 (증명 문구와 회사 정보 사이에 위치)
     date_p = doc.add_paragraph()
@@ -432,11 +433,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run = date_p.add_run(today_str)
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(12)
+    date_run.font.bold = True  # 날짜를 굵게 표시
     
-    # 추가 여백 (적당한 간격)
-    empty_p = doc.add_paragraph()
-    empty_p.paragraph_format.space_before = Pt(10)
-    empty_p.paragraph_format.space_after = Pt(10)
+    # 추가 여백 - 더 많은 공간을 추가하여 회사정보가 하단에 위치하도록 함
+    for i in range(10):  # 충분한 여백 추가
+        empty_p = doc.add_paragraph()
+        empty_p.paragraph_format.space_before = Pt(12)
+        empty_p.paragraph_format.space_after = Pt(12)
     
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
