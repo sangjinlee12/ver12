@@ -387,9 +387,10 @@ def create_docx_certificate(certificate, current_user, company_info):
     title_run.font.bold = True
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # 제목 아래 여백 추가
-    space_p = doc.add_paragraph()
-    space_p.paragraph_format.space_after = Pt(30)  # 더 많은 여백 추가
+    # 제목 아래 여백 추가 (업로드된 문서 형식에 맞게)
+    for i in range(2):  # 2개의 빈 줄 추가
+        space_p = doc.add_paragraph()
+        space_p.paragraph_format.space_after = Pt(12)
     
     # 표 생성
     table = doc.add_table(rows=4, cols=4)
@@ -482,6 +483,10 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.size = Pt(12)
     date_run.font.bold = True  # 날짜를 굵게 표시
     
+    # 여백 추가 (업로드된 문서에 맞게 조정)
+    for i in range(3):  # 3개의 빈 줄 추가
+        doc.add_paragraph()
+    
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -511,8 +516,12 @@ def create_docx_certificate(certificate, current_user, company_info):
     seal_run.font.name = '맑은 고딕'
     seal_run.font.size = Pt(9)  # 작은 글씨 크기
     
-    # 바코드 및 QR 코드 추가를 위한 추가 공간 확보
-    doc.add_paragraph()
+    # 추가 여백 조정 - 업로드된 문서와 동일한 여백을 위해
+    # 여백 추가 (많은 줄바꿈으로 공간 확보)
+    for i in range(3):
+        empty_p = doc.add_paragraph()
+        empty_p.paragraph_format.space_before = Pt(10)
+        empty_p.paragraph_format.space_after = Pt(10)
     
     # 바코드 위의 설명 추가
     verify_p = doc.add_paragraph()
@@ -523,11 +532,15 @@ def create_docx_certificate(certificate, current_user, company_info):
     verify_run.font.name = '맑은 고딕'
     verify_run.font.size = Pt(9)
     
+    # 추가 여백
+    doc.add_paragraph()
+    
     # 문서 식별 코드 생성 (증명서 ID + 사번 + 발급일자)
     cert_id = certificate.id if certificate else 0
     user_id = current_user.id
     today_code = datetime.now().strftime("%Y%m%d%H%M")
-    doc_verification_code = f"CERT-{cert_id}-{user_id}-{today_code}"
+    # 간소화된 문서 확인 번호 형식 (업로드된 문서와 동일하게)
+    doc_verification_code = f"CERT-{cert_id}-{user_id}-{today_code[:8]}"
     
     # 바코드 이미지 생성
     try:
@@ -543,7 +556,10 @@ def create_docx_certificate(certificate, current_user, company_info):
         barcode_run.add_picture(barcode_img_io, width=Cm(12))  # 약 12cm 너비로 설정
     except Exception as e:
         print(f"바코드 생성 오류: {str(e)}")
-        
+    
+    # 추가 여백
+    doc.add_paragraph()
+    
     # 바코드 아래에 설명 텍스트 추가
     code_p = doc.add_paragraph()
     code_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
