@@ -343,18 +343,18 @@ def create_barcode(data, width=400, height=100):
 
 
 def create_docx_certificate(certificate, current_user, company_info):
-    """워드 파일로 재직증명서 생성"""
+    """워드 파일로 재직증명서 생성 - 새로운 간결한 양식"""
     company_name = company_info.name if company_info else '주식회사 에스에스전력'
-    ceo_name = company_info.ceo_name if company_info else '대표이사'
+    ceo_name = company_info.ceo_name if company_info else '김세인'
     
     today = datetime.now().date()
     today_str = f"{today.year}년 {today.month}월 {today.day}일"
     
     hire_date_str = ""
     if current_user.hire_date:
-        hire_date_str = current_user.hire_date.strftime('20%y년 %m월 %d일')
+        hire_date_str = current_user.hire_date.strftime('%Y년 %m월 %d일')
     else:
-        hire_date_str = current_user.created_at.strftime('20%y년 %m월 %d일')
+        hire_date_str = current_user.created_at.strftime('%Y년 %m월 %d일')
     
     # 워드 문서 생성
     doc = docx.Document()
@@ -364,41 +364,21 @@ def create_docx_certificate(certificate, current_user, company_info):
     for section in sections:
         section.top_margin = Cm(1.0)  # 상단 여백 축소
         section.bottom_margin = Cm(1.0)  # 하단 여백 축소
-        section.left_margin = Cm(2.0)
-        section.right_margin = Cm(2.0)
+        section.left_margin = Cm(1.5)  # 좌측 여백 축소
+        section.right_margin = Cm(1.5)  # 우측 여백 축소
     
     # 스타일 설정
     style = doc.styles['Normal']
     style.font.name = '맑은 고딕'
-    style.font.size = Pt(12)
+    style.font.size = Pt(10)
     
-    # 발급일 추가 (오른쪽 상단)
-    issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    issue_date_run = issue_date_p.add_run(f'발급일: {today_str}')
-    issue_date_run.font.name = '맑은 고딕'
-    issue_date_run.font.size = Pt(10)
-    
-    # 제목 추가 - 가운데 정렬, 큰 글씨
-    title = doc.add_heading('', level=0)
-    title_run = title.add_run('재직증명서')
-    title_run.font.name = '맑은 고딕'
-    title_run.font.size = Pt(20)  # 글씨 크기 증가
-    title_run.font.bold = True
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    # 제목 아래 여백 추가 (업로드된 문서 형식에 맞게)
-    for i in range(2):  # 2개의 빈 줄 추가
-        space_p = doc.add_paragraph()
-        space_p.paragraph_format.space_after = Pt(12)
-    
-    # 표 생성
+    # 표 생성 (제공된 이미지와 같이 더 간결한 표)
     table = doc.add_table(rows=4, cols=4)
     table.style = 'Table Grid'
     
     # 표 너비 설정
     table.autofit = False
-    table.width = Cm(16)  # A4 너비는 약 21cm, 여백 제외하면 약 16cm
+    table.width = Cm(17)  # 더 넓은 표 설정
     
     # 1행: 성명, 주민등록번호
     row = table.rows[0]
@@ -412,7 +392,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     row.cells[0].text = '소속'
     row.cells[1].text = current_user.department or ''
     row.cells[2].text = '직위'
-    row.cells[3].text = current_user.position or '사원'
+    row.cells[3].text = current_user.position or '선임연구원'
     
     # 3행: 재직기간
     row = table.rows[2]
@@ -430,11 +410,11 @@ def create_docx_certificate(certificate, current_user, company_info):
     cell = row.cells[1]
     cell.merge(row.cells[2])
     cell.merge(row.cells[3])
-    cell.text = certificate.purpose if certificate and certificate.purpose else '재직증명용'
+    cell.text = certificate.purpose if certificate and certificate.purpose else '개인'
     
     # 모든 셀 정렬과 여백 설정
     for row in table.rows:
-        row.height = Cm(1.2)  # 더 높은 행 높이로 설정
+        row.height = Cm(0.8)  # 행 높이 설정
         row.height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
         
         for cell in row.cells:
@@ -449,122 +429,103 @@ def create_docx_certificate(certificate, current_user, company_info):
             for paragraph in cell.paragraphs:
                 # 단락 스타일 설정
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                paragraph.space_before = Pt(6)  # 단락 위 여백
-                paragraph.space_after = Pt(6)   # 단락 아래 여백
+                paragraph.space_before = Pt(0)  # 단락 위 여백 최소화
+                paragraph.space_after = Pt(0)   # 단락 아래 여백 최소화
                 
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
-                    run.font.size = Pt(11)      # 일관된 글자 크기
-                
-            # 헤더 셀 배경색 설정
-            if cell.text in ['성명', '주민등록번호', '소속', '직위', '재직기간', '용도']:
-                try:
-                    shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="F2F2F2"/>')
-                    cell._element.get_or_add_tcPr().append(shading)
-                except Exception as e:
-                    print(f"셀 배경색 설정 오류: {str(e)}")
+                    run.font.size = Pt(10)      # 작은 글씨 크기
+    
+    # 여백 조정
+    doc.add_paragraph()
     
     # 증명 문구 추가
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.paragraph_format.space_before = Pt(25)  # 간격 증가
-    p_confirm.paragraph_format.space_after = Pt(15)
+    p_confirm.paragraph_format.space_before = Pt(8)
+    p_confirm.paragraph_format.space_after = Pt(8)
     confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
     confirm_run.font.name = '맑은 고딕'
-    confirm_run.font.size = Pt(12)  # 글자 크기 지정
+    confirm_run.font.size = Pt(10)
     
-    # 날짜 추가 (증명 문구와 회사 정보 사이에 위치)
+    # 날짜 추가
     date_p = doc.add_paragraph()
     date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    date_p.paragraph_format.space_before = Pt(20)
-    date_p.paragraph_format.space_after = Pt(20)
+    date_p.paragraph_format.space_before = Pt(8)
+    date_p.paragraph_format.space_after = Pt(8)
     date_run = date_p.add_run(today_str)
     date_run.font.name = '맑은 고딕'
-    date_run.font.size = Pt(12)
-    date_run.font.bold = True  # 날짜를 굵게 표시
+    date_run.font.size = Pt(10)
+    date_run.font.bold = True
     
-    # 여백 추가 (업로드된 문서에 맞게 조정)
-    for i in range(3):  # 3개의 빈 줄 추가
-        doc.add_paragraph()
+    # 여백 추가 (더 적은 여백)
+    doc.add_paragraph()
+    doc.add_paragraph()
     
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_p.paragraph_format.space_before = Pt(5)
-    company_p.paragraph_format.space_after = Pt(5)
-    
-    # 회사명 추가
+    company_p.paragraph_format.space_before = Pt(0)
+    company_p.paragraph_format.space_after = Pt(0)
     company_run = company_p.add_run(company_name)
     company_run.font.name = '맑은 고딕'
+    company_run.font.size = Pt(10)
     company_run.font.bold = True
-    company_run.font.size = Pt(14)
     
     # 대표이사 이름과 직인 생략 문구 (중앙 정렬)
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_p.paragraph_format.space_before = Pt(5)
-    ceo_p.paragraph_format.space_after = Pt(5)
-    
-    # 대표이사 이름
+    ceo_p.paragraph_format.space_before = Pt(0)
+    ceo_p.paragraph_format.space_after = Pt(8)
     ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.size = Pt(14)  # 글씨 크기
-    ceo_run.font.bold = True    # 글씨 굵게
+    ceo_run.font.size = Pt(10)
+    ceo_run.font.bold = True
     
     # 직인생략 텍스트 추가 (작은 글씨)
     seal_run = ceo_p.add_run(" (직인 생략)")
     seal_run.font.name = '맑은 고딕'
-    seal_run.font.size = Pt(9)  # 작은 글씨 크기
+    seal_run.font.size = Pt(8)
     
-    # 추가 여백 조정 - 업로드된 문서와 동일한 여백을 위해
-    # 여백 추가 (많은 줄바꿈으로 공간 확보)
-    for i in range(3):
-        empty_p = doc.add_paragraph()
-        empty_p.paragraph_format.space_before = Pt(10)
-        empty_p.paragraph_format.space_after = Pt(10)
+    # 여백 추가
+    doc.add_paragraph()
     
     # 바코드 위의 설명 추가
     verify_p = doc.add_paragraph()
     verify_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    verify_p.paragraph_format.space_before = Pt(10)
-    verify_p.paragraph_format.space_after = Pt(5)
+    verify_p.paragraph_format.space_before = Pt(0)
+    verify_p.paragraph_format.space_after = Pt(4)
     verify_run = verify_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
     verify_run.font.name = '맑은 고딕'
-    verify_run.font.size = Pt(9)
-    
-    # 추가 여백
-    doc.add_paragraph()
+    verify_run.font.size = Pt(8)
     
     # 문서 식별 코드 생성 (증명서 ID + 사번 + 발급일자)
     cert_id = certificate.id if certificate else 0
     user_id = current_user.id
-    today_code = datetime.now().strftime("%Y%m%d%H%M")
+    today_code = datetime.now().strftime("%Y%m%d")
     # 간소화된 문서 확인 번호 형식 (업로드된 문서와 동일하게)
-    doc_verification_code = f"CERT-{cert_id}-{user_id}-{today_code[:8]}"
+    doc_verification_code = f"CERT-{cert_id}-{user_id}-{today_code}"
     
-    # 바코드 이미지 생성
+    # 바코드 이미지 생성 및 삽입
     try:
-        barcode_img_io = create_barcode(doc_verification_code, width=400, height=80)
+        barcode_img_io = create_barcode(doc_verification_code, width=400, height=70)
         
         # 바코드 이미지 삽입
         barcode_p = doc.add_paragraph()
         barcode_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        barcode_p.paragraph_format.space_before = Pt(5)
-        barcode_p.paragraph_format.space_after = Pt(5)
+        barcode_p.paragraph_format.space_before = Pt(0)
+        barcode_p.paragraph_format.space_after = Pt(0)
         
         barcode_run = barcode_p.add_run()
         barcode_run.add_picture(barcode_img_io, width=Cm(12))  # 약 12cm 너비로 설정
     except Exception as e:
         print(f"바코드 생성 오류: {str(e)}")
     
-    # 추가 여백
-    doc.add_paragraph()
-    
     # 바코드 아래에 설명 텍스트 추가
     code_p = doc.add_paragraph()
     code_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    code_p.paragraph_format.space_before = Pt(5)
-    code_p.paragraph_format.space_after = Pt(10)
+    code_p.paragraph_format.space_before = Pt(0)
+    code_p.paragraph_format.space_after = Pt(0)
     code_run = code_p.add_run(f"문서확인번호: {doc_verification_code}")
     code_run.font.name = '맑은 고딕'
     code_run.font.size = Pt(8)
@@ -572,10 +533,11 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 검증 안내문 추가
     guide_p = doc.add_paragraph()
     guide_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    guide_p.paragraph_format.space_before = Pt(5)
-    code_run = guide_p.add_run(f"문서확인 사이트: {company_info.website if company_info and company_info.website else 'https://ss-electric.co.kr'}")
-    code_run.font.name = '맑은 고딕'
-    code_run.font.size = Pt(8)
+    guide_p.paragraph_format.space_before = Pt(0)
+    guide_p.paragraph_format.space_after = Pt(0)
+    guide_run = guide_p.add_run(f"문서확인 사이트: {company_info.website if company_info and company_info.website else 'https://ss-electric.co.kr'}")
+    guide_run.font.name = '맑은 고딕'
+    guide_run.font.size = Pt(8)
     
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
