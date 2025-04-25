@@ -13,7 +13,7 @@ from weasyprint import HTML
 from PIL import Image, ImageDraw, ImageFont
 import base64
 import docx
-from docx.shared import Pt, Cm
+from docx.shared import Pt, Cm, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT
 from docx.oxml.ns import nsdecls
@@ -22,6 +22,9 @@ from docx.enum.section import WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.section import WD_ORIENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
+import qrcode
+from barcode import Code128
+from barcode.writer import ImageWriter
 
 employee_bp = Blueprint('employee', __name__)
 
@@ -294,6 +297,50 @@ def text_to_image(text, font_size=24, width=None, text_color=(0, 0, 0), bg_color
     
     return img_byte.getvalue()
 
+def create_qrcode(data, size=200):
+    """QR 코드 생성 함수"""
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # QR 코드 이미지 크기 조정
+    img = img.resize((size, size))
+    
+    # 이미지를 바이트로 변환
+    img_byte = io.BytesIO()
+    img.save(img_byte, format='PNG')
+    img_byte.seek(0)
+    
+    return img_byte
+
+def create_barcode(data, width=400, height=100):
+    """바코드 생성 함수"""
+    # Code128 바코드 생성 (가장 일반적인 형식)
+    code128 = Code128(data, writer=ImageWriter())
+    
+    # 바코드 이미지 생성
+    img_byte = io.BytesIO()
+    code128.write(img_byte, options={"write_text": True, "module_width": 0.5, "module_height": 15})
+    img_byte.seek(0)
+    
+    # PIL Image로 변환하여 크기 조정
+    img = Image.open(img_byte)
+    img = img.resize((width, height), Image.LANCZOS)
+    
+    # 이미지를 바이트로 변환
+    resized_img_byte = io.BytesIO()
+    img.save(resized_img_byte, format='PNG')
+    resized_img_byte.seek(0)
+    
+    return resized_img_byte
+
 
 def create_docx_certificate(certificate, current_user, company_info):
     """워드 파일로 재직증명서 생성"""
@@ -435,12 +482,6 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.size = Pt(12)
     date_run.font.bold = True  # 날짜를 굵게 표시
     
-    # 추가 여백 - 더 많은 공간을 추가하되 페이지를 넘기지 않도록 조정
-    for i in range(5):  # 여백 더 줄이기 (6에서 5으로 감소)
-        empty_p = doc.add_paragraph()
-        empty_p.paragraph_format.space_before = Pt(8)  # 여백 줄이기
-        empty_p.paragraph_format.space_after = Pt(8)   # 여백 줄이기
-    
     # 회사명 추가 (중앙 정렬)
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -457,7 +498,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     ceo_p.paragraph_format.space_before = Pt(5)
-    ceo_p.paragraph_format.space_after = Pt(20)
+    ceo_p.paragraph_format.space_after = Pt(5)
     
     # 대표이사 이름
     ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
@@ -469,6 +510,57 @@ def create_docx_certificate(certificate, current_user, company_info):
     seal_run = ceo_p.add_run(" (직인 생략)")
     seal_run.font.name = '맑은 고딕'
     seal_run.font.size = Pt(9)  # 작은 글씨 크기
+    
+    # 바코드 및 QR 코드 추가를 위한 추가 공간 확보
+    doc.add_paragraph()
+    
+    # 바코드 위의 설명 추가
+    verify_p = doc.add_paragraph()
+    verify_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    verify_p.paragraph_format.space_before = Pt(10)
+    verify_p.paragraph_format.space_after = Pt(5)
+    verify_run = verify_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
+    verify_run.font.name = '맑은 고딕'
+    verify_run.font.size = Pt(9)
+    
+    # 문서 식별 코드 생성 (증명서 ID + 사번 + 발급일자)
+    cert_id = certificate.id if certificate else 0
+    user_id = current_user.id
+    today_code = datetime.now().strftime("%Y%m%d%H%M")
+    doc_verification_code = f"CERT-{cert_id}-{user_id}-{today_code}"
+    
+    # 바코드 이미지 생성
+    try:
+        barcode_img_io = create_barcode(doc_verification_code, width=400, height=80)
+        
+        # 바코드 이미지 삽입
+        barcode_p = doc.add_paragraph()
+        barcode_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        barcode_p.paragraph_format.space_before = Pt(5)
+        barcode_p.paragraph_format.space_after = Pt(5)
+        
+        barcode_run = barcode_p.add_run()
+        barcode_run.add_picture(barcode_img_io, width=Cm(12))  # 약 12cm 너비로 설정
+    except Exception as e:
+        print(f"바코드 생성 오류: {str(e)}")
+        
+    # 바코드 아래에 설명 텍스트 추가
+    code_p = doc.add_paragraph()
+    code_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    code_p.paragraph_format.space_before = Pt(5)
+    code_p.paragraph_format.space_after = Pt(10)
+    code_run = code_p.add_run(f"문서확인번호: {doc_verification_code}")
+    code_run.font.name = '맑은 고딕'
+    code_run.font.size = Pt(8)
+    
+    # 검증 안내문 추가
+    guide_p = doc.add_paragraph()
+    guide_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    guide_p.paragraph_format.space_before = Pt(5)
+    code_run = guide_p.add_run(f"문서확인 사이트: {company_info.website if company_info and company_info.website else 'https://ss-electric.co.kr'}")
+    code_run.font.name = '맑은 고딕'
+    code_run.font.size = Pt(8)
+    
     # 문서를 메모리에 저장
     buffer = io.BytesIO()
     doc.save(buffer)
