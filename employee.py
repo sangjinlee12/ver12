@@ -421,20 +421,20 @@ def create_docx_certificate(certificate, current_user, company_info):
     for section in sections:
         section.page_width = Cm(21.0)
         section.page_height = Cm(29.7)
-        # 여백을 매우 작게 설정하여 모든 내용이 한 페이지에 맞도록 함
-        section.top_margin = Cm(0.8)
-        section.bottom_margin = Cm(0.8)
-        section.left_margin = Cm(1.0)
-        section.right_margin = Cm(1.0)
+        # 여백을 이미지와 유사하게 설정
+        section.top_margin = Cm(1.5)
+        section.bottom_margin = Cm(1.5)
+        section.left_margin = Cm(2.0)
+        section.right_margin = Cm(2.0)
     
     # 스타일 설정
     style = doc.styles['Normal']
     style.font.name = '맑은 고딕'
     style.font.size = Pt(10)
     
-    # 발급일 추가 (이미지와 동일하게 왼쪽 정렬)
+    # 발급일 추가 (이미지와 동일하게 오른쪽 정렬)
     issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     issue_date_run = issue_date_p.add_run(f'발급일: {today_str}')
     issue_date_run.font.name = '맑은 고딕'
     issue_date_run.font.size = Pt(10)
@@ -444,15 +444,27 @@ def create_docx_certificate(certificate, current_user, company_info):
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title.add_run('재직증명서')
     title_run.font.name = '맑은 고딕'
-    title_run.font.size = Pt(12)
+    title_run.font.size = Pt(14)
     title_run.font.bold = True
     title.space_after = Pt(12)  # 제목 아래 약간의 여백
+    
+    # 가로선 추가
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(12)
+    p_fmt = p.paragraph_format
+    p_fmt.left_indent = Cm(0)
+    p_fmt.right_indent = Cm(0)
+    p.add_run().add_tab()
+    p.runs[0].add_tab()
+    tab_stops = p_fmt.tab_stops
+    tab_stop = tab_stops.add_tab_stop(Cm(16), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.SOLID)
     
     # 표 생성
     table = doc.add_table(rows=4, cols=4)
     table.style = 'Table Grid'
     table.autofit = False
-    table.width = Cm(17)
+    table.width = Cm(16)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
     
     # 표 내용 채우기 (이미지와 정확히 동일하게)
     # 1행: 성명, 주민등록번호
@@ -467,7 +479,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     row.cells[0].text = '소속'
     row.cells[1].text = current_user.department or '개발팀'
     row.cells[2].text = '직위'
-    row.cells[3].text = current_user.position or '선임연구원'
+    row.cells[3].text = current_user.position or '과장'
     
     # 3행: 재직기간
     row = table.rows[2]
@@ -487,7 +499,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     
     # 표 셀 스타일 설정
     for row in table.rows:
-        row.height = Cm(0.7)  # 행 높이를 작게 설정
+        row.height = Cm(0.9)  # 행 높이 설정
         row.height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
         
         for cell in row.cells:
@@ -505,24 +517,23 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 증명 문구
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.space_before = Pt(10)
+    p_confirm.space_before = Pt(15)
     confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
     confirm_run.font.name = '맑은 고딕'
-    confirm_run.font.size = Pt(10)
+    confirm_run.font.size = Pt(11)
     
     # 날짜
     date_p = doc.add_paragraph()
     date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    date_p.space_before = Pt(10)
+    date_p.space_before = Pt(20)
     date_run = date_p.add_run(today_str)
     date_run.font.name = '맑은 고딕'
-    date_run.font.size = Pt(10)
+    date_run.font.size = Pt(11)
     
-    # 중앙 여백 (이미지처럼 간격 조정)
-    # 이미지와 같은 간격을 유지하기 위해 여백 수를 줄임
-    for i in range(4):
+    # 중앙 여백 (이미지처럼 더 많은 간격 추가)
+    for i in range(6):
         empty_p = doc.add_paragraph()
-        empty_p.space_before = Pt(6)
+        empty_p.space_before = Pt(10)
         empty_p.space_after = Pt(0)
     
     # 회사명
@@ -532,31 +543,24 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_p.space_after = Pt(0)
     company_run = company_p.add_run(company_name)
     company_run.font.name = '맑은 고딕'
-    company_run.font.size = Pt(10)
+    company_run.font.size = Pt(12)
     company_run.font.bold = True
     
     # 대표이사 및 직인 생략
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_p.space_before = Pt(0)
-    ceo_p.space_after = Pt(6)
+    ceo_p.space_before = Pt(2)
+    ceo_p.space_after = Pt(2)
     ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.size = Pt(10)
+    ceo_run.font.size = Pt(11)
     ceo_run.font.bold = True
     
-    seal_run = ceo_p.add_run(" (직인 생략)")
+    ceo_p.add_run(" ")  # 간격 추가
+    
+    seal_run = ceo_p.add_run("(직인 생략)")
     seal_run.font.name = '맑은 고딕'
     seal_run.font.size = Pt(8)
-    
-    # 바코드 안내문
-    verify_p = doc.add_paragraph()
-    verify_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    verify_p.space_before = Pt(6)
-    verify_p.space_after = Pt(0)
-    verify_run = verify_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
-    verify_run.font.name = '맑은 고딕'
-    verify_run.font.size = Pt(8)
     
     # 문서 확인번호 생성 (이미지와 동일한 형식)
     doc_verification_code = f"CERT-2-2-{datetime.now().strftime('%Y%m%d')}"
