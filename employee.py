@@ -540,14 +540,6 @@ def create_docx_certificate(certificate, current_user, company_info):
                     run.font.name = '맑은 고딕'
                     run.font.size = Pt(10)
     
-    # 증명 문구
-    p_confirm = doc.add_paragraph()
-    p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.space_before = Pt(15)
-    confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
-    confirm_run.font.name = '맑은 고딕'
-    confirm_run.font.size = Pt(11)
-    
     # 중앙 여백 (이미지처럼 더 많은 간격 추가)
     for i in range(4):
         empty_p = doc.add_paragraph()
@@ -563,6 +555,15 @@ def create_docx_certificate(certificate, current_user, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Pt(14)  # 폰트 크기 14로 변경
     
+    # 증명 문구 (날짜와 회사명 사이에 배치)
+    p_confirm = doc.add_paragraph()
+    p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_confirm.space_before = Pt(10)
+    p_confirm.space_after = Pt(10)
+    confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
+    confirm_run.font.name = '맑은 고딕'
+    confirm_run.font.size = Pt(14)  # 폰트 크기 14로 변경
+    
     # 날짜와 회사이름 사이 추가 여백
     date_company_space = doc.add_paragraph()
     date_company_space.space_before = Pt(15)
@@ -577,9 +578,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_run.font.size = Pt(17)  # 폰트 크기 17로 변경
     company_run.font.bold = True
     
-    # 대표이사 - 빈 줄 추가하여 한 칸 내림
-    ceo_space = doc.add_paragraph()
-    ceo_space.space_before = Pt(8)
+    # 회사 이름과 대표이사 이름을 바로 붙여서 배치 (여백 제거)
     
     # 대표이사 및 직인 생략
     ceo_p = doc.add_paragraph()
