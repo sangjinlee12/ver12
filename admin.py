@@ -201,6 +201,8 @@ def download_employee_template():
     # 샘플 데이터 추가
     df.loc[0] = ['employee1', '홍길동', 'password123', 'employee1@example.com', '900101', '1', '영업팀', '사원', '2025-01-02']
     df.loc[1] = ['employee2', '김철수', 'password123', 'employee2@example.com', '910215', '2', '공사팀', '대리', '2024-09-15']
+    df.loc[2] = ['employee3', '이영희', 'password123', 'employee3@example.com', '920315', '2', '공무부', '과장', '2023-05-10']
+    df.loc[3] = ['employee4', '박민수', 'password123', 'employee4@example.com', '880620', '1', '경리부', '차장', '2022-03-01']
     
     # BytesIO 객체에 엑셀 파일 저장
     output = io.BytesIO()
