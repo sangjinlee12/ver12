@@ -1,4 +1,4 @@
-docx==0.8.11
+
 email-validator==2.1.1
 Flask==2.2.3
 Flask-Login==0.6.3
@@ -19,4 +19,3 @@ xlrd==2.0.1
 python-barcode
 qrcode
 barcode
-python-barcode
