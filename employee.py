@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 import base64
 import docx
 from docx.shared import Pt, Cm, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT, WD_TAB_LEADER
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT
 from docx.oxml.ns import nsdecls
 from docx.oxml import parse_xml
@@ -448,16 +448,18 @@ def create_docx_certificate(certificate, current_user, company_info):
     title_run.font.bold = True
     title.space_after = Pt(12)  # 제목 아래 약간의 여백
     
-    # 가로선 추가
-    p = doc.add_paragraph()
-    p.paragraph_format.space_after = Pt(12)
-    p_fmt = p.paragraph_format
-    p_fmt.left_indent = Cm(0)
-    p_fmt.right_indent = Cm(0)
-    p.add_run().add_tab()
-    p.runs[0].add_tab()
-    tab_stops = p_fmt.tab_stops
-    tab_stop = tab_stops.add_tab_stop(Cm(16), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.SOLID)
+    # 가로선 추가 (테이블 방식으로 구현)
+    line_table = doc.add_table(rows=1, cols=1)
+    line_table.style = 'Table Grid'
+    line_table.autofit = False
+    line_table.width = Cm(16)
+    line_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # 테이블 높이를 아주 작게 설정해서 선으로 보이게 함
+    line_table.rows[0].height = Cm(0.05)
+    line_table.rows[0].height_rule = 2  # WD_ROW_HEIGHT.EXACTLY = 2
+    # 여백 추가
+    p_after_line = doc.add_paragraph()
+    p_after_line.space_after = Pt(12)
     
     # 표 생성
     table = doc.add_table(rows=4, cols=4)
