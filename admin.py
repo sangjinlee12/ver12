@@ -392,7 +392,7 @@ def export_vacations():
         io.BytesIO(output.getvalue().encode('utf-8-sig')),  # 한글 인코딩 처리
         mimetype='text/csv',
         as_attachment=True,
-        attachment_filename=f'vacation_data_{year}.csv'
+        download_name=f'vacation_data_{year}.csv'
     )
 
 @admin_bp.route('/holidays', methods=['GET', 'POST'])
