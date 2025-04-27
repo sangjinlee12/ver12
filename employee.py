@@ -455,13 +455,10 @@ def create_docx_certificate(certificate, current_user, company_info):
     style.font.name = '맑은 고딕'
     style.font.size = Pt(10)
     
-    # 공백 추가 (발급일을 아래로 내림)
-    top_space = doc.add_paragraph()
-    top_space.space_after = Pt(20)  # 위쪽 공백 추가
-    
-    # 발급일 추가 (중앙 정렬로 변경)
+    # 발급일을 문서 상단 우측 끝으로 배치
     issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    issue_date_p.space_after = Pt(20)  # 아래쪽 공백 추가
     issue_date_run = issue_date_p.add_run(f'발급일: {today_str}')
     issue_date_run.font.name = '맑은 고딕'
     issue_date_run.font.size = Pt(10)
@@ -551,23 +548,22 @@ def create_docx_certificate(certificate, current_user, company_info):
     confirm_run.font.name = '맑은 고딕'
     confirm_run.font.size = Pt(11)
     
-    # 날짜
-    date_p = doc.add_paragraph()
-    date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    date_p.space_before = Pt(20)
-    date_run = date_p.add_run(today_str)
-    date_run.font.name = '맑은 고딕'
-    date_run.font.size = Pt(11)
-    
     # 중앙 여백 (이미지처럼 더 많은 간격 추가)
-    for i in range(6):
+    for i in range(4):
         empty_p = doc.add_paragraph()
         empty_p.space_before = Pt(10)
         empty_p.space_after = Pt(0)
     
-    # 회사명 - 빈 줄 추가하여 한 칸 내림
-    company_space = doc.add_paragraph()
-    company_space.space_before = Pt(8)
+    # 날짜를 회사명 위로 배치 (중앙 정렬)
+    date_p = doc.add_paragraph()
+    date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    date_p.space_before = Pt(10)
+    date_p.space_after = Pt(10)
+    date_run = date_p.add_run(today_str)
+    date_run.font.name = '맑은 고딕'
+    date_run.font.size = Pt(11)
+    
+    # 회사명
     
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
