@@ -538,7 +538,7 @@ def create_docx_certificate(certificate, current_user, company_info):
                 
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
-                    run.font.size = Pt(10)
+                    run.font.size = Pt(12)
     
     # 표 아래 추가 공백 (세 칸)
     for i in range(3):
