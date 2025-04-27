@@ -350,8 +350,8 @@ def create_qrcode(data, size=200):
     return img_byte
 
 def create_barcode(data, width=400, height=100):
-    """바코드 생성 함수 (간단한 이미지 생성 방식으로 대체)"""
-    # 간단한 이미지 생성 (바코드 모양의 이미지)
+    """바코드 생성 함수 (선명하고 깔끔한 이미지로 개선)"""
+    # 이미지 설정
     img_width = width
     img_height = height
     background_color = (255, 255, 255)  # 흰색
@@ -361,39 +361,62 @@ def create_barcode(data, width=400, height=100):
     img = Image.new('RGB', (img_width, img_height), color=background_color)
     draw = ImageDraw.Draw(img)
     
-    # 바코드 패턴을 직접 그리기 (임의의 간격으로 세로선 그리기)
-    bar_width = 3  # 바코드 선 너비
-    max_bars = 30  # 최대 바 개수
-    position = 20  # 시작 위치
+    # 바코드 패턴을 직접 그리기 (더 선명하고 규칙적인 패턴으로)
+    bar_width = 4  # 바코드 선 너비 증가
+    gap_width = 2  # 간격 축소
+    max_bars = 40  # 최대 바 개수 증가
+    position = 30  # 시작 위치
     
     # 데이터를 이용해 일관된 패턴 생성
     data_hash = sum([ord(c) for c in data])
     
     for i in range(max_bars):
-        # 데이터 기반 간격 계산 (일관성 유지)
-        offset = (i * 17 + data_hash) % 13 + 5
-        if i % 3 != 0:  # 2/3의 바만 그림
-            # 세로선 그리기
+        # 데이터 기반으로 바코드 높이 변화를 줌 (더 진짜같은 효과)
+        height_variation = ((i * 7 + data_hash) % 3) * 5
+        bar_height = img_height - 35 - height_variation
+        
+        # 특정 패턴에 따라 바를 그림 (더 실제 바코드처럼 보이게)
+        # 데이터 값에 기반한 패턴 생성
+        if ((i * 13 + data_hash) % 7) != 0:
+            # 세로선 그리기 (위치 변동)
             draw.rectangle(
-                (position, 10, position + bar_width, img_height - 30),
+                (position, 10, position + bar_width, bar_height),
                 fill=barcode_color
             )
-        position += bar_width + offset
+        
+        # 가끔 더 굵은 바 추가
+        if i % 10 == 0:
+            wide_bar_width = bar_width * 2
+            draw.rectangle(
+                (position + bar_width + gap_width, 10, 
+                 position + bar_width + gap_width + wide_bar_width, bar_height - 5),
+                fill=barcode_color
+            )
+            position += wide_bar_width + gap_width
+            
+        position += bar_width + gap_width
     
-    # 바코드 번호 추가
+    # 바코드 번호 추가 (글꼴 크기 증가)
     try:
-        font = ImageFont.truetype("Arial", 12)
+        font = ImageFont.truetype("Arial", 14)  # 글꼴 크기 증가
     except:
         font = ImageFont.load_default()
     
-    # 바코드 번호 텍스트 추가
+    # 바코드 번호 텍스트 추가 (위치 조정)
     text_width = draw.textbbox((0, 0), data, font=font)[2]
     text_x = (img_width - text_width) // 2
     draw.text((text_x, img_height - 25), data, font=font, fill=barcode_color)
     
+    # 테두리 추가 (바코드 영역 표시)
+    draw.rectangle(
+        (15, 5, img_width - 15, img_height - 30),
+        outline=barcode_color,
+        width=1
+    )
+    
     # 이미지를 바이트로 변환
     img_byte = io.BytesIO()
-    img.save(img_byte, format='PNG')
+    img.save(img_byte, format='PNG', dpi=(300, 300))  # DPI 증가로 인쇄 품질 향상
     img_byte.seek(0)
     
     return img_byte
@@ -432,9 +455,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     style.font.name = '맑은 고딕'
     style.font.size = Pt(10)
     
-    # 발급일 추가 (이미지와 동일하게 오른쪽 정렬)
+    # 공백 추가 (발급일을 아래로 내림)
+    top_space = doc.add_paragraph()
+    top_space.space_after = Pt(20)  # 위쪽 공백 추가
+    
+    # 발급일 추가 (중앙 정렬로 변경)
     issue_date_p = doc.add_paragraph()
-    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    issue_date_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     issue_date_run = issue_date_p.add_run(f'발급일: {today_str}')
     issue_date_run.font.name = '맑은 고딕'
     issue_date_run.font.size = Pt(10)
@@ -538,7 +565,10 @@ def create_docx_certificate(certificate, current_user, company_info):
         empty_p.space_before = Pt(10)
         empty_p.space_after = Pt(0)
     
-    # 회사명
+    # 회사명 - 빈 줄 추가하여 한 칸 내림
+    company_space = doc.add_paragraph()
+    company_space.space_before = Pt(8)
+    
     company_p = doc.add_paragraph()
     company_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     company_p.space_before = Pt(0)
@@ -548,11 +578,15 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_run.font.size = Pt(12)
     company_run.font.bold = True
     
+    # 대표이사 - 빈 줄 추가하여 한 칸 내림
+    ceo_space = doc.add_paragraph()
+    ceo_space.space_before = Pt(8)
+    
     # 대표이사 및 직인 생략
     ceo_p = doc.add_paragraph()
     ceo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_p.space_before = Pt(2)
-    ceo_p.space_after = Pt(2)
+    ceo_p.space_before = Pt(0)
+    ceo_p.space_after = Pt(0)
     ceo_run = ceo_p.add_run(f"대표이사 {ceo_name}")
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Pt(11)
@@ -564,27 +598,43 @@ def create_docx_certificate(certificate, current_user, company_info):
     seal_run.font.name = '맑은 고딕'
     seal_run.font.size = Pt(8)
     
+    # 추가 공백 삽입 (원본 확인 관련 부분을 더 아래로 내리기)
+    spacer_p = doc.add_paragraph()
+    spacer_p.space_before = Pt(10)
+    spacer_p.space_after = Pt(10)
+    
     # 문서 확인번호 생성 (이미지와 동일한 형식)
     doc_verification_code = f"CERT-2-2-{datetime.now().strftime('%Y%m%d')}"
     
-    # 바코드 생성 및 삽입
+    # 원본 확인 안내문
+    verify_note_p = doc.add_paragraph()
+    verify_note_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    verify_note_p.space_before = Pt(0)
+    verify_note_p.space_after = Pt(6)
+    verify_note_run = verify_note_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
+    verify_note_run.font.name = '맑은 고딕'
+    verify_note_run.font.size = Pt(8)
+    verify_note_run.font.bold = True
+    
+    # 바코드 생성 및 삽입 (크기와 선명도 개선)
     try:
-        barcode_img_io = create_barcode(doc_verification_code, width=400, height=40)
+        # 바코드 높이 증가 및 넓이 유지
+        barcode_img_io = create_barcode(doc_verification_code, width=500, height=70)
         
         barcode_p = doc.add_paragraph()
         barcode_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        barcode_p.space_before = Pt(6)
+        barcode_p.space_before = Pt(3)
         barcode_p.space_after = Pt(6)
         
         barcode_run = barcode_p.add_run()
-        barcode_run.add_picture(barcode_img_io, width=Cm(12))
+        barcode_run.add_picture(barcode_img_io, width=Cm(14))  # 이미지 크기 증가
     except Exception as e:
         print(f"바코드 생성 오류: {str(e)}")
     
     # 문서확인번호
     code_p = doc.add_paragraph()
     code_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    code_p.space_before = Pt(0)
+    code_p.space_before = Pt(2)
     code_p.space_after = Pt(0)
     code_run = code_p.add_run(f"문서확인번호: {doc_verification_code}")
     code_run.font.name = '맑은 고딕'
@@ -593,7 +643,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     # 문서확인 사이트
     guide_p = doc.add_paragraph()
     guide_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    guide_p.space_before = Pt(0)
+    guide_p.space_before = Pt(1)
     guide_p.space_after = Pt(0)
     guide_run = guide_p.add_run(f"문서확인 사이트: {company_info.website if company_info and company_info.website else 'https://ss-electric.co.kr'}")
     guide_run.font.name = '맑은 고딕'
