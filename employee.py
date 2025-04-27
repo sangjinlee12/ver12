@@ -621,8 +621,8 @@ def create_docx_certificate(certificate, current_user, company_info):
     
     # 가로형 바코드 생성 및 삽입
     try:
-        # 표 너비에 맞춘 가로형 바코드 생성
-        barcode_img_io = create_barcode(doc_verification_code, width=500, height=80)
+        # 표 너비에 맞춘 가로형 바코드 생성 (세로 크기 40으로 줄임)
+        barcode_img_io = create_barcode(doc_verification_code, width=500, height=40)
         
         barcode_p = doc.add_paragraph()
         barcode_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -630,7 +630,7 @@ def create_docx_certificate(certificate, current_user, company_info):
         barcode_p.space_after = Pt(6)
         
         barcode_run = barcode_p.add_run()
-        barcode_run.add_picture(barcode_img_io, width=Cm(16))  # 표와 동일한 너비(16cm)로 설정
+        barcode_run.add_picture(barcode_img_io, width=Cm(16), height=Cm(1))  # 세로 크기 줄임
     except Exception as e:
         print(f"바코드 생성 오류: {str(e)}")
     
