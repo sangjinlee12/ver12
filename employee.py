@@ -350,85 +350,68 @@ def create_qrcode(data, size=200):
     return img_byte
 
 def create_barcode(data, width=400, height=100):
-    """QR 코드 스타일의 2D 바코드 생성 함수"""
-    # 정사각형 이미지로 QR 코드 스타일 구현
-    size = min(width, height)
-    square_size = size
+    """바코드 생성 함수 (가로형 형태)"""
+    # 이미지 설정
+    img_width = width
+    img_height = height
+    background_color = (255, 255, 255)  # 흰색
+    barcode_color = (0, 0, 0)  # 검은색
     
-    # 새 이미지 생성 (QR코드는 정사각형)
-    img = Image.new('RGB', (width, height), color=(255, 255, 255))
+    # 새 이미지 생성
+    img = Image.new('RGB', (img_width, img_height), color=background_color)
     draw = ImageDraw.Draw(img)
     
-    # QR 코드 위치 계산 (중앙 정렬)
-    qr_x = (width - square_size) // 2
-    qr_y = (height - square_size) // 2
+    # 바코드 패턴 설정
+    bar_width = 3  # 바코드 선 너비
+    gap_width = 2  # 간격
+    max_bars = 35  # 바 개수
+    position = 20  # 시작 위치
+    bar_height = img_height - 35  # 바코드 높이
     
-    # 데이터 해시 값 계산 (일관된 패턴 생성)
-    hash_val = sum([ord(c) for c in data]) % 1000
+    # 데이터 해시 값으로 일관된 패턴 생성
+    data_hash = sum([ord(c) for c in data])
     
-    # QR 코드 그리기
-    cell_size = square_size // 25  # 25x25 그리드
-    margin = cell_size * 1  # 여백
-    
-    # 첫 번째 위치 탐지 패턴 (좌상단)
-    pos_size = cell_size * 7
-    
-    # 좌상단 패턴
-    draw.rectangle((qr_x, qr_y, qr_x + pos_size, qr_y + pos_size), fill=(0, 0, 0))
-    draw.rectangle((qr_x + cell_size, qr_y + cell_size, qr_x + pos_size - cell_size, qr_y + pos_size - cell_size), fill=(255, 255, 255))
-    draw.rectangle((qr_x + cell_size * 2, qr_y + cell_size * 2, qr_x + pos_size - cell_size * 2, qr_y + pos_size - cell_size * 2), fill=(0, 0, 0))
-    
-    # 우상단 패턴
-    draw.rectangle((qr_x + square_size - pos_size, qr_y, qr_x + square_size, qr_y + pos_size), fill=(0, 0, 0))
-    draw.rectangle((qr_x + square_size - pos_size + cell_size, qr_y + cell_size, qr_x + square_size - cell_size, qr_y + pos_size - cell_size), fill=(255, 255, 255))
-    draw.rectangle((qr_x + square_size - pos_size + cell_size * 2, qr_y + cell_size * 2, qr_x + square_size - cell_size * 2, qr_y + pos_size - cell_size * 2), fill=(0, 0, 0))
-    
-    # 좌하단 패턴
-    draw.rectangle((qr_x, qr_y + square_size - pos_size, qr_x + pos_size, qr_y + square_size), fill=(0, 0, 0))
-    draw.rectangle((qr_x + cell_size, qr_y + square_size - pos_size + cell_size, qr_x + pos_size - cell_size, qr_y + square_size - cell_size), fill=(255, 255, 255))
-    draw.rectangle((qr_x + cell_size * 2, qr_y + square_size - pos_size + cell_size * 2, qr_x + pos_size - cell_size * 2, qr_y + square_size - cell_size * 2), fill=(0, 0, 0))
-    
-    # 데이터 패턴 생성 (중앙 영역)
-    for i in range(8, 17):
-        for j in range(8, 17):
-            # 데이터 해시 값에 기반한 패턴
-            pattern_val = (i * j + hash_val) % 5
-            if pattern_val < 2:  # 40% 확률로 검정색 셀
-                x = qr_x + i * cell_size
-                y = qr_y + j * cell_size
-                draw.rectangle((x, y, x + cell_size, y + cell_size), fill=(0, 0, 0))
-    
-    # 타이밍 패턴 (가로/세로 점선)
-    for i in range(8, 17, 2):
-        # 가로 패턴
-        x = qr_x + i * cell_size
-        y = qr_y + 6 * cell_size
-        draw.rectangle((x, y, x + cell_size, y + cell_size), fill=(0, 0, 0))
-        
-        # 세로 패턴
-        x = qr_x + 6 * cell_size
-        y = qr_y + i * cell_size
-        draw.rectangle((x, y, x + cell_size, y + cell_size), fill=(0, 0, 0))
-    
-    # 정렬 패턴 (우하단 작은 사각형)
-    align_size = cell_size * 5
-    align_x = qr_x + square_size - align_size - cell_size * 5
-    align_y = qr_y + square_size - align_size - cell_size * 5
-    
-    draw.rectangle((align_x, align_y, align_x + align_size, align_y + align_size), fill=(0, 0, 0))
-    draw.rectangle((align_x + cell_size, align_y + cell_size, align_x + align_size - cell_size, align_y + align_size - cell_size), fill=(255, 255, 255))
-    draw.rectangle((align_x + cell_size * 2, align_y + cell_size * 2, align_x + align_size - cell_size * 2, align_y + align_size - cell_size * 2), fill=(0, 0, 0))
+    # 바코드 생성
+    for i in range(max_bars):
+        # 데이터 기반 패턴
+        height_variation = ((i * 5 + data_hash) % 3) * 3
+        actual_bar_height = bar_height - height_variation
+
+        # 바 그리기 - 특정 패턴으로 바 생성
+        if ((i * 11 + data_hash) % 5) != 0:
+            draw.rectangle(
+                (position, 15, position + bar_width, 15 + actual_bar_height),
+                fill=barcode_color
+            )
+
+        # 가끔 더 굵은 바 추가
+        if i % 8 == 0:
+            draw.rectangle(
+                (position + bar_width + gap_width, 15, 
+                 position + bar_width * 2 + gap_width, 15 + actual_bar_height - 5),
+                fill=barcode_color
+            )
+            position += bar_width + gap_width
+            
+        position += bar_width + gap_width
     
     # 바코드 번호 추가
     try:
-        font = ImageFont.truetype("Arial", 14)
+        font = ImageFont.truetype("Arial", 12)
     except:
         font = ImageFont.load_default()
     
     # 바코드 번호 텍스트 추가
     text_width = draw.textbbox((0, 0), data, font=font)[2]
-    text_x = (width - text_width) // 2
-    draw.text((text_x, height - 25), data, font=font, fill=(0, 0, 0))
+    text_x = (img_width - text_width) // 2
+    draw.text((text_x, img_height - 20), data, font=font, fill=barcode_color)
+    
+    # 테두리 추가
+    draw.rectangle(
+        (10, 10, img_width - 10, img_height - 25),
+        outline=barcode_color,
+        width=1
+    )
     
     # 이미지를 바이트로 변환
     img_byte = io.BytesIO()
@@ -631,15 +614,15 @@ def create_docx_certificate(certificate, current_user, company_info):
     verify_note_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     verify_note_p.space_before = Pt(0)
     verify_note_p.space_after = Pt(6)
-    verify_note_run = verify_note_p.add_run("※ 아래 QR코드로 문서의 진위여부를 확인하실 수 있습니다.")
+    verify_note_run = verify_note_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
     verify_note_run.font.name = '맑은 고딕'
     verify_note_run.font.size = Pt(8)
     verify_note_run.font.bold = True
     
-    # QR 코드 스타일의 2D 바코드 생성 및 삽입
+    # 가로형 바코드 생성 및 삽입
     try:
-        # QR 코드 스타일의 바코드 생성 (정사각형으로 설정)
-        barcode_img_io = create_barcode(doc_verification_code, width=200, height=200)
+        # 표 너비에 맞춘 가로형 바코드 생성
+        barcode_img_io = create_barcode(doc_verification_code, width=500, height=80)
         
         barcode_p = doc.add_paragraph()
         barcode_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -647,7 +630,7 @@ def create_docx_certificate(certificate, current_user, company_info):
         barcode_p.space_after = Pt(6)
         
         barcode_run = barcode_p.add_run()
-        barcode_run.add_picture(barcode_img_io, width=Cm(6))  # QR 코드 적정 크기로 조정
+        barcode_run.add_picture(barcode_img_io, width=Cm(16))  # 표와 동일한 너비(16cm)로 설정
     except Exception as e:
         print(f"바코드 생성 오류: {str(e)}")
     
