@@ -507,6 +507,41 @@ def process_certificate(certificate_id):
     )
 
 
+@admin_bp.route('/employees/delete/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_employee(user_id):
+    """직원 삭제"""
+    user = User.query.get_or_404(user_id)
+    
+    # 관리자는 삭제할 수 없음
+    if user.role == Role.ADMIN:
+        flash('관리자 계정은 삭제할 수 없습니다.', 'danger')
+        return redirect(url_for('admin.manage_employees'))
+    
+    # 사용자 정보 미리 저장
+    user_name = user.name
+    
+    try:
+        # 휴가 데이터 삭제
+        VacationDays.query.filter_by(user_id=user.id).delete()
+        # 휴가 신청 삭제
+        VacationRequest.query.filter_by(user_id=user.id).delete()
+        # 재직증명서 신청 삭제
+        EmploymentCertificate.query.filter_by(user_id=user.id).delete()
+        
+        # 사용자 삭제
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'{user_name} 직원이 성공적으로 삭제되었습니다.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'직원 삭제 중 오류가 발생했습니다: {str(e)}', 'danger')
+        
+    return redirect(url_for('admin.manage_employees'))
+
+
 @admin_bp.route('/company-info', methods=['GET', 'POST'])
 @login_required
 @admin_required

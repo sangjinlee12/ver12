@@ -122,6 +122,11 @@
                                         <a href="{{ url_for('admin.set_hire_date', user_id=employee.id) }}" class="text-primary hover:text-primary-dark">
                                             <i class="fas fa-calendar-day mr-1"></i> 입사일 설정
                                         </a>
+                                        <button type="button" 
+                                                onclick="confirmDeleteEmployee('{{ employee.id }}', '{{ employee.name }}')"
+                                                class="text-red-600 hover:text-red-800">
+                                            <i class="fas fa-user-times mr-1"></i> 직원 삭제
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -165,5 +170,21 @@
             window.location.href = "{{ url_for('admin.manage_employees') }}" + "?year=" + year;
         });
     });
+
+    // 직원 삭제 확인
+    function confirmDeleteEmployee(userId, userName) {
+        if (confirm(`정말로 ${userName} 직원을 삭제하시겠습니까?\n관련된 모든 정보(휴가, 재직증명서 등)가 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`)) {
+            // 확인 시 삭제 폼 생성 및 제출
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('admin.delete_employee', user_id=0) }}".replace('0', userId);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>
+{% endblock %}
+
+{% block modal %}
+<!-- 삭제 확인 모달 (생략 - JavaScript confirm으로 대체) -->
 {% endblock %}
