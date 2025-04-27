@@ -583,7 +583,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_p.space_before = Pt(0)
     company_p.space_after = Pt(0)
     company_run = company_p.add_run(company_name)
-    company_run.font.name = '맑은 고딕'
+    company_run.font.name = 'HY견고딕'
     company_run.font.size = Pt(15)  # 폰트 크기 15로 변경
     company_run.font.bold = True
     
@@ -595,14 +595,14 @@ def create_docx_certificate(certificate, current_user, company_info):
     ceo_p.space_before = Pt(0)
     ceo_p.space_after = Pt(0)
     ceo_run = ceo_p.add_run(f"대표이사 김세인")  # 이름 수정
-    ceo_run.font.name = '맑은 고딕'
+    ceo_run.font.name = 'HY견고딕'
     ceo_run.font.size = Pt(15)  # 폰트 크기 15로 변경
     ceo_run.font.bold = True
     
     ceo_p.add_run(" ")  # 간격 추가
     
     seal_run = ceo_p.add_run("(직인 생략)")
-    seal_run.font.name = '맑은 고딕'
+    seal_run.font.name = 'HY견고딕'
     seal_run.font.size = Pt(12)  # 폰트 크기 12로 변경
     
     # 추가 공백 삽입 (원본 확인 관련 부분을 더 아래로 내리기)
@@ -619,7 +619,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     verify_note_p.space_before = Pt(0)
     verify_note_p.space_after = Pt(6)
     verify_note_run = verify_note_p.add_run("※ 아래 바코드로 문서의 진위여부를 확인하실 수 있습니다.")
-    verify_note_run.font.name = '맑은 고딕'
+    verify_note_run.font.name = 'HY견고딕'
     verify_note_run.font.size = Pt(8)
     verify_note_run.font.bold = True
     
@@ -644,7 +644,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     code_p.space_before = Pt(2)
     code_p.space_after = Pt(0)
     code_run = code_p.add_run(f"문서확인번호: {doc_verification_code}")
-    code_run.font.name = '맑은 고딕'
+    code_run.font.name = 'HY견고딕'
     code_run.font.size = Pt(8)
     
     # 문서확인 사이트
@@ -653,7 +653,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     guide_p.space_before = Pt(1)
     guide_p.space_after = Pt(0)
     guide_run = guide_p.add_run(f"문서확인 사이트: {company_info.website if company_info and company_info.website else 'https://ss-electric.co.kr'}")
-    guide_run.font.name = '맑은 고딕'
+    guide_run.font.name = 'HY견고딕'
     guide_run.font.size = Pt(8)
     
     # 문서 저장
