@@ -540,13 +540,13 @@ def create_docx_certificate(certificate, current_user, company_info):
                     run.font.name = '맑은 고딕'
                     run.font.size = Pt(10)
     
-    # 표 아래 추가 공백 (두 칸)
-    for i in range(2):
+    # 표 아래 추가 공백 (세 칸)
+    for i in range(3):
         table_space = doc.add_paragraph()
         table_space.space_before = Pt(15)
         table_space.space_after = Pt(0)
     
-    # 증명 문구 (표 아래 두 칸 이후에 배치)
+    # 증명 문구 (표 아래 세 칸 이후에 배치)
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_confirm.space_before = Pt(0)
@@ -581,7 +581,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     company_p.space_after = Pt(0)
     company_run = company_p.add_run(company_name)
     company_run.font.name = '맑은 고딕'
-    company_run.font.size = Pt(17)  # 폰트 크기 17로 변경
+    company_run.font.size = Pt(15)  # 폰트 크기 15로 변경
     company_run.font.bold = True
     
     # 회사 이름과 대표이사 이름을 바로 붙여서 배치 (여백 제거)
@@ -593,7 +593,7 @@ def create_docx_certificate(certificate, current_user, company_info):
     ceo_p.space_after = Pt(0)
     ceo_run = ceo_p.add_run(f"대표이사 김세인")  # 이름 수정
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.size = Pt(17)  # 폰트 크기 17로 변경
+    ceo_run.font.size = Pt(15)  # 폰트 크기 15로 변경
     ceo_run.font.bold = True
     
     ceo_p.add_run(" ")  # 간격 추가
