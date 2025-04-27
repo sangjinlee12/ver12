@@ -540,10 +540,16 @@ def create_docx_certificate(certificate, current_user, company_info):
                     run.font.name = '맑은 고딕'
                     run.font.size = Pt(10)
     
-    # 증명 문구 (표 바로 아래에 배치)
+    # 표 아래 추가 공백 (두 칸)
+    for i in range(2):
+        table_space = doc.add_paragraph()
+        table_space.space_before = Pt(15)
+        table_space.space_after = Pt(0)
+    
+    # 증명 문구 (표 아래 두 칸 이후에 배치)
     p_confirm = doc.add_paragraph()
     p_confirm.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_confirm.space_before = Pt(25)
+    p_confirm.space_before = Pt(0)
     p_confirm.space_after = Pt(25)
     confirm_run = p_confirm.add_run("상기인은 위와 같이 재직하고 있음을 증명합니다.")
     confirm_run.font.name = '맑은 고딕'
