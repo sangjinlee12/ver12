@@ -9,7 +9,9 @@ import tempfile
 import os
 import urllib.parse
 import io
-from weasyprint import HTML
+# WeasyPrint는 시스템 종속성 문제가 있어 사용하지 않습니다
+# 필요한 경우 reportlab을 사용합니다
+from reportlab.pdfgen import canvas
 from PIL import Image, ImageDraw, ImageFont
 import base64
 import docx

@@ -2,7 +2,10 @@ services:
   - type: web
     name: sselectric-vacation-system
     env: python
-    buildCommand: pip install -r requirements-render.txt
+    buildCommand: |
+      apt-get update -y
+      apt-get install -y build-essential fonts-nanum fonts-noto-cjk
+      pip install -r requirements-render.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --reuse-port main:app
     plan: free
     envVars:
@@ -12,4 +15,8 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: PYTHONIOENCODING
+        value: "utf-8"
     autoDeploy: true
