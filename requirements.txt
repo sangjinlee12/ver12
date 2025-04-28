@@ -19,3 +19,4 @@ xlrd==2.0.1
 python-barcode
 qrcode
 barcode
+docx
