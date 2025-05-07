@@ -53,7 +53,8 @@ class User(UserMixin, db.Model):
     vacation_requests = db.relationship('VacationRequest', backref='user', foreign_keys='VacationRequest.user_id')
     
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # 명시적으로 해시 메소드 지정 (pbkdf2:sha256)
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
