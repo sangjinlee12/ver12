@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["python39"]
+
+[phases.install]
+cmds = ["pip install -r requirements-railway.txt"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 1 main:app"
