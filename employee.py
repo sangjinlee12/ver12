@@ -69,12 +69,64 @@ def dashboard():
         status=VacationStatus.APPROVED
     ).count()
     
+    # 추가 통계 데이터
+    remaining_vacation_days = vacation_days.remaining_days()
+    total_vacation_days = vacation_days.total_days
+    
+    # 대기중인 모든 신청 (휴가 + 증명서)
+    pending_requests = (VacationRequest.query.filter_by(user_id=current_user.id, status=VacationStatus.PENDING).count() +
+                       EmploymentCertificate.query.filter_by(user_id=current_user.id, status=CertificateStatus.PENDING).count())
+    
+    # 최근 휴가 신청 내역 (5개)
+    recent_my_vacations = VacationRequest.query.filter_by(
+        user_id=current_user.id
+    ).order_by(VacationRequest.created_at.desc()).limit(5).all()
+    
+    # 이번 달 예정된 이벤트 (휴가, 공휴일)
+    from models import Holiday
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    upcoming_events = []
+    
+    # 승인된 휴가 일정
+    approved_vacations = VacationRequest.query.filter_by(
+        user_id=current_user.id,
+        status=VacationStatus.APPROVED
+    ).filter(
+        VacationRequest.start_date >= datetime.now().date()
+    ).order_by(VacationRequest.start_date).limit(10).all()
+    
+    for vacation in approved_vacations:
+        upcoming_events.append({
+            'date': vacation.start_date,
+            'type': 'vacation',
+            'description': f'{vacation.type} ({vacation.days}일)'
+        })
+    
+    # 공휴일
+    holidays = Holiday.query.filter(
+        Holiday.date >= datetime.now().date()
+    ).order_by(Holiday.date).limit(10).all()
+    
+    for holiday in holidays:
+        upcoming_events.append({
+            'date': holiday.date,
+            'type': 'holiday',
+            'description': holiday.name
+        })
+    
+    # 날짜순 정렬
+    upcoming_events.sort(key=lambda x: x['date'])
+    upcoming_events = upcoming_events[:10]  # 최대 10개
+
     return render_template(
-        'employee/dashboard.html',
-        vacation_days=vacation_days,
-        recent_requests=recent_requests,
-        pending_count=pending_count,
-        approved_count=approved_count,
+        'employee/dashboard_gov.html',
+        remaining_vacation_days=remaining_vacation_days,
+        total_vacation_days=total_vacation_days,
+        pending_requests=pending_requests,
+        recent_my_vacations=recent_my_vacations,
+        upcoming_events=upcoming_events,
         current_year=current_year
     )
 

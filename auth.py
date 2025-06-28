@@ -29,7 +29,7 @@ def login():
         
         flash('아이디 또는 비밀번호가 잘못되었습니다.', 'danger')
     
-    return render_template('login.html', form=form)
+    return render_template('login_gov.html', form=form)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -42,12 +42,12 @@ def register():
         # 아이디 중복 확인
         if User.query.filter_by(username=form.username.data).first():
             flash('이미 사용 중인 아이디입니다.', 'danger')
-            return render_template('register.html', form=form)
+            return render_template('register_gov.html', form=form)
         
         # 이메일 중복 확인
         if User.query.filter_by(email=form.email.data).first():
             flash('이미 사용 중인 이메일입니다.', 'danger')
-            return render_template('register.html', form=form)
+            return render_template('register_gov.html', form=form)
         
         # 첫 번째 사용자는 관리자로 설정
         role = Role.EMPLOYEE
@@ -84,7 +84,7 @@ def register():
         flash('회원가입이 완료되었습니다. 로그인해주세요.', 'success')
         return redirect(url_for('auth.login'))
     
-    return render_template('register.html', form=form)
+    return render_template('register_gov.html', form=form)
 
 @auth_bp.route('/logout')
 @login_required

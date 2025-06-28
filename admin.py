@@ -50,14 +50,32 @@ def dashboard():
     
     current_year = datetime.now().year
     
+    # 추가 통계 데이터
+    pending_vacations = VacationRequest.query.filter_by(status=VacationStatus.PENDING).count()
+    pending_certificates = EmploymentCertificate.query.filter_by(status=CertificateStatus.PENDING).count()
+    total_holidays = Holiday.query.count()
+    
+    # 최근 휴가 신청 (5개)
+    recent_vacations = VacationRequest.query.order_by(VacationRequest.created_at.desc()).limit(5).all()
+    
+    # 최근 증명서 신청 (5개)
+    recent_certificates = EmploymentCertificate.query.order_by(EmploymentCertificate.created_at.desc()).limit(5).all()
+    
+    # 부서별 인원 통계
+    department_stats = {}
+    departments = db.session.query(User.department, db.func.count(User.id)).filter(User.department != None).group_by(User.department).all()
+    for dept, count in departments:
+        department_stats[dept] = count
+
     return render_template(
-        'admin/dashboard.html',
+        'admin/dashboard_gov.html',
         total_employees=total_employees,
-        pending_requests=pending_requests,
-        approved_requests=approved_requests,
-        rejected_requests=rejected_requests,
-        recent_requests=recent_requests,
-        dept_stats=dept_stats,
+        pending_vacations=pending_vacations,
+        pending_certificates=pending_certificates,
+        total_holidays=total_holidays,
+        recent_vacations=recent_vacations,
+        recent_certificates=recent_certificates,
+        department_stats=department_stats,
         current_year=current_year
     )
 

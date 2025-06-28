@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대한민국 행정안전부 - 인사관리시스템 로그인</title>
+    
+    <!-- 정부 표준 웹폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 정부 표준 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --gov-blue: #003d82;
+            --gov-blue-dark: #002855;
+            --gov-blue-light: #e6f0ff;
+            --gov-navy: #1a365d;
+            --gov-gray: #f8f9fa;
+            --gov-border: #dee2e6;
+            --gov-text: #343a40;
+            --gov-white: #ffffff;
+            --gov-danger: #e17055;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 배경 패턴 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
+            background-size: 400px 400px;
+            z-index: 1;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--gov-white);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
+            color: white;
+            padding: 30px 30px 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 10px solid var(--gov-navy);
+        }
+
+        .gov-emblem {
+            width: 60px;
+            height: 60px;
+            background: var(--gov-white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: var(--gov-blue);
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .system-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .system-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .login-body {
+            padding: 35px 30px 30px;
+        }
+
+        .login-notice {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .login-notice .notice-icon {
+            color: var(--gov-blue);
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gov-text);
+            font-size: 14px;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gov-blue);
+            box-shadow: 0 0 0 3px rgba(0,61,130,0.1);
+        }
+
+        .form-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,61,130,0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-links {
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .login-links a {
+            color: var(--gov-blue);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+
+        .gov-footer-mini {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .login-body {
+                padding: 25px 20px;
+            }
+
+            .login-header {
+                padding: 25px 20px 20px;
+            }
+
+            .system-title {
+                font-size: 18px;
+            }
+
+            .gov-emblem {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="gov-emblem">
+                    <i class="fas fa-landmark"></i>
+                </div>
+                <div class="system-title">행정안전부</div>
+                <div class="system-subtitle">인사관리시스템</div>
+            </div>
+            
+            <div class="login-body">
+                <div class="login-notice">
+                    <i class="fas fa-info-circle notice-icon"></i>
+                    본 시스템은 공무원 전용 인사관리시스템입니다. 승인된 사용자만 접근 가능합니다.
+                </div>
+
+                <!-- Flash 메시지 표시 -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                <i class="fas fa-exclamation-triangle"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-group">
+                        <label for="username" class="form-label">사용자 아이디</label>
+                        <div class="form-input-wrapper">
+                            <i class="fas fa-user form-icon"></i>
+                            {{ form.username(class="form-input", placeholder="사용자 아이디를 입력하세요") }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="field-error">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">비밀번호</label>
+                        <div class="form-input-wrapper">
+                            <i class="fas fa-lock form-icon"></i>
+                            {{ form.password(class="form-input", placeholder="비밀번호를 입력하세요") }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="field-error">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> 시스템 접속
+                    </button>
+                </form>
+
+                <div class="login-links">
+                    <a href="{{ url_for('auth.register') }}">
+                        <i class="fas fa-user-plus"></i> 신규 계정 등록
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gov-footer-mini">
+        Copyright © 2025 Ministry of the Interior and Safety. All rights reserved.
+    </div>
+
+    <script>
+        // 폼 제출 시 버튼 비활성화
+        document.querySelector('form').addEventListener('submit', function() {
+            const btn = document.querySelector('.login-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 접속 중...';
+            btn.disabled = true;
+        });
+
+        // 엔터키로 폼 제출
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('form').submit();
+            }
+        });
+    </script>
+</body>
+</html>

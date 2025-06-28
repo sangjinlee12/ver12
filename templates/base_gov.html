@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}대한민국 행정안전부 - 인사관리시스템{% endblock %}</title>
+    
+    <!-- 정부 표준 웹폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 정부 표준 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 정부 웹사이트 표준 CSS -->
+    <style>
+        /* 정부 표준 색상 팔레트 */
+        :root {
+            --gov-blue: #003d82;
+            --gov-blue-dark: #002855;
+            --gov-blue-light: #e6f0ff;
+            --gov-navy: #1a365d;
+            --gov-red: #d63031;
+            --gov-gray: #f8f9fa;
+            --gov-border: #dee2e6;
+            --gov-text: #343a40;
+            --gov-text-light: #6c757d;
+            --gov-white: #ffffff;
+            --gov-success: #00b894;
+            --gov-warning: #fdcb6e;
+            --gov-danger: #e17055;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--gov-gray);
+            color: var(--gov-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* 정부 헤더 스타일 */
+        .gov-header {
+            background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .gov-header-top {
+            background-color: var(--gov-blue-dark);
+            padding: 8px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .gov-header-main {
+            padding: 15px 0;
+        }
+
+        .gov-header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .gov-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .gov-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gov-white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gov-blue);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .gov-logo-text {
+            color: white;
+        }
+
+        .gov-logo-main {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .gov-logo-sub {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .gov-user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* 정부 네비게이션 */
+        .gov-nav {
+            background-color: var(--gov-white);
+            border-bottom: 1px solid var(--gov-border);
+            margin-top: 110px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+
+        .gov-nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .gov-nav-list {
+            display: flex;
+            list-style: none;
+        }
+
+        .gov-nav-item {
+            border-right: 1px solid var(--gov-border);
+        }
+
+        .gov-nav-link {
+            display: block;
+            padding: 15px 25px;
+            color: var(--gov-text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .gov-nav-link:hover,
+        .gov-nav-link.active {
+            background-color: var(--gov-blue-light);
+            color: var(--gov-blue);
+        }
+
+        .gov-nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--gov-blue);
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .gov-main {
+            margin-top: 165px;
+            min-height: calc(100vh - 165px);
+            background-color: var(--gov-gray);
+        }
+
+        .gov-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* 정부 표준 페이지 제목 */
+        .gov-page-header {
+            background-color: var(--gov-white);
+            border: 1px solid var(--gov-border);
+            border-radius: 8px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .gov-page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gov-blue);
+            margin-bottom: 8px;
+        }
+
+        .gov-page-subtitle {
+            color: var(--gov-text-light);
+            font-size: 14px;
+        }
+
+        .gov-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--gov-text-light);
+            margin-bottom: 15px;
+        }
+
+        .gov-breadcrumb a {
+            color: var(--gov-blue);
+            text-decoration: none;
+        }
+
+        /* 정부 표준 카드 */
+        .gov-card {
+            background-color: var(--gov-white);
+            border: 1px solid var(--gov-border);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .gov-card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid var(--gov-border);
+            padding: 15px 20px;
+            font-weight: 600;
+            color: var(--gov-text);
+        }
+
+        .gov-card-body {
+            padding: 25px;
+        }
+
+        /* 정부 표준 버튼 */
+        .gov-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1.4;
+        }
+
+        .gov-btn-primary {
+            background-color: var(--gov-blue);
+            color: white;
+        }
+
+        .gov-btn-primary:hover {
+            background-color: var(--gov-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,61,130,0.3);
+        }
+
+        .gov-btn-secondary {
+            background-color: var(--gov-gray);
+            color: var(--gov-text);
+            border: 1px solid var(--gov-border);
+        }
+
+        .gov-btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+
+        .gov-btn-success {
+            background-color: var(--gov-success);
+            color: white;
+        }
+
+        .gov-btn-warning {
+            background-color: var(--gov-warning);
+            color: var(--gov-text);
+        }
+
+        .gov-btn-danger {
+            background-color: var(--gov-danger);
+            color: white;
+        }
+
+        /* 정부 표준 테이블 */
+        .gov-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--gov-white);
+            font-size: 14px;
+        }
+
+        .gov-table th,
+        .gov-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--gov-border);
+        }
+
+        .gov-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--gov-text);
+            border-bottom: 2px solid var(--gov-border);
+        }
+
+        .gov-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* 정부 표준 폼 */
+        .gov-form-group {
+            margin-bottom: 20px;
+        }
+
+        .gov-form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gov-text);
+        }
+
+        .gov-form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--gov-border);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .gov-form-input:focus {
+            outline: none;
+            border-color: var(--gov-blue);
+            box-shadow: 0 0 0 3px rgba(0,61,130,0.1);
+        }
+
+        /* 정부 표준 상태 뱃지 */
+        .gov-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gov-badge-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .gov-badge-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .gov-badge-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 정부 표준 알림 */
+        .gov-alert {
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .gov-alert-info {
+            background-color: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .gov-alert-success {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .gov-alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .gov-alert-danger {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        /* 푸터 */
+        .gov-footer {
+            background-color: var(--gov-blue-dark);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 50px;
+        }
+
+        .gov-footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .gov-footer-info {
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .gov-footer-copyright {
+            font-size: 12px;
+            opacity: 0.8;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 15px;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .gov-header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .gov-nav-list {
+                flex-direction: column;
+            }
+
+            .gov-nav-item {
+                border-right: none;
+                border-bottom: 1px solid var(--gov-border);
+            }
+
+            .gov-main {
+                margin-top: 200px;
+            }
+
+            .gov-container {
+                padding: 20px 15px;
+            }
+
+            .gov-page-header {
+                padding: 20px;
+            }
+
+            .gov-card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 정부 표준 헤더 -->
+    <header class="gov-header">
+        <div class="gov-header-top">
+            대한민국 정부 공식 웹사이트 | Republic of Korea Government Official Website
+        </div>
+        <div class="gov-header-main">
+            <div class="gov-header-content">
+                <div class="gov-logo">
+                    <div class="gov-logo-icon">
+                        <i class="fas fa-landmark"></i>
+                    </div>
+                    <div class="gov-logo-text">
+                        <div class="gov-logo-main">행정안전부</div>
+                        <div class="gov-logo-sub">인사관리시스템</div>
+                    </div>
+                </div>
+                
+                {% if current_user and current_user.is_authenticated %}
+                <div class="gov-user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ current_user.name }} ({{ current_user.department }})</span>
+                    <a href="{{ url_for('auth.logout') }}" class="gov-btn gov-btn-secondary" style="padding: 5px 12px; font-size: 12px;">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- 정부 표준 네비게이션 -->
+    {% if current_user and current_user.is_authenticated %}
+    <nav class="gov-nav">
+        <div class="gov-nav-content">
+            <ul class="gov-nav-list">
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('routes.dashboard') }}" class="gov-nav-link {% if request.endpoint == 'routes.dashboard' %}active{% endif %}">
+                        <i class="fas fa-home"></i> 대시보드
+                    </a>
+                </li>
+                
+                {% if current_user.is_admin() %}
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('admin.manage_employees') }}" class="gov-nav-link {% if 'admin.manage_employees' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-users"></i> 직원관리
+                    </a>
+                </li>
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('admin.manage_vacations') }}" class="gov-nav-link {% if 'admin.manage_vacations' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-calendar-check"></i> 휴가관리
+                    </a>
+                </li>
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('admin.manage_certificates') }}" class="gov-nav-link {% if 'admin.manage_certificates' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-certificate"></i> 증명서관리
+                    </a>
+                </li>
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('admin.manage_holidays') }}" class="gov-nav-link {% if 'admin.manage_holidays' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-calendar-alt"></i> 공휴일관리
+                    </a>
+                </li>
+                {% else %}
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('employee.request_vacation') }}" class="gov-nav-link {% if 'employee.request_vacation' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-calendar-plus"></i> 휴가신청
+                    </a>
+                </li>
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('employee.my_vacations') }}" class="gov-nav-link {% if 'employee.my_vacations' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-list"></i> 휴가내역
+                    </a>
+                </li>
+                <li class="gov-nav-item">
+                    <a href="{{ url_for('employee.request_certificate') }}" class="gov-nav-link {% if 'employee.request_certificate' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-file-alt"></i> 재직증명서
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 메인 컨텐츠 -->
+    <main class="gov-main">
+        <div class="gov-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- 정부 표준 푸터 -->
+    <footer class="gov-footer">
+        <div class="gov-footer-content">
+            <div class="gov-footer-info">
+                <strong>행정안전부 인사관리시스템</strong><br>
+                주소: 서울특별시 종로구 세종대로 209 정부서울청사<br>
+                대표전화: 02-2100-3114 | 팩스: 02-2100-1999<br>
+                개인정보보호책임자: 정보화담당관실 개인정보보호팀
+            </div>
+            <div class="gov-footer-copyright">
+                Copyright © 2025 Ministry of the Interior and Safety. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Flash 메시지 처리 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Flash 메시지 자동 숨김 (5초 후)
+            const alerts = document.querySelectorAll('.gov-alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
