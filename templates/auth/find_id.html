@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>에스에스전력 - 인사관리시스템 로그인</title>
+    <title>에스에스전력 - 아이디 찾기</title>
     
     <!-- 정부 표준 웹폰트 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,25 +40,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
         }
 
-        /* 배경 패턴 */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
-            background-size: 400px 400px;
-            z-index: 1;
-        }
-
-        .login-container {
+        .find-container {
             position: relative;
             z-index: 10;
             width: 100%;
@@ -66,33 +50,18 @@
             padding: 20px;
         }
 
-        .login-card {
+        .find-card {
             background: var(--gov-white);
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             overflow: hidden;
-            position: relative;
         }
 
-        .login-header {
+        .find-header {
             background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
             color: white;
             padding: 30px 30px 25px;
             text-align: center;
-            position: relative;
-        }
-
-        .login-header::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 10px solid var(--gov-navy);
         }
 
         .gov-emblem {
@@ -111,41 +80,22 @@
         }
 
         .system-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             margin-bottom: 5px;
-            letter-spacing: -0.5px;
         }
 
         .system-subtitle {
             font-size: 13px;
             opacity: 0.9;
-            font-weight: 400;
         }
 
-        .login-body {
+        .find-body {
             padding: 35px 30px 30px;
-        }
-
-        .login-notice {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 25px;
-            font-size: 13px;
-            color: #495057;
-            line-height: 1.5;
-        }
-
-        .login-notice .notice-icon {
-            color: var(--gov-blue);
-            margin-right: 8px;
         }
 
         .form-group {
             margin-bottom: 20px;
-            position: relative;
         }
 
         .form-label {
@@ -167,7 +117,6 @@
             border-radius: 6px;
             font-size: 14px;
             transition: all 0.3s ease;
-            background: #fff;
         }
 
         .form-input:focus {
@@ -185,7 +134,7 @@
             font-size: 16px;
         }
 
-        .login-btn {
+        .find-btn {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, var(--gov-blue) 0%, var(--gov-navy) 100%);
@@ -199,39 +148,24 @@
             margin-bottom: 20px;
         }
 
-        .login-btn:hover {
+        .find-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,61,130,0.3);
         }
 
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .login-links {
+        .back-links {
             text-align: center;
             font-size: 13px;
         }
 
-        .login-links a {
+        .back-links a {
             color: var(--gov-blue);
             text-decoration: none;
             margin: 0 10px;
         }
 
-        .login-links a:hover {
+        .back-links a:hover {
             text-decoration: underline;
-        }
-
-        .gov-footer-mini {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.8);
-            font-size: 12px;
-            text-align: center;
-            z-index: 10;
         }
 
         .alert {
@@ -253,111 +187,94 @@
             color: #155724;
         }
 
-        .alert-info {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid var(--gov-blue);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
-        /* 반응형 디자인 */
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 15px;
-            }
-
-            .login-body {
-                padding: 25px 20px;
-            }
-
-            .login-header {
-                padding: 25px 20px 20px;
-            }
-
-            .system-title {
-                font-size: 18px;
-            }
-
-            .gov-emblem {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
+        .result-username {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gov-blue);
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
+    <div class="find-container">
+        <div class="find-card">
+            <div class="find-header">
                 <div class="gov-emblem">
-                    <i class="fas fa-landmark"></i>
+                    <i class="fas fa-search"></i>
                 </div>
-                <div class="system-title">에스에스전력</div>
-                <div class="system-subtitle">인사관리시스템</div>
+                <div class="system-title">아이디 찾기</div>
+                <div class="system-subtitle">이름과 이메일로 아이디를 찾습니다</div>
             </div>
             
-            <div class="login-body">
-                <div class="login-notice">
-                    <i class="fas fa-info-circle notice-icon"></i>
-                    본 시스템은 직원 전용 인사관리시스템입니다. 승인된 사용자만 접근 가능합니다.
-                </div>
-
+            <div class="find-body">
                 <!-- Flash 메시지 표시 -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
-                                <i class="fas fa-exclamation-triangle"></i> {{ message }}
+                                <i class="fas fa-info-circle"></i> {{ message }}
                             </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
 
-                <form method="POST" action="{{ url_for('auth.login') }}">
+                {% if found_username %}
+                <div class="result-box">
+                    <div class="result-username">{{ found_username }}</div>
+                    <p>위 아이디로 로그인하실 수 있습니다.</p>
+                </div>
+                {% endif %}
+
+                <form method="POST">
                     {{ form.hidden_tag() }}
                     
                     <div class="form-group">
-                        <label for="username" class="form-label">사용자 아이디</label>
+                        <label for="name" class="form-label">이름</label>
                         <div class="form-input-wrapper">
                             <i class="fas fa-user form-icon"></i>
-                            {{ form.username(class="form-input", placeholder="사용자 아이디를 입력하세요") }}
+                            {{ form.name(class="form-input", placeholder="본명을 입력하세요") }}
                         </div>
-                        {% if form.username.errors %}
+                        {% if form.name.errors %}
                             <div class="field-error">
-                                {% for error in form.username.errors %}
-                                    <small>{{ error }}</small>
+                                {% for error in form.name.errors %}
+                                    <small style="color: #dc3545;">{{ error }}</small>
                                 {% endfor %}
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="form-group">
-                        <label for="password" class="form-label">비밀번호</label>
+                        <label for="email" class="form-label">이메일</label>
                         <div class="form-input-wrapper">
-                            <i class="fas fa-lock form-icon"></i>
-                            {{ form.password(class="form-input", placeholder="비밀번호를 입력하세요") }}
+                            <i class="fas fa-envelope form-icon"></i>
+                            {{ form.email(class="form-input", placeholder="등록된 이메일을 입력하세요") }}
                         </div>
-                        {% if form.password.errors %}
+                        {% if form.email.errors %}
                             <div class="field-error">
-                                {% for error in form.password.errors %}
-                                    <small>{{ error }}</small>
+                                {% for error in form.email.errors %}
+                                    <small style="color: #dc3545;">{{ error }}</small>
                                 {% endfor %}
                             </div>
                         {% endif %}
                     </div>
 
-                    <button type="submit" class="login-btn">
-                        <i class="fas fa-sign-in-alt"></i> 시스템 접속
+                    <button type="submit" class="find-btn">
+                        <i class="fas fa-search"></i> 아이디 찾기
                     </button>
                 </form>
 
-                <div class="login-links">
-                    <a href="{{ url_for('auth.register') }}">
-                        <i class="fas fa-user-plus"></i> 신규 계정 등록
-                    </a>
-                    <br><br>
-                    <a href="{{ url_for('auth.find_id') }}">
-                        <i class="fas fa-search"></i> 아이디 찾기
+                <div class="back-links">
+                    <a href="{{ url_for('auth.login') }}">
+                        <i class="fas fa-arrow-left"></i> 로그인으로 돌아가기
                     </a>
                     |
                     <a href="{{ url_for('auth.find_password') }}">
@@ -367,25 +284,5 @@
             </div>
         </div>
     </div>
-
-    <div class="gov-footer-mini">
-        Copyright © 2025 Ministry of the Interior and Safety. All rights reserved.
-    </div>
-
-    <script>
-        // 폼 제출 시 버튼 비활성화
-        document.querySelector('form').addEventListener('submit', function() {
-            const btn = document.querySelector('.login-btn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 접속 중...';
-            btn.disabled = true;
-        });
-
-        // 엔터키로 폼 제출
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.querySelector('form').submit();
-            }
-        });
-    </script>
 </body>
 </html>

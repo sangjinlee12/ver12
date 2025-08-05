@@ -11,6 +11,33 @@ class LoginForm(FlaskForm):
     submit = SubmitField('로그인')
 
 
+class FindIdForm(FlaskForm):
+    """아이디 찾기 폼"""
+    name = StringField('이름', validators=[DataRequired('이름을 입력하세요.')])
+    email = StringField('이메일', validators=[DataRequired('이메일을 입력하세요.'), Email('올바른 이메일 형식이 아닙니다.')])
+    submit = SubmitField('아이디 찾기')
+
+
+class FindPasswordForm(FlaskForm):
+    """비밀번호 찾기 폼"""
+    username = StringField('아이디', validators=[DataRequired('아이디를 입력하세요.')])
+    email = StringField('이메일', validators=[DataRequired('이메일을 입력하세요.'), Email('올바른 이메일 형식이 아닙니다.')])
+    submit = SubmitField('임시 비밀번호 발급')
+
+
+class ResetPasswordForm(FlaskForm):
+    """비밀번호 재설정 폼"""
+    new_password = PasswordField('새 비밀번호', validators=[
+        DataRequired('새 비밀번호를 입력하세요.'),
+        Length(min=6, message='비밀번호는 최소 6자 이상이어야 합니다.')
+    ])
+    confirm_password = PasswordField('비밀번호 확인', validators=[
+        DataRequired('비밀번호 확인을 입력하세요.'),
+        EqualTo('new_password', message='비밀번호가 일치하지 않습니다.')
+    ])
+    submit = SubmitField('비밀번호 변경')
+
+
 class RegisterForm(FlaskForm):
     """회원가입 폼"""
     username = StringField('아이디', validators=[DataRequired('아이디를 입력하세요.'), Length(min=4, max=20, message='아이디는 4-20자 사이여야 합니다.')])

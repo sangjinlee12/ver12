@@ -3,7 +3,9 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from models import User, Role, VacationDays
-from forms import LoginForm, RegisterForm
+from forms import LoginForm, RegisterForm, FindIdForm, FindPasswordForm, ResetPasswordForm
+import secrets
+import string
 from datetime import datetime
 
 auth_bp = Blueprint('auth', __name__)
@@ -93,3 +95,72 @@ def logout():
     logout_user()
     flash('로그아웃되었습니다.', 'info')
     return redirect(url_for('auth.login'))
+
+
+def generate_temp_password(length=8):
+    """임시 비밀번호 생성"""
+    characters = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+
+@auth_bp.route('/find-id', methods=['GET', 'POST'])
+def find_id():
+    """아이디 찾기"""
+    form = FindIdForm()
+    found_username = None
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(
+            name=form.name.data, 
+            email=form.email.data
+        ).first()
+        
+        if user:
+            found_username = user.username
+            flash(f'회원님의 아이디는 "{found_username}" 입니다.', 'success')
+        else:
+            flash('입력하신 정보와 일치하는 계정을 찾을 수 없습니다.', 'danger')
+    
+    return render_template('auth/find_id.html', form=form, found_username=found_username)
+
+
+@auth_bp.route('/find-password', methods=['GET', 'POST'])
+def find_password():
+    """비밀번호 찾기 (임시 비밀번호 발급)"""
+    form = FindPasswordForm()
+    temp_password = None
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(
+            username=form.username.data,
+            email=form.email.data
+        ).first()
+        
+        if user:
+            # 임시 비밀번호 생성 및 설정
+            temp_password = generate_temp_password()
+            user.set_password(temp_password)
+            db.session.commit()
+            
+            flash(f'임시 비밀번호가 발급되었습니다: {temp_password}', 'success')
+            flash('보안을 위해 로그인 후 반드시 비밀번호를 변경해주세요.', 'warning')
+        else:
+            flash('입력하신 정보와 일치하는 계정을 찾을 수 없습니다.', 'danger')
+    
+    return render_template('auth/find_password.html', form=form, temp_password=temp_password)
+
+
+@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+@login_required
+def reset_password():
+    """비밀번호 재설정"""
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        
+        flash('비밀번호가 성공적으로 변경되었습니다.', 'success')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('auth/reset_password.html', form=form)
