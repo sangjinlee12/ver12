@@ -4,9 +4,12 @@ services:
     env: python
     buildCommand: |
       apt-get update -y
-      apt-get install -y build-essential fonts-nanum fonts-noto-cjk
+      apt-get install -y build-essential fonts-nanum fonts-noto-cjk libpango-1.0-0 libpangoft2-1.0-0
+      pip install --upgrade pip
       pip install -r requirements-render.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --reuse-port main:app
+      python3 create_admin.py
+      python3 add_holidays.py
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 main:app
     plan: free
     envVars:
       - key: DATABASE_URL
