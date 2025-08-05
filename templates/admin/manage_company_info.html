@@ -16,165 +16,160 @@
     <p class="gov-page-subtitle">재직증명서에 기재될 회사 정보를 관리합니다.</p>
 </div>
 
+<!-- 성공 메시지 -->
+{% if get_flashed_messages() %}
+    <div class="gov-alert gov-alert-success" style="margin-bottom: 20px;">
+        <i class="fas fa-check-circle"></i>
+        {% for message in get_flashed_messages() %}
+            {{ message }}
+        {% endfor %}
+    </div>
+{% endif %}
+
 <!-- 회사 정보 관리 -->
 <div class="gov-card">
     <div class="gov-card-header">
         <i class="fas fa-edit"></i> 회사 정보 수정
     </div>
-        
-        <div class="p-6">
-            <form method="POST" action="{{ url_for('admin.manage_company_info') }}">
-                {{ form.hidden_tag() }}
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 회사명 -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">{{ form.name.label }}</label>
-                        {{ form.name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.name.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 대표자명 -->
-                    <div>
-                        <label for="ceo_name" class="block text-sm font-medium text-gray-700 mb-1">{{ form.ceo_name.label }}</label>
-                        {{ form.ceo_name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.ceo_name.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.ceo_name.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 사업자등록번호 -->
-                    <div>
-                        <label for="registration_number" class="block text-sm font-medium text-gray-700 mb-1">{{ form.registration_number.label }}</label>
-                        {{ form.registration_number(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.registration_number.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.registration_number.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 회사 주소 -->
-                    <div>
-                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">{{ form.address.label }}</label>
-                        {{ form.address(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.address.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.address.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 전화번호 -->
-                    <div>
-                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">{{ form.phone.label }}</label>
-                        {{ form.phone(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.phone.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.phone.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 팩스번호 -->
-                    <div>
-                        <label for="fax" class="block text-sm font-medium text-gray-700 mb-1">{{ form.fax.label }}</label>
-                        {{ form.fax(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.fax.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.fax.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- 웹사이트 -->
-                    <div>
-                        <label for="website" class="block text-sm font-medium text-gray-700 mb-1">{{ form.website.label }}</label>
-                        {{ form.website(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary") }}
-                        {% if form.website.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.website.errors[0] }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <!-- 직인 이미지 (base64) -->
-                <div class="mt-6">
-                    <label for="stamp_image" class="block text-sm font-medium text-gray-700 mb-1">{{ form.stamp_image.label }}</label>
-                    <p class="text-xs text-gray-500 mb-2">
-                        직인 이미지를 업로드하거나 base64 형식으로 등록할 수 있습니다. 직인 이미지는 재직증명서 발급 시 사용됩니다.
-                    </p>
-                    <!-- 파일 업로드 -->
-                    <div class="mb-2">
-                        <input type="file" id="stampImageFile" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
-                        <button type="button" id="uploadStampBtn" class="mt-2 inline-flex justify-center py-1 px-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">이미지 변환</button>
-                    </div>
-                    
-                    <!-- Base64 텍스트 영역 -->
-                    {{ form.stamp_image(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary", rows=3) }}
-                    {% if form.stamp_image.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.stamp_image.errors[0] }}</p>
+    <div class="gov-card-body">
+        <form method="POST" action="{{ url_for('admin.manage_company_info') }}">
+            {{ form.hidden_tag() }}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- 회사명 -->
+                <div>
+                    <label class="gov-form-label">{{ form.name.label }}</label>
+                    {{ form.name(class="gov-form-control") }}
+                    {% if form.name.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.name.errors[0] }}</div>
                     {% endif %}
                 </div>
                 
-                <!-- 이미지 변환 스크립트 -->
-                <script>
-                    document.getElementById('uploadStampBtn').addEventListener('click', function() {
-                        const fileInput = document.getElementById('stampImageFile');
-                        const base64Input = document.getElementById('stamp_image');
-                        
-                        if (fileInput.files.length > 0) {
-                            const file = fileInput.files[0];
-                            const reader = new FileReader();
-                            
-                            reader.onload = function(e) {
-                                base64Input.value = e.target.result;
-                                // 미리보기 업데이트
-                                const previewContainer = document.getElementById('stampPreviewContainer');
-                                if (previewContainer) {
-                                    const previewImg = previewContainer.querySelector('img');
-                                    if (previewImg) {
-                                        previewImg.src = e.target.result;
-                                    } else {
-                                        const newImg = document.createElement('img');
-                                        newImg.src = e.target.result;
-                                        newImg.alt = '직인 미리보기';
-                                        newImg.className = 'max-h-24';
-                                        previewContainer.appendChild(newImg);
-                                    }
-                                } else {
-                                    // 미리보기 영역 생성
-                                    const newPreviewDiv = document.createElement('div');
-                                    newPreviewDiv.id = 'stampPreviewContainer';
-                                    newPreviewDiv.className = 'mt-4';
-                                    newPreviewDiv.innerHTML = `
-                                        <p class="text-sm font-medium text-gray-700 mb-2">직인 미리보기:</p>
-                                        <div class="border border-gray-300 rounded-md p-4 inline-block bg-white">
-                                            <img src="${e.target.result}" alt="직인 미리보기" class="max-h-24">
-                                        </div>
-                                    `;
-                                    
-                                    const formElement = document.querySelector('form');
-                                    formElement.insertBefore(newPreviewDiv, document.querySelector('.mt-6:last-of-type'));
-                                }
-                            };
-                            
-                            reader.readAsDataURL(file);
-                        } else {
-                            alert('파일을 선택해주세요.');
-                        }
-                    });
-                </script>
-                
-                <!-- 직인 미리보기 -->
-                {% if company_info and company_info.stamp_image %}
-                <div class="mt-4">
-                    <p class="text-sm font-medium text-gray-700 mb-2">직인 미리보기:</p>
-                    <div class="border border-gray-300 rounded-md p-4 inline-block bg-white">
-                        <img src="{{ company_info.stamp_image }}" alt="직인 이미지" class="max-h-24">
-                    </div>
+                <!-- 대표자명 -->
+                <div>
+                    <label class="gov-form-label">{{ form.ceo_name.label }}</label>
+                    {{ form.ceo_name(class="gov-form-control") }}
+                    {% if form.ceo_name.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.ceo_name.errors[0] }}</div>
+                    {% endif %}
                 </div>
+                
+                <!-- 사업자등록번호 -->
+                <div>
+                    <label class="gov-form-label">{{ form.registration_number.label }}</label>
+                    {{ form.registration_number(class="gov-form-control") }}
+                    {% if form.registration_number.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.registration_number.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 회사 주소 -->
+                <div>
+                    <label class="gov-form-label">{{ form.address.label }}</label>
+                    {{ form.address(class="gov-form-control") }}
+                    {% if form.address.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.address.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 전화번호 -->
+                <div>
+                    <label class="gov-form-label">{{ form.phone.label }}</label>
+                    {{ form.phone(class="gov-form-control") }}
+                    {% if form.phone.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.phone.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 팩스번호 -->
+                <div>
+                    <label class="gov-form-label">{{ form.fax.label }}</label>
+                    {{ form.fax(class="gov-form-control") }}
+                    {% if form.fax.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.fax.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 웹사이트 -->
+                <div>
+                    <label class="gov-form-label">{{ form.website.label }}</label>
+                    {{ form.website(class="gov-form-control") }}
+                    {% if form.website.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.website.errors[0] }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 직인 이미지 -->
+            <div style="margin-top: 25px;">
+                <label class="gov-form-label">{{ form.stamp_image.label }}</label>
+                <div style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">
+                    직인 이미지를 업로드하거나 base64 형식으로 등록할 수 있습니다. 재직증명서 발급 시 사용됩니다.
+                </div>
+                
+                <!-- 파일 업로드 -->
+                <div style="margin-bottom: 15px;">
+                    <input type="file" id="stampImageFile" accept="image/*" class="gov-form-control">
+                    <button type="button" id="uploadStampBtn" class="gov-btn" style="margin-top: 10px; background: #6c757d; color: white;">
+                        <i class="fas fa-upload"></i> 이미지 변환
+                    </button>
+                </div>
+                
+                <!-- Base64 텍스트 영역 -->
+                {{ form.stamp_image(class="gov-form-control", rows=3, placeholder="base64 형식의 이미지 데이터가 여기에 표시됩니다") }}
+                {% if form.stamp_image.errors %}
+                    <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">{{ form.stamp_image.errors[0] }}</div>
                 {% endif %}
-                
-                <!-- 제출 버튼 -->
-                <div class="mt-6">
-                    {{ form.submit(class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary") }}
-                </div>
-            </form>
-        </div>
+            </div>
+            
+            <!-- 기존 직인 미리보기 -->
+            {% if company_info and company_info.stamp_image %}
+            <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;">
+                <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: #495057;">현재 등록된 직인</h4>
+                <img src="{{ company_info.stamp_image }}" alt="현재 직인" style="max-width: 200px; max-height: 100px; border: 1px solid #ccc;">
+            </div>
+            {% endif %}
+            
+            <div style="text-align: right; margin-top: 25px;">
+                {{ form.submit(class="gov-btn gov-btn-primary") }}
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+    document.getElementById('uploadStampBtn').addEventListener('click', function() {
+        const fileInput = document.getElementById('stampImageFile');
+        const base64Input = document.getElementById('stamp_image');
+        
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                base64Input.value = e.target.result;
+                updatePreview(e.target.result);
+            };
+            
+            reader.readAsDataURL(file);
+        } else {
+            alert('이미지 파일을 선택해주세요.');
+        }
+    });
+    
+    function updatePreview(base64Data) {
+        let previewDiv = document.getElementById('stampPreview');
+        if (!previewDiv) {
+            previewDiv = document.createElement('div');
+            previewDiv.id = 'stampPreview';
+            previewDiv.style.cssText = 'margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;';
+            document.getElementById('stamp_image').parentNode.appendChild(previewDiv);
+        }
+        
+        previewDiv.innerHTML = `
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: #495057;">직인 미리보기</h4>
+            <img src="${base64Data}" alt="직인 미리보기" style="max-width: 200px; max-height: 100px; border: 1px solid #ccc;">
+        `;
+    }
+</script>
 {% endblock %}
