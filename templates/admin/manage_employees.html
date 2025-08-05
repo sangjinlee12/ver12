@@ -1,180 +1,198 @@
-{% extends 'base.html' %}
+{% extends "base_gov.html" %}
 
-{% block title %}직원 관리 - 휴가관리시스템{% endblock %}
-
-{% block page_title %}직원 관리{% endblock %}
+{% block title %}에스에스전력 - 직원 관리{% endblock %}
 
 {% block content %}
-<div>
-    <!-- 직원 대량 업로드 섹션 -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <div class="p-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-800">직원 대량 등록</h2>
-            <p class="text-sm text-gray-500 mt-1">엑셀 파일을 업로드하여 여러 직원을 한 번에 등록할 수 있습니다.</p>
-        </div>
-        <div class="p-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex-1">
-                    <form action="{{ url_for('admin.upload_employees') }}" method="post" enctype="multipart/form-data" class="space-y-4">
-                        {{ upload_form.hidden_tag() }}
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-1">
-                                <div class="relative">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ upload_form.file.label }}</label>
-                                    {{ upload_form.file(class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none") }}
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>직원 관리</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-users"></i> 직원 관리
+    </h1>
+    <p class="gov-page-subtitle">직원 정보와 휴가 현황을 등록하고 관리합니다.</p>
+</div>
+
+<!-- 성공 메시지 -->
+{% if get_flashed_messages() %}
+    <div class="gov-alert gov-alert-success" style="margin-bottom: 20px;">
+        <i class="fas fa-check-circle"></i>
+        {% for message in get_flashed_messages() %}
+            {{ message }}
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- 직원 대량 등록 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-upload"></i> 직원 대량 등록
+        <small style="margin-left: 10px; color: #6c757d;">엑셀 파일로 여러 직원을 한 번에 등록합니다</small>
+    </div>
+    <div class="gov-card-body">
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start;">
+            <div>
+                <form action="{{ url_for('admin.upload_employees') }}" method="post" enctype="multipart/form-data">
+                    {{ upload_form.hidden_tag() }}
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: end;">
+                        <div>
+                            <label class="gov-form-label">{{ upload_form.file.label }}</label>
+                            {{ upload_form.file(class="gov-form-control", accept=".xlsx,.xls") }}
+                            {% if upload_form.file.errors %}
+                                <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                    {% for error in upload_form.file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
                                 </div>
-                                {% if upload_form.file.errors %}
-                                    <div class="text-red-500 text-xs mt-1">
-                                        {% for error in upload_form.file.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div>
-                                {{ upload_form.submit(class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary") }}
-                            </div>
+                            {% endif %}
                         </div>
-                    </form>
-                </div>
-                <div>
-                    <a href="{{ url_for('admin.download_employee_template') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                        <i class="fas fa-download mr-2"></i> 샘플 파일 다운로드
-                    </a>
+                        <div>
+                            {{ upload_form.submit(class="gov-btn gov-btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+                
+                <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #495057;">엑셀 파일 형식 안내</h4>
+                    <div style="font-size: 12px; color: #6c757d; line-height: 1.4;">
+                        <p>• <strong>필수 항목</strong>: username(아이디), name(이름), password(비밀번호), email(이메일), department(부서), position(직급)</p>
+                        <p>• <strong>선택 항목</strong>: hire_date(입사일, YYYY-MM-DD 형식)</p>
+                        <p>• 샘플 파일을 다운로드하여 정확한 형식을 확인하세요.</p>
+                    </div>
                 </div>
             </div>
-            <div class="mt-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">엑셀 파일 형식</h3>
-                <div class="text-xs text-gray-600 space-y-1">
-                    <p>• <strong>필수 항목</strong>: username(아이디), name(이름), password(비밀번호), email(이메일), department(부서), position(직급)</p>
-                    <p>• <strong>선택 항목</strong>: hire_date(입사일, YYYY-MM-DD 형식)</p>
-                    <p>• 샘플 파일을 다운로드하여 형식을 확인하세요.</p>
-                </div>
+            
+            <div style="text-align: center;">
+                <a href="{{ url_for('admin.download_employee_template') }}" class="gov-btn" style="background: #6c757d; color: white;">
+                    <i class="fas fa-download"></i> 샘플 파일 다운로드
+                </a>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 직원 목록 테이블 -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <div class="p-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-800">직원 목록</h2>
-            <p class="text-sm text-gray-500 mt-1">전체 직원과 휴가 현황을 관리합니다.</p>
-        </div>
+<!-- 직원 목록 -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-list"></i> 직원 목록
+        <small style="margin-left: 10px; color: #6c757d;">전체 직원과 휴가 현황을 관리합니다</small>
+    </div>
         
+    <div class="gov-card-body">
         {% if employees %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">부서</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직급</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">입사일</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">남은 휴가</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사용 휴가</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>부서</th>
+                        <th>직급</th>
+                        <th>이메일</th>
+                        <th>입사일</th>
+                        <th>남은 휴가</th>
+                        <th>사용 휴가</th>
+                        <th>액션</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for employee in employees %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                                            {{ employee.name[0] }}
-                                        </div>
-                                        <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
-                                            <div class="text-xs text-gray-500">{{ employee.username }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ employee.department or '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ employee.position or '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ employee.email }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {% if employee.hire_date %}
-                                        {{ employee.hire_date.strftime('%Y년 %m월 %d일') }}
-                                    {% else %}
-                                        <span class="text-yellow-600">미설정</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {% if employee.vacation_days and employee.vacation_days.year == current_year %}
-                                        {{ employee.vacation_days.remaining_days() }}일
-                                    {% else %}
-                                        <span class="text-yellow-600">미설정</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {% if employee.vacation_days and employee.vacation_days.year == current_year %}
-                                        {{ employee.vacation_days.used_days }}일
-                                    {% else %}
-                                        <span class="text-yellow-600">미설정</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <div class="flex flex-col gap-2">
-                                        <a href="{{ url_for('admin.set_vacation_days', user_id=employee.id, year=current_year) }}" class="text-primary hover:text-primary-dark">
-                                            <i class="fas fa-cog mr-1"></i> 휴가 설정
-                                        </a>
-                                        <a href="{{ url_for('admin.set_hire_date', user_id=employee.id) }}" class="text-primary hover:text-primary-dark">
-                                            <i class="fas fa-calendar-day mr-1"></i> 입사일 설정
-                                        </a>
-                                        <button type="button" 
-                                                onclick="confirmDeleteEmployee('{{ employee.id }}', '{{ employee.name }}')"
-                                                class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-user-times mr-1"></i> 직원 삭제
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #003d82, #002855); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">
+                                    {{ employee.name[0] }}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: #212529;">{{ employee.name }}</div>
+                                    <div style="font-size: 12px; color: #6c757d;">{{ employee.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ employee.department or '-' }}</td>
+                        <td>{{ employee.position or '-' }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>
+                            {% if employee.hire_date %}
+                                {{ employee.hire_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                <span style="color: #f39c12;">미설정</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if employee.vacation_days and employee.vacation_days.year == current_year %}
+                                <strong style="color: #00b894;">{{ employee.vacation_days.remaining_days() }}일</strong>
+                            {% else %}
+                                <span style="color: #f39c12;">미설정</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if employee.vacation_days and employee.vacation_days.year == current_year %}
+                                <span style="color: #636e72;">{{ employee.vacation_days.used_days }}일</span>
+                            {% else %}
+                                <span style="color: #f39c12;">미설정</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <a href="{{ url_for('admin.set_vacation_days', user_id=employee.id, year=current_year) }}" 
+                                   class="gov-btn gov-btn-primary" style="font-size: 11px; padding: 4px 8px;">
+                                    <i class="fas fa-cog"></i> 휴가 설정
+                                </a>
+                                <a href="{{ url_for('admin.set_hire_date', user_id=employee.id) }}" 
+                                   class="gov-btn gov-btn-success" style="font-size: 11px; padding: 4px 8px;">
+                                    <i class="fas fa-calendar"></i> 입사일 설정
+                                </a>
+                                <button type="button" 
+                                        onclick="confirmDeleteEmployee('{{ employee.id }}', '{{ employee.name }}')"
+                                        class="gov-btn" style="background: #e74c3c; color: white; font-size: 11px; padding: 4px 8px;">
+                                    <i class="fas fa-user-times"></i> 삭제
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         {% else %}
-            <div class="text-center py-12 px-4">
-                <div class="text-gray-400">
-                    <i class="fas fa-users text-5xl mb-4"></i>
-                    <p class="text-lg">등록된 직원이 없습니다.</p>
-                </div>
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 16px; margin: 0;">등록된 직원이 없습니다.</p>
+                <p style="font-size: 14px; margin-top: 5px;">엑셀 파일로 직원을 등록해보세요.</p>
             </div>
         {% endif %}
     </div>
-    
-    <!-- 연도 변경 -->
-    <div class="bg-white rounded-lg shadow-md p-4">
-        <h3 class="text-md font-medium text-gray-700 mb-3">연도별 조회</h3>
-        <div class="flex items-center space-x-2">
-            <select id="yearSelect" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+</div>
+
+<!-- 연도별 조회 -->
+<div class="gov-card" style="margin-top: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-calendar-alt"></i> 연도별 조회
+    </div>
+    <div class="gov-card-body">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <label class="gov-form-label" style="margin: 0;">조회 연도:</label>
+            <select id="yearSelect" class="gov-form-control" style="width: 120px;">
                 {% for year in range(current_year - 3, current_year + 2) %}
                     <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}년</option>
                 {% endfor %}
             </select>
-            <button id="changeYearBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                변경
+            <button onclick="changeYear()" class="gov-btn gov-btn-primary">
+                <i class="fas fa-search"></i> 조회
             </button>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 연도 변경 처리
-        document.getElementById('changeYearBtn').addEventListener('click', function() {
-            const year = document.getElementById('yearSelect').value;
-            window.location.href = "{{ url_for('admin.manage_employees') }}" + "?year=" + year;
-        });
-    });
+    function changeYear() {
+        const year = document.getElementById('yearSelect').value;
+        window.location.href = "{{ url_for('admin.manage_employees') }}" + "?year=" + year;
+    }
 
-    // 직원 삭제 확인
     function confirmDeleteEmployee(userId, userName) {
         if (confirm(`정말로 ${userName} 직원을 삭제하시겠습니까?\n관련된 모든 정보(휴가, 재직증명서 등)가 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`)) {
-            // 확인 시 삭제 폼 생성 및 제출
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = "{{ url_for('admin.delete_employee', user_id=0) }}".replace('0', userId);
@@ -183,8 +201,4 @@
         }
     }
 </script>
-{% endblock %}
-
-{% block modal %}
-<!-- 삭제 확인 모달 (생략 - JavaScript confirm으로 대체) -->
 {% endblock %}

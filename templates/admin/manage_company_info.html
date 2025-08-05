@@ -1,17 +1,26 @@
-{% extends 'base.html' %}
+{% extends "base_gov.html" %}
 
-{% block title %}회사 정보 관리 - 휴가관리시스템{% endblock %}
-
-{% block page_title %}회사 정보 관리{% endblock %}
+{% block title %}에스에스전력 - 회사 정보 관리{% endblock %}
 
 {% block content %}
-<div>
-    <!-- 회사 정보 관리 폼 -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-        <div class="p-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-800">회사 정보 관리</h2>
-            <p class="text-sm text-gray-500 mt-1">재직증명서에 자동으로 기재될 회사 정보를 관리합니다.</p>
-        </div>
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>회사 정보 관리</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-building"></i> 회사 정보 관리
+    </h1>
+    <p class="gov-page-subtitle">재직증명서에 기재될 회사 정보를 관리합니다.</p>
+</div>
+
+<!-- 회사 정보 관리 -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-edit"></i> 회사 정보 수정
+    </div>
         
         <div class="p-6">
             <form method="POST" action="{{ url_for('admin.manage_company_info') }}">

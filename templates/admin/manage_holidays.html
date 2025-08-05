@@ -1,18 +1,27 @@
-{% extends 'base.html' %}
+{% extends "base_gov.html" %}
 
-{% block title %}공휴일 관리 - 휴가관리시스템{% endblock %}
-
-{% block page_title %}공휴일 관리{% endblock %}
+{% block title %}에스에스전력 - 공휴일 관리{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- 공휴일 등록 폼 -->
-    <div class="md:col-span-1">
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="p-4 border-b border-gray-200">
-                <h2 class="text-lg font-medium text-gray-800">공휴일 등록</h2>
-                <p class="text-sm text-gray-500 mt-1">새 공휴일을 추가합니다.</p>
-            </div>
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>공휴일 관리</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-calendar-alt"></i> 공휴일 관리
+    </h1>
+    <p class="gov-page-subtitle">휴가 계산에 사용할 공휴일을 등록하고 관리합니다.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 25px;">
+    <!-- 공휴일 등록 -->
+    <div class="gov-card">
+        <div class="gov-card-header">
+            <i class="fas fa-plus"></i> 공휴일 등록
+        </div>
             
             <div class="p-6">
                 <form method="POST" action="{{ url_for('admin.manage_holidays') }}">

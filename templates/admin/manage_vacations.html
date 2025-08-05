@@ -1,17 +1,31 @@
-{% extends 'base.html' %}
+{% extends "base_gov.html" %}
 
-{% block title %}휴가 관리 - 휴가관리시스템{% endblock %}
-
-{% block page_title %}휴가 관리{% endblock %}
+{% block title %}에스에스전력 - 휴가 관리{% endblock %}
 
 {% block content %}
-<div>
-    <!-- 필터 영역 -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>휴가 관리</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-calendar-check"></i> 휴가 관리
+    </h1>
+    <p class="gov-page-subtitle">직원들의 휴가 신청을 승인하고 관리합니다.</p>
+</div>
+
+<!-- 필터 및 통계 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-filter"></i> 휴가 필터 및 다운로드
+    </div>
+    <div class="gov-card-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: end;">
             <div>
-                <label for="statusSelect" class="block text-sm font-medium text-gray-700 mb-1">휴가 상태</label>
-                <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                <label class="gov-form-label">휴가 상태</label>
+                <select id="statusSelect" class="gov-form-control">
                     <option value="all" {% if status_filter == 'all' %}selected{% endif %}>전체</option>
                     <option value="대기중" {% if status_filter == '대기중' %}selected{% endif %}>대기중</option>
                     <option value="승인됨" {% if status_filter == '승인됨' %}selected{% endif %}>승인됨</option>
@@ -20,123 +34,129 @@
             </div>
             
             <div>
-                <label for="yearSelect" class="block text-sm font-medium text-gray-700 mb-1">연도</label>
-                <select id="yearSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                <label class="gov-form-label">연도</label>
+                <select id="yearSelect" class="gov-form-control">
                     {% for year in range(now.year - 3, now.year + 2) %}
                         <option value="{{ year }}">{{ year }}년</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="flex items-end">
-                <button id="exportBtn" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    <i class="fas fa-file-excel mr-2"></i>
-                    엑셀 다운로드
+            <div>
+                <button onclick="applyFilters()" class="gov-btn gov-btn-primary">
+                    <i class="fas fa-search"></i> 필터 적용
+                </button>
+            </div>
+            
+            <div>
+                <button id="exportBtn" class="gov-btn" style="background: #00b894; color: white;">
+                    <i class="fas fa-file-excel"></i> 엑셀 다운로드
                 </button>
             </div>
         </div>
     </div>
+</div>
     
-    <!-- 휴가 신청 목록 테이블 -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="p-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-800">휴가 신청 목록</h2>
-            <p class="text-sm text-gray-500 mt-1">
-                {% if status_filter == 'all' %}
-                    전체 휴가 신청 내역입니다.
-                {% elif status_filter == '대기중' %}
-                    승인 대기중인 휴가 신청 내역입니다.
-                {% elif status_filter == '승인됨' %}
-                    승인된 휴가 신청 내역입니다.
-                {% else %}
-                    반려된 휴가 신청 내역입니다.
-                {% endif %}
-            </p>
-        </div>
+<!-- 휴가 신청 목록 -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-list"></i> 휴가 신청 목록
+        <small style="margin-left: 10px; color: #6c757d;">
+            {% if status_filter == 'all' %}
+                전체 휴가 신청 내역입니다
+            {% elif status_filter == '대기중' %}
+                승인 대기중인 휴가 신청 내역입니다
+            {% elif status_filter == '승인됨' %}
+                승인된 휴가 신청 내역입니다
+            {% else %}
+                반려된 휴가 신청 내역입니다
+            {% endif %}
+        </small>
+    </div>
         
+    <div class="gov-card-body">
         {% if vacation_requests %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직원</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">부서</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">시작일</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">종료일</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">일수</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">유형</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사유</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">신청일</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for request in vacation_requests %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                                            {{ request.user.name[0] }}
-                                        </div>
-                                        <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ request.user.name }}</div>
-                                            <div class="text-xs text-gray-500">{{ request.user.position or '' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.user.department or '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.start_date.strftime('%Y-%m-%d') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.end_date.strftime('%Y-%m-%d') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.days }}일</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.type }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">{{ request.reason or '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {% if request.status == '대기중' %}
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">대기중</span>
-                                    {% elif request.status == '승인됨' %}
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">승인됨</span>
-                                    {% else %}
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">반려됨</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ request.created_at.strftime('%Y-%m-%d') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {% if request.status == '대기중' %}
-                                        <a href="{{ url_for('admin.process_vacation', request_id=request.id) }}" class="text-primary hover:text-primary-dark">
-                                            <i class="fas fa-check-circle mr-1"></i> 처리하기
-                                        </a>
-                                    {% else %}
-                                        <span class="text-gray-400">처리완료</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th>직원</th>
+                        <th>부서</th>
+                        <th>시작일</th>
+                        <th>종료일</th>
+                        <th>일수</th>
+                        <th>유형</th>
+                        <th>사유</th>
+                        <th>상태</th>
+                        <th>신청일</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for request in vacation_requests %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #003d82, #002855); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">
+                                {{ request.user.name[0] }}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: #212529;">{{ request.user.name }}</div>
+                                <div style="font-size: 12px; color: #6c757d;">{{ request.user.position or request.user.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ request.user.department or '-' }}</td>
+                    <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                    <td><strong style="color: #003d82;">{{ request.days }}일</strong></td>
+                    <td>{{ request.type }}</td>
+                    <td>
+                        <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ request.reason or '-' }}">
+                            {{ request.reason or '-' }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if request.status == '대기중' %}
+                            <span class="gov-badge gov-badge-pending">대기중</span>
+                        {% elif request.status == '승인됨' %}
+                            <span class="gov-badge gov-badge-approved">승인됨</span>
+                        {% else %}
+                            <span class="gov-badge gov-badge-rejected">반려됨</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ request.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if request.status == '대기중' %}
+                            <a href="{{ url_for('admin.process_vacation', request_id=request.id) }}" 
+                               class="gov-btn gov-btn-primary" style="font-size: 12px; padding: 4px 8px;">
+                                <i class="fas fa-check-circle"></i> 처리하기
+                            </a>
+                        {% else %}
+                            <span style="color: #6c757d; font-size: 12px;">처리완료</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-            <div class="text-center py-12 px-4">
-                <div class="text-gray-400">
-                    <i class="fas fa-calendar-times text-5xl mb-4"></i>
-                    <p class="text-lg">해당 조건의 휴가 신청 내역이 없습니다.</p>
-                </div>
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 16px; margin: 0;">해당 조건의 휴가 신청 내역이 없습니다.</p>
+                <p style="font-size: 14px; margin-top: 5px;">필터 조건을 변경해보세요.</p>
             </div>
         {% endif %}
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
+    function applyFilters() {
+        const status = document.getElementById('statusSelect').value;
+        const year = document.getElementById('yearSelect').value;
+        window.location.href = "{{ url_for('admin.manage_vacations') }}" + "?status=" + status + "&year=" + year;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // 상태 필터 변경 시 페이지 이동
-        document.getElementById('statusSelect').addEventListener('change', function() {
-            const status = this.value;
-            window.location.href = "{{ url_for('admin.manage_vacations') }}" + "?status=" + status;
-        });
-        
-        // 엑셀 다운로드
         document.getElementById('exportBtn').addEventListener('click', function() {
             const year = document.getElementById('yearSelect').value;
             const status = document.getElementById('statusSelect').value;
