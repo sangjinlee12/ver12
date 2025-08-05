@@ -86,6 +86,53 @@ with app.app_context():
     # 데이터베이스 테이블 생성
     db.create_all()
     
+    # 초기 데이터 설정 (관리자 계정 및 공휴일)
+    try:
+        from models import User, Role
+        from holidays import add_korean_holidays
+        from datetime import datetime
+        
+        # 관리자 계정 생성 (없을 경우에만)
+        existing_admin = User.query.filter_by(username='admin').first()
+        if not existing_admin:
+            from models import VacationDays
+            from werkzeug.security import generate_password_hash
+            
+            admin = User(
+                username='admin',
+                email='admin@example.com',
+                name='관리자',
+                role=Role.ADMIN,
+                department='경영지원팀',
+                position='관리자',
+                created_at=datetime.now()
+            )
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+            
+            # 관리자 휴가일수 설정
+            vacation_days = VacationDays(
+                user_id=admin.id,
+                year=datetime.now().year,
+                total_days=15,
+                used_days=0
+            )
+            db.session.add(vacation_days)
+            db.session.commit()
+            print("✅ 관리자 계정 생성 완료 (admin/admin123)")
+        
+        # 공휴일 등록 (2025, 2026년)
+        from models import Holiday
+        existing_holidays = Holiday.query.filter_by(year=2025).first()
+        if not existing_holidays:
+            add_korean_holidays(2025)
+            add_korean_holidays(2026)
+            print("✅ 공휴일 데이터 등록 완료 (2025-2026)")
+            
+    except Exception as e:
+        print(f"⚠️ 초기 데이터 설정 중 오류: {e}")
+    
     # 라우트 등록
     from auth import auth_bp
     from admin import admin_bp
