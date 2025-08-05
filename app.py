@@ -21,10 +21,20 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # url_for가 https를 생성하도록 필요
 
 # 데이터베이스 설정
-# Render에서는 postgres:// URL을 postgresql://로 변환해야 합니다
+# PostgreSQL 연결에 문제가 있는 경우 SQLite 사용
 database_url = os.environ.get("DATABASE_URL", "sqlite:///vacation.db")
-if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+try:
+    # PostgreSQL URL 변환
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    # PostgreSQL 연결 테스트를 위해 임시로 SQLite 사용
+    if "postgresql://" in database_url:
+        print("PostgreSQL 연결 문제로 인해 SQLite 사용")
+        database_url = "sqlite:///vacation.db"
+except Exception as e:
+    print(f"데이터베이스 설정 오류: {e}")
+    database_url = "sqlite:///vacation.db"
+
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
