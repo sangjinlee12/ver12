@@ -110,7 +110,13 @@ The application follows a traditional Flask web application architecture with th
 
 # Changelog
 
-- June 29, 2025. Initial setup
+- August 5, 2025: Railway 배포 환경 완전 구성
+  - PostgreSQL 우선, SQLite 폴백 시스템 구현
+  - 영구 데이터베이스 (instance/vacation_permanent.db) 설정
+  - Railway 배포용 start.sh 스크립트 생성
+  - nixpacks.toml 및 railway.json 업데이트
+  - 배포 가이드 문서 작성
+- June 29, 2025: Initial setup
 
 # User Preferences
 
