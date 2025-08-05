@@ -16,44 +16,51 @@
     <p class="gov-page-subtitle">직원들의 휴가 신청을 승인하고 관리합니다.</p>
 </div>
 
-<!-- 필터 및 통계 -->
+<!-- 검색 필터 -->
 <div class="gov-card" style="margin-bottom: 25px;">
     <div class="gov-card-header">
-        <i class="fas fa-filter"></i> 휴가 필터 및 다운로드
+        <i class="fas fa-search"></i> 휴가 검색 및 엑셀 출력
     </div>
     <div class="gov-card-body">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: end;">
-            <div>
-                <label class="gov-form-label">휴가 상태</label>
-                <select id="statusSelect" class="gov-form-control">
-                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>전체</option>
-                    <option value="대기중" {% if status_filter == '대기중' %}selected{% endif %}>대기중</option>
-                    <option value="승인됨" {% if status_filter == '승인됨' %}selected{% endif %}>승인됨</option>
-                    <option value="반려됨" {% if status_filter == '반려됨' %}selected{% endif %}>반려됨</option>
-                </select>
+        <form method="POST">
+            {{ search_form.hidden_tag() }}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label class="gov-form-label">{{ search_form.start_date.label }}</label>
+                    {{ search_form.start_date(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.end_date.label }}</label>
+                    {{ search_form.end_date(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.status.label }}</label>
+                    {{ search_form.status(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.department.label }}</label>
+                    {{ search_form.department(class="gov-form-control") }}
+                </div>
             </div>
             
-            <div>
-                <label class="gov-form-label">연도</label>
-                <select id="yearSelect" class="gov-form-control">
-                    {% for year in range(now.year - 3, now.year + 2) %}
-                        <option value="{{ year }}">{{ year }}년</option>
-                    {% endfor %}
-                </select>
+            <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: end;">
+                <div>
+                    <label class="gov-form-label">{{ search_form.year.label }}</label>
+                    {{ search_form.year(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    {{ search_form.submit(class="gov-btn gov-btn-primary") }}
+                </div>
+                
+                <div>
+                    {{ search_form.export(class="gov-btn", style="background: #00b894; color: white;") }}
+                </div>
             </div>
-            
-            <div>
-                <button onclick="applyFilters()" class="gov-btn gov-btn-primary">
-                    <i class="fas fa-search"></i> 필터 적용
-                </button>
-            </div>
-            
-            <div>
-                <button id="exportBtn" class="gov-btn" style="background: #00b894; color: white;">
-                    <i class="fas fa-file-excel"></i> 엑셀 다운로드
-                </button>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
     

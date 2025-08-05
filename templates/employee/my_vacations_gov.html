@@ -1,0 +1,169 @@
+{% extends "base_gov.html" %}
+
+{% block title %}에스에스전력 - 나의 휴가현황{% endblock %}
+
+{% block content %}
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>나의 휴가현황</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-user-clock"></i> 나의 휴가현황
+    </h1>
+    <p class="gov-page-subtitle">나의 휴가 신청 내역과 사용 현황을 확인할 수 있습니다.</p>
+</div>
+
+<!-- 휴가 사용 현황 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-chart-bar"></i> 휴가 사용 현황 ({{ year }}년)
+    </div>
+    <div class="gov-card-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: center;">
+            <div style="text-align: center; padding: 15px; background: #e6f0ff; border-radius: 8px; border: 1px solid #b3d9ff;">
+                <div style="font-size: 24px; font-weight: 700; color: #003d82; margin-bottom: 5px;">{{ vacation_days.total_days }}일</div>
+                <div style="font-size: 14px; color: #6c757d;">총 휴가</div>
+            </div>
+            
+            <div style="text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeaa7;">
+                <div style="font-size: 24px; font-weight: 700; color: #b8860b; margin-bottom: 5px;">{{ vacation_days.used_days }}일</div>
+                <div style="font-size: 14px; color: #6c757d;">사용한 휴가</div>
+            </div>
+            
+            <div style="text-align: center; padding: 15px; background: #d4edda; border-radius: 8px; border: 1px solid #c3e6cb;">
+                <div style="font-size: 24px; font-weight: 700; color: #155724; margin-bottom: 5px;">{{ vacation_days.remaining_days() }}일</div>
+                <div style="font-size: 14px; color: #6c757d;">남은 휴가</div>
+            </div>
+            
+            <div>
+                <a href="{{ url_for('employee.request_vacation') }}" class="gov-btn gov-btn-primary">
+                    <i class="fas fa-plus"></i> 새 휴가 신청
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 검색 및 필터 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-search"></i> 휴가 검색 및 엑셀 출력
+    </div>
+    <div class="gov-card-body">
+        <form method="POST">
+            {{ search_form.hidden_tag() }}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label class="gov-form-label">{{ search_form.start_date.label }}</label>
+                    {{ search_form.start_date(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.end_date.label }}</label>
+                    {{ search_form.end_date(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.status.label }}</label>
+                    {{ search_form.status(class="gov-form-control") }}
+                </div>
+                
+                <div>
+                    <label class="gov-form-label">{{ search_form.year.label }}</label>
+                    {{ search_form.year(class="gov-form-control") }}
+                </div>
+            </div>
+            
+            <div style="text-align: right;">
+                {{ search_form.submit(class="gov-btn gov-btn-primary", style="margin-right: 10px;") }}
+                {{ search_form.export(class="gov-btn", style="background: #00b894; color: white;") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 휴가 신청 목록 -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-list"></i> 나의 휴가 신청 목록
+        <small style="margin-left: 10px; color: #6c757d;">
+            총 {{ vacation_requests|length }}건의 휴가 신청 내역입니다
+        </small>
+    </div>
+    
+    <div class="gov-card-body">
+        {% if vacation_requests %}
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th>시작일</th>
+                        <th>종료일</th>
+                        <th>일수</th>
+                        <th>유형</th>
+                        <th>사유</th>
+                        <th>상태</th>
+                        <th>신청일</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for request in vacation_requests %}
+                <tr>
+                    <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                    <td><strong style="color: #003d82;">{{ request.days }}일</strong></td>
+                    <td>{{ request.type }}</td>
+                    <td>
+                        <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ request.reason or '-' }}">
+                            {{ request.reason or '-' }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if request.status == '대기중' %}
+                            <span class="gov-badge gov-badge-pending">대기중</span>
+                        {% elif request.status == '승인됨' %}
+                            <span class="gov-badge gov-badge-approved">승인됨</span>
+                        {% else %}
+                            <span class="gov-badge gov-badge-rejected">반려됨</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ request.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if request.status == '대기중' %}
+                            <form method="POST" action="{{ url_for('employee.cancel_vacation', request_id=request.id) }}" 
+                                  style="display: inline;" 
+                                  onsubmit="return confirm('휴가 신청을 취소하시겠습니까?')">
+                                <button type="submit" class="gov-btn" style="background: #dc3545; color: white; font-size: 12px; padding: 4px 8px;">
+                                    <i class="fas fa-times"></i> 취소
+                                </button>
+                            </form>
+                        {% else %}
+                            <span style="color: #6c757d; font-size: 12px;">
+                                {% if request.status == '승인됨' %}
+                                    승인 완료
+                                {% else %}
+                                    반려됨
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 16px; margin: 0;">휴가 신청 내역이 없습니다.</p>
+                <p style="font-size: 14px; margin-top: 5px;">새로운 휴가를 신청해보세요.</p>
+                <a href="{{ url_for('employee.request_vacation') }}" class="gov-btn gov-btn-primary" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i> 새 휴가 신청
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

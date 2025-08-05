@@ -2,13 +2,14 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from models import VacationDays, VacationRequest, VacationStatus, EmploymentCertificate, CertificateStatus, CompanyInfo
-from forms import VacationRequestForm, EmploymentCertificateRequestForm
+from forms import VacationRequestForm, EmploymentCertificateRequestForm, VacationSearchForm
 from datetime import datetime
 from utils import get_vacation_days_count, check_overlapping_vacation
 import tempfile
 import os
 import urllib.parse
 import io
+import pandas as pd
 # WeasyPrint는 시스템 종속성 문제가 있어 사용하지 않습니다
 # 필요한 경우 reportlab을 사용합니다
 from reportlab.pdfgen import canvas
@@ -193,23 +194,51 @@ def request_vacation():
     
     return render_template('employee/request_vacation.html', form=form)
 
-@employee_bp.route('/my-vacations')
+@employee_bp.route('/my-vacations', methods=['GET', 'POST'])
 @login_required
 def my_vacations():
-    """내 휴가 내역 페이지"""
-    # 필터링 옵션
-    year = request.args.get('year', datetime.now().year, type=int)
-    status = request.args.get('status', 'all')
+    """내 휴가 내역 페이지 (기간 검색 및 엑셀 출력 지원)"""
+    form = VacationSearchForm()
     
-    # 쿼리 생성
+    # 기본 쿼리
     query = VacationRequest.query.filter_by(user_id=current_user.id)
     
-    # 연도 필터
-    query = query.filter(db.extract('year', VacationRequest.start_date) == year)
+    # 기본 연도 설정
+    current_year = datetime.now().year
+    search_year = current_year
     
-    # 상태 필터
-    if status != 'all':
-        query = query.filter_by(status=status)
+    # 폼 처리
+    if form.validate_on_submit():
+        # 엑셀 다운로드 요청
+        if form.export.data:
+            return export_my_vacation_data(form)
+        
+        # 검색 필터 적용
+        if form.start_date.data:
+            query = query.filter(VacationRequest.start_date >= form.start_date.data)
+        
+        if form.end_date.data:
+            query = query.filter(VacationRequest.end_date <= form.end_date.data)
+        
+        if form.status.data != 'all':
+            query = query.filter(VacationRequest.status == form.status.data)
+        
+        if form.year.data != 0:
+            query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+            search_year = form.year.data
+    else:
+        # URL 파라미터로부터 필터 적용 (기존 호환성)
+        year = request.args.get('year', current_year, type=int)
+        status = request.args.get('status', 'all')
+        
+        if year != current_year:
+            query = query.filter(db.extract('year', VacationRequest.start_date) == year)
+            form.year.data = year
+            search_year = year
+        
+        if status != 'all':
+            query = query.filter(VacationRequest.status == status)
+            form.status.data = status
     
     # 정렬 (최신순)
     vacation_requests = query.order_by(VacationRequest.created_at.desc()).all()
@@ -217,13 +246,13 @@ def my_vacations():
     # 연도별 휴가 정보
     vacation_days = VacationDays.query.filter_by(
         user_id=current_user.id,
-        year=year
+        year=search_year
     ).first()
     
     if not vacation_days:
         vacation_days = VacationDays(
             user_id=current_user.id,
-            year=year,
+            year=search_year,
             total_days=15,  # 기본값
             used_days=0
         )
@@ -231,11 +260,12 @@ def my_vacations():
         db.session.commit()
     
     return render_template(
-        'employee/my_vacations.html',
+        'employee/my_vacations_gov.html',
         vacation_requests=vacation_requests,
         vacation_days=vacation_days,
-        year=year,
-        status_filter=status
+        year=search_year,
+        status_filter=form.status.data or 'all',
+        search_form=form
     )
 
 @employee_bp.route('/cancel-vacation/<int:request_id>', methods=['POST'])
@@ -260,6 +290,70 @@ def cancel_vacation(request_id):
     
     flash('휴가 신청이 취소되었습니다.', 'success')
     return redirect(url_for('employee.my_vacations'))
+
+
+def export_my_vacation_data(form):
+    """개인 휴가 데이터 엑셀 다운로드"""
+    # 쿼리 생성
+    query = VacationRequest.query.filter_by(user_id=current_user.id)
+    
+    # 검색 조건 적용
+    if form.start_date.data:
+        query = query.filter(VacationRequest.start_date >= form.start_date.data)
+    
+    if form.end_date.data:
+        query = query.filter(VacationRequest.end_date <= form.end_date.data)
+    
+    if form.status.data != 'all':
+        query = query.filter(VacationRequest.status == form.status.data)
+    
+    if form.year.data != 0:
+        query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+    
+    # 정렬
+    query = query.order_by(VacationRequest.created_at.desc())
+    
+    # 결과 가져오기
+    results = query.all()
+    
+    # 엑셀 파일 생성 (pandas 이용)
+    data = []
+    for vacation_request in results:
+        data.append({
+            '휴가시작일': vacation_request.start_date.strftime('%Y-%m-%d'),
+            '휴가종료일': vacation_request.end_date.strftime('%Y-%m-%d'),
+            '휴가일수': vacation_request.days,
+            '휴가유형': vacation_request.type,
+            '휴가사유': vacation_request.reason or '',
+            '상태': vacation_request.status,
+            '신청일시': vacation_request.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            '승인일시': vacation_request.approval_date.strftime('%Y-%m-%d %H:%M:%S') if vacation_request.approval_date else ''
+        })
+    
+    # DataFrame 생성
+    df = pd.DataFrame(data)
+    
+    # 파일명 생성
+    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'{current_user.name}_휴가현황_{current_time}.xlsx'
+    
+    # 임시 파일로 저장
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+        df.to_excel(tmp.name, index=False, engine='openpyxl')
+        
+        # 파일 읽기
+        with open(tmp.name, 'rb') as f:
+            excel_data = f.read()
+        
+        # 임시 파일 삭제
+        os.unlink(tmp.name)
+    
+    # 응답 생성
+    response = make_response(excel_data)
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
 
 @employee_bp.route('/calculate-vacation-days', methods=['POST'])
 @login_required

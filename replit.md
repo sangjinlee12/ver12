@@ -110,6 +110,12 @@ The application follows a traditional Flask web application architecture with th
 
 # Changelog
 
+- August 5, 2025: 사용자 계정 복구 및 고급 휴가 관리 기능 추가
+  - 로그인 페이지에 아이디/패스워드 찾기 기능 구현 (FindIdForm, FindPasswordForm, ResetPasswordForm)
+  - 전직원 휴가현황 및 개인별 휴가현황에 고급 검색 기능 추가 (VacationSearchForm)
+  - 기간별, 부서별, 상태별 휴가 검색 및 필터링 기능
+  - 엑셀 출력 기능 구현 (pandas + openpyxl 활용)
+  - 정부 스타일 UI로 일관된 디자인 적용
 - August 5, 2025: Railway 배포 환경 완전 구성
   - PostgreSQL 우선, SQLite 폴백 시스템 구현
   - 영구 데이터베이스 (instance/vacation_permanent.db) 설정

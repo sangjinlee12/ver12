@@ -38,6 +38,41 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('비밀번호 변경')
 
 
+class VacationSearchForm(FlaskForm):
+    """휴가 검색 폼 (기간 검색용)"""
+    start_date = DateField('시작일', format='%Y-%m-%d')
+    end_date = DateField('종료일', format='%Y-%m-%d')
+    status = SelectField('상태', choices=[
+        ('all', '전체'),
+        ('대기중', '대기중'),
+        ('승인됨', '승인됨'),
+        ('반려됨', '반려됨')
+    ])
+    department = SelectField('부서', choices=[
+        ('all', '전체'),
+        ('공사팀', '공사팀'),
+        ('공무부', '공무부'),
+        ('경리부', '경리부'),
+        ('인사팀', '인사팀'),
+        ('총무팀', '총무팀'),
+        ('영업팀', '영업팀'),
+        ('안전팀', '안전팀'),
+        ('품질팀', '품질팀')
+    ])
+    year = SelectField('연도', choices=[], coerce=int)
+    submit = SubmitField('검색')
+    export = SubmitField('엑셀 다운로드')
+
+    def __init__(self, *args, **kwargs):
+        super(VacationSearchForm, self).__init__(*args, **kwargs)
+        # 연도 선택지 동적 생성 (현재 년도 기준 -3 ~ +1)
+        current_year = datetime.now().year
+        year_choices = [(0, '전체')]
+        for year in range(current_year - 3, current_year + 2):
+            year_choices.append((year, f'{year}년'))
+        self.year.choices = year_choices
+
+
 class RegisterForm(FlaskForm):
     """회원가입 폼"""
     username = StringField('아이디', validators=[DataRequired('아이디를 입력하세요.'), Length(min=4, max=20, message='아이디는 4-20자 사이여야 합니다.')])
