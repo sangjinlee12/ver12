@@ -21,21 +21,48 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # url_for가 https를 생성하도록 필요
 
 # 데이터베이스 설정
-# PostgreSQL 연결에 문제가 있는 경우 SQLite 사용
-database_url = os.environ.get("DATABASE_URL", "sqlite:///vacation.db")
-try:
+# PostgreSQL 우선, 연결 실패 시 영구 SQLite 폴백
+database_url = os.environ.get("DATABASE_URL")
+
+if database_url:
     # PostgreSQL URL 변환
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
-    # PostgreSQL 연결 테스트를 위해 임시로 SQLite 사용
+    
+    # PostgreSQL 연결 테스트
     if "postgresql://" in database_url:
-        print("PostgreSQL 연결 문제로 인해 SQLite 사용")
-        database_url = "sqlite:///vacation.db"
-except Exception as e:
-    print(f"데이터베이스 설정 오류: {e}")
-    database_url = "sqlite:///vacation.db"
+        try:
+            import psycopg2
+            from urllib.parse import urlparse
+            
+            result = urlparse(database_url)
+            conn = psycopg2.connect(
+                database=result.path[1:],
+                user=result.username,
+                password=result.password,
+                host=result.hostname,
+                port=result.port
+            )
+            conn.close()
+            print("✅ PostgreSQL 데이터베이스 연결 성공")
+        except Exception as e:
+            print(f"❌ PostgreSQL 연결 실패: {e}")
+            print("📁 영구 SQLite 데이터베이스로 폴백합니다")
+            # 영구 저장을 위해 절대 경로 사용
+            import os
+            db_dir = os.path.abspath("instance")
+            os.makedirs(db_dir, exist_ok=True)
+            database_url = f"sqlite:///{db_dir}/vacation_permanent.db"
+else:
+    # 개발환경: 영구 SQLite 사용
+    print("🔧 개발 환경: 영구 SQLite 데이터베이스 사용")
+    import os
+    db_dir = os.path.abspath("instance")
+    os.makedirs(db_dir, exist_ok=True)
+    database_url = f"sqlite:///{db_dir}/vacation_permanent.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+print(f"🗄️  데이터베이스: {database_url}")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
