@@ -555,7 +555,13 @@ def create_docx_certificate(certificate, current_user, company_info):
     row.cells[0].text = '성명'
     row.cells[1].text = current_user.name if current_user.name else '김영희'  # 기본값
     row.cells[2].text = '주민등록번호'
-    row.cells[3].text = '******-*******'
+    
+    # 주민번호 표시 (실제 주민번호가 있으면 표시, 없으면 기본값)
+    if current_user.resident_id_first and current_user.resident_id_last_digit:
+        resident_id = f"{current_user.resident_id_first}-{current_user.resident_id_last_digit}******"
+    else:
+        resident_id = "******-*******"  # 기본값
+    row.cells[3].text = resident_id
     
     # 2행: 소속, 직위
     row = table.rows[1]
