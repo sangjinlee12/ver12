@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, DateField, IntegerField, HiddenField, FloatField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, DateField, IntegerField, HiddenField, FloatField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, ValidationError
-from datetime import date
+from datetime import date, datetime
 
 class LoginForm(FlaskForm):
     """로그인 폼"""
