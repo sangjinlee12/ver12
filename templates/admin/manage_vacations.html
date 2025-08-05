@@ -104,15 +104,15 @@
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #003d82, #002855); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">
-                                {{ request.user.name[0] }}
+                                {{ request.user_name[0] if request.user_name else request.user.name[0] }}
                             </div>
                             <div>
-                                <div style="font-weight: 600; color: #212529;">{{ request.user.name }}</div>
-                                <div style="font-size: 12px; color: #6c757d;">{{ request.user.position or request.user.username }}</div>
+                                <div style="font-weight: 600; color: #212529;">{{ request.user_name if request.user_name else request.user.name }}</div>
+                                <div style="font-size: 12px; color: #6c757d;">{{ request.user_position if request.user_position else (request.user.position or request.user.username) }}</div>
                             </div>
                         </div>
                     </td>
-                    <td>{{ request.user.department or '-' }}</td>
+                    <td>{{ request.user_department if request.user_department else (request.user.department or '-') }}</td>
                     <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
                     <td><strong style="color: #003d82;">{{ request.days }}일</strong></td>
@@ -157,20 +157,6 @@
 </div>
 
 <script>
-    function applyFilters() {
-        const status = document.getElementById('statusSelect').value;
-        const year = document.getElementById('yearSelect').value;
-        window.location.href = "{{ url_for('admin.manage_vacations') }}" + "?status=" + status + "&year=" + year;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('exportBtn').addEventListener('click', function() {
-            const year = document.getElementById('yearSelect').value;
-            const status = document.getElementById('statusSelect').value;
-            window.location.href = "{{ url_for('admin.export_vacations') }}" + 
-                "?year=" + year + 
-                "&status=" + status;
-        });
-    });
+// 기존 JavaScript 제거 (새로운 폼 기반 검색으로 대체됨)
 </script>
 {% endblock %}
