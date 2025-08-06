@@ -5,7 +5,7 @@ import os
 from flask_login import login_required, current_user
 from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm
 from functools import wraps
 from datetime import datetime
 import csv
@@ -237,6 +237,99 @@ def download_employee_template():
     response.headers['Content-Disposition'] = 'attachment; filename=employee_template.xlsx'
     
     return response
+
+@admin_bp.route('/add_vacation', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_vacation():
+    """관리자가 직원에게 휴가 등록"""
+    form = AdminVacationForm()
+    
+    # 직원 목록을 폼에 설정
+    employees = User.query.filter_by(role=Role.EMPLOYEE).all()
+    form.user_id.choices = [(emp.id, f"{emp.name} ({emp.department})") for emp in employees]
+    
+    if form.validate_on_submit():
+        try:
+            # 휴가 일수 계산
+            vacation_days = get_vacation_days_count(
+                form.start_date.data, 
+                form.end_date.data, 
+                form.type.data
+            )
+            
+            # 직원의 남은 휴가 일수 확인 (특별휴가 제외)
+            if form.type.data != '특별휴가':
+                year = form.start_date.data.year
+                user_vacation_days = VacationDays.query.filter_by(
+                    user_id=form.user_id.data, 
+                    year=year
+                ).first()
+                
+                if user_vacation_days:
+                    remaining_days = user_vacation_days.total_days - user_vacation_days.used_days
+                    if vacation_days > remaining_days:
+                        flash(f'해당 직원의 남은 휴가 일수가 부족합니다. (남은 일수: {remaining_days}일)', 'danger')
+                        return render_template('admin/add_vacation.html', form=form)
+            
+            # 중복 휴가 신청 확인
+            existing_vacation = VacationRequest.query.filter(
+                VacationRequest.user_id == form.user_id.data,
+                VacationRequest.status.in_([VacationStatus.PENDING, VacationStatus.APPROVED]),
+                ((VacationRequest.start_date <= form.start_date.data) & (VacationRequest.end_date >= form.start_date.data)) |
+                ((VacationRequest.start_date <= form.end_date.data) & (VacationRequest.end_date >= form.end_date.data))
+            ).first()
+            
+            if existing_vacation:
+                flash('해당 기간에 이미 휴가가 등록되어 있습니다.', 'danger')
+                return render_template('admin/add_vacation.html', form=form)
+            
+            # 새로운 휴가 신청 생성 (자동 승인 상태)
+            new_vacation = VacationRequest(
+                user_id=form.user_id.data,
+                start_date=form.start_date.data,
+                end_date=form.end_date.data,
+                days=vacation_days,
+                type=form.type.data,
+                reason=form.reason.data,
+                status=VacationStatus.APPROVED,  # 관리자가 등록하므로 자동 승인
+                approved_by=current_user.id,
+                approval_date=datetime.now()
+            )
+            
+            db.session.add(new_vacation)
+            
+            # 특별휴가가 아닌 경우 휴가 일수 차감
+            if form.type.data != '특별휴가':
+                year = form.start_date.data.year
+                user_vacation_days = VacationDays.query.filter_by(
+                    user_id=form.user_id.data, 
+                    year=year
+                ).first()
+                
+                if user_vacation_days:
+                    user_vacation_days.used_days += vacation_days
+                else:
+                    # 휴가 일수 레코드가 없으면 생성
+                    new_vacation_days = VacationDays(
+                        user_id=form.user_id.data,
+                        year=year,
+                        total_days=15,  # 기본 15일
+                        used_days=vacation_days
+                    )
+                    db.session.add(new_vacation_days)
+            
+            db.session.commit()
+            
+            user = User.query.get(form.user_id.data)
+            flash(f'{user.name}님의 휴가가 성공적으로 등록되었습니다.', 'success')
+            return redirect(url_for('admin.manage_vacations'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'휴가 등록 중 오류가 발생했습니다: {str(e)}', 'danger')
+    
+    return render_template('admin/add_vacation.html', form=form)
 
 @admin_bp.route('/employees/vacation-days', methods=['GET', 'POST'])
 @login_required

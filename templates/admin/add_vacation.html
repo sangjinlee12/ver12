@@ -1,0 +1,143 @@
+{% extends "base_gov.html" %}
+
+{% block title %}에스에스전력 - 휴가 등록{% endblock %}
+
+{% block content %}
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('admin.manage_vacations') }}">휴가 관리</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>휴가 등록</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-calendar-plus"></i> 직원 휴가 등록
+    </h1>
+    <p class="gov-page-subtitle">관리자가 직원에게 직접 휴가를 등록할 수 있습니다.</p>
+</div>
+
+<div class="gov-card">
+        <div class="gov-card-header">
+            <i class="fas fa-calendar-plus"></i> 휴가 등록 폼
+        </div>
+        
+        <div class="gov-card-body">
+            <form method="POST" class="gov-form">
+                {{ form.hidden_tag() }}
+                
+                <div class="gov-form-group">
+                    <label for="{{ form.user_id.id }}" class="gov-form-label">
+                        {{ form.user_id.label.text }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {{ form.user_id(class="gov-form-control") }}
+                    {% for error in form.user_id.errors %}
+                        <div class="gov-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="gov-form-group">
+                        <label for="{{ form.start_date.id }}" class="gov-form-label">
+                            {{ form.start_date.label.text }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.start_date(class="gov-form-control") }}
+                        {% for error in form.start_date.errors %}
+                            <div class="gov-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="gov-form-group">
+                        <label for="{{ form.end_date.id }}" class="gov-form-label">
+                            {{ form.end_date.label.text }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.end_date(class="gov-form-control") }}
+                        {% for error in form.end_date.errors %}
+                            <div class="gov-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="gov-form-group">
+                    <label for="{{ form.type.id }}" class="gov-form-label">
+                        {{ form.type.label.text }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {{ form.type(class="gov-form-control") }}
+                    {% for error in form.type.errors %}
+                        <div class="gov-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="gov-form-group">
+                    <label for="{{ form.reason.id }}" class="gov-form-label">
+                        {{ form.reason.label.text }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    {{ form.reason(class="gov-form-control", style="height: 100px;") }}
+                    {% for error in form.reason.errors %}
+                        <div class="gov-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <a href="{{ url_for('admin.manage_vacations') }}" class="gov-btn" style="background: #6c757d; color: white;">
+                        <i class="fas fa-arrow-left"></i> 돌아가기
+                    </a>
+                    {{ form.submit(class="gov-btn gov-btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 도움말 카드 -->
+    <div class="gov-card" style="margin-top: 20px;">
+        <div class="gov-card-header">
+            <h3 class="gov-card-title">
+                <i class="fas fa-info-circle text-info"></i>
+                휴가 등록 안내
+            </h3>
+        </div>
+        <div class="gov-card-body">
+            <div class="gov-alert gov-alert-info">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>관리자가 등록하는 휴가는 자동으로 <strong>승인됨</strong> 상태로 설정됩니다.</li>
+                    <li><strong>특별휴가</strong>를 제외한 모든 휴가는 해당 직원의 연차에서 차감됩니다.</li>
+                    <li>휴가 기간은 <strong>주말과 공휴일을 제외</strong>하고 계산됩니다.</li>
+                    <li>중복된 휴가 기간이 있는 경우 등록이 불가능합니다.</li>
+                    <li>직원의 남은 휴가 일수가 부족한 경우 등록이 제한됩니다.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 날짜 선택 시 자동 계산 기능
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('{{ form.start_date.id }}');
+    const endDateInput = document.getElementById('{{ form.end_date.id }}');
+    
+    // 오늘 날짜를 기본값으로 설정
+    if (!startDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.value = today;
+        endDateInput.value = today;
+    }
+    
+    // 시작일 변경 시 종료일 최소값 설정
+    startDateInput.addEventListener('change', function() {
+        if (this.value) {
+            endDateInput.min = this.value;
+            if (endDateInput.value < this.value) {
+                endDateInput.value = this.value;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -46,7 +46,7 @@
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: end;">
+            <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 15px; align-items: end;">
                 <div>
                     <label class="gov-form-label">{{ search_form.year.label }}</label>
                     {{ search_form.year(class="gov-form-control") }}
@@ -58,6 +58,12 @@
                 
                 <div>
                     {{ search_form.export(class="gov-btn", style="background: #00b894; color: white;") }}
+                </div>
+                
+                <div>
+                    <a href="{{ url_for('admin.add_vacation') }}" class="gov-btn" style="background: #e17055; color: white;">
+                        <i class="fas fa-plus"></i> 휴가 등록
+                    </a>
                 </div>
             </div>
         </form>

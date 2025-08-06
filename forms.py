@@ -38,6 +38,29 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('비밀번호 변경')
 
 
+class AdminVacationForm(FlaskForm):
+    """관리자 휴가 등록 폼"""
+    user_id = SelectField('직원 선택', validators=[DataRequired('직원을 선택하세요.')], coerce=int)
+    start_date = DateField('시작일', validators=[DataRequired('시작일을 선택하세요.')], format='%Y-%m-%d')
+    end_date = DateField('종료일', validators=[DataRequired('종료일을 선택하세요.')], format='%Y-%m-%d')
+    type = SelectField('휴가 유형', choices=[
+        ('연차', '연차'),
+        ('반차(오전)', '반차(오전)'),
+        ('반차(오후)', '반차(오후)'),
+        ('특별휴가', '특별휴가')
+    ], validators=[DataRequired('휴가 유형을 선택하세요.')])
+    reason = TextAreaField('휴가 사유', validators=[DataRequired('휴가 사유를 입력하세요.')], 
+                          render_kw={"rows": 3, "placeholder": "휴가 사유를 입력하세요"})
+    submit = SubmitField('휴가 등록')
+
+    def validate_start_date(self, field):
+        if field.data < date.today():
+            raise ValidationError('시작일은 오늘 이후여야 합니다.')
+
+    def validate_end_date(self, field):
+        if hasattr(self, 'start_date') and self.start_date.data and field.data < self.start_date.data:
+            raise ValidationError('종료일은 시작일보다 늦어야 합니다.')
+
 class VacationSearchForm(FlaskForm):
     """휴가 검색 폼 (기간 검색용)"""
     start_date = DateField('시작일', format='%Y-%m-%d')
