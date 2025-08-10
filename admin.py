@@ -87,9 +87,21 @@ def dashboard():
 @admin_required
 def manage_employees():
     """직원 관리 페이지"""
-    employees = User.query.filter_by(role=Role.EMPLOYEE).all()
     current_year = datetime.now().year
     upload_form = BulkUploadForm()
+    
+    # 직원과 현재 연도 휴가 데이터 조인하여 가져오기
+    employees_query = db.session.query(User, VacationDays).outerjoin(
+        VacationDays, 
+        (User.id == VacationDays.user_id) & (VacationDays.year == current_year)
+    ).filter(User.role == Role.EMPLOYEE).all()
+    
+    # 직원 목록을 위한 데이터 구조 생성
+    employees = []
+    for user, vacation_days in employees_query:
+        # 사용자 객체에 현재 연도 휴가 데이터 추가
+        user.current_vacation_days = vacation_days
+        employees.append(user)
     
     return render_template(
         'admin/manage_employees.html',

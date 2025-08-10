@@ -121,15 +121,15 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if employee.vacation_days and employee.vacation_days.year == current_year %}
-                                <strong style="color: #00b894;">{{ employee.vacation_days.remaining_days() }}일</strong>
+                            {% if employee.current_vacation_days %}
+                                <strong style="color: #00b894;">{{ employee.current_vacation_days.remaining_days() }}일</strong>
                             {% else %}
                                 <span style="color: #f39c12;">미설정</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if employee.vacation_days and employee.vacation_days.year == current_year %}
-                                <span style="color: #636e72;">{{ employee.vacation_days.used_days }}일</span>
+                            {% if employee.current_vacation_days %}
+                                <span style="color: #636e72;">{{ employee.current_vacation_days.used_days }}일</span>
                             {% else %}
                                 <span style="color: #f39c12;">미설정</span>
                             {% endif %}

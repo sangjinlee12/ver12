@@ -110,6 +110,15 @@ The application follows a traditional Flask web application architecture with th
 
 # Changelog
 
+- August 10, 2025: 배포 준비 완료 및 영구 저장 시스템 구현
+  - 관리자 직원 휴가 등록 기능 완전 구현 (AdminVacationForm, /admin/add_vacation)
+  - 휴가 일수 계산 및 반차 처리 로직 개선 (utils.py 업데이트)
+  - 테스트 직원 5명 자동 생성 (test_emp1~5, 비밀번호: test123)
+  - 데이터베이스 백업 시스템 구현 (backup_database.py)
+  - 배포 준비 점검 스크립트 작성 (deploy_setup.py)
+  - 영구 SQLite 데이터베이스 설정 완료 (instance/vacation_permanent.db)
+  - 하단 푸터 회사 연락처 정보 제거
+  - DEPLOYMENT_GUIDE.md 배포 가이드 생성
 - August 5, 2025: 사용자 계정 복구 및 고급 휴가 관리 기능 추가
   - 로그인 페이지에 아이디/패스워드 찾기 기능 구현 (FindIdForm, FindPasswordForm, ResetPasswordForm)
   - 전직원 휴가현황 및 개인별 휴가현황에 고급 검색 기능 추가 (VacationSearchForm)

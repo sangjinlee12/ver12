@@ -49,7 +49,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     # 관계 설정
-    vacation_days = db.relationship('VacationDays', backref='user', uselist=False)
+    vacation_days = db.relationship('VacationDays', backref='user', lazy='dynamic')
     vacation_requests = db.relationship('VacationRequest', backref='user', foreign_keys='VacationRequest.user_id')
     
     def set_password(self, password):

@@ -1,0 +1,23 @@
+{
+  "system_status": {
+    "database_type": "SQLite (permanent)",
+    "database_path": "/home/runner/workspace/instance/vacation_permanent.db",
+    "total_users": 6,
+    "admin_users": 1,
+    "employee_users": 5,
+    "vacation_records": 11,
+    "holidays_configured": 30,
+    "company_info_configured": true
+  },
+  "features_available": [
+    "사용자 인증 및 권한 관리",
+    "휴가 신청 및 승인",
+    "관리자 직원 휴가 등록",
+    "재직증명서 발급",
+    "공휴일 관리",
+    "엑셀 데이터 가져오기/내보내기",
+    "고급 검색 및 필터링",
+    "사용자 계정 복구"
+  ],
+  "generated_at": "2025-08-10T13:49:40.062425"
+}
