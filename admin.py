@@ -469,12 +469,15 @@ def manage_vacations():
         # 검색 필터 적용 (우선순위: 년도/월 > 기간 > 기타)
         
         # 1. 년도/월 검색 (우선순위 높음)
-        if form.year.data != 0:
-            query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+        if form.year.data and form.year.data != 0:
+            # SQLite에서는 extract 대신 strftime 사용
+            from sqlalchemy import func
+            query = query.filter(func.strftime('%Y', VacationRequest.start_date) == str(form.year.data))
             
             # 월이 선택된 경우 해당 월만 검색
-            if form.month.data != 0:
-                query = query.filter(db.extract('month', VacationRequest.start_date) == form.month.data)
+            if hasattr(form, 'month') and form.month.data and form.month.data != 0:
+                month_str = f'{form.month.data:02d}'  # 01, 02, ..., 12 형식
+                query = query.filter(func.strftime('%m', VacationRequest.start_date) == month_str)
         
         # 2. 기간 검색 (년도가 선택되지 않은 경우에만 적용)
         elif form.start_date.data or form.end_date.data:
@@ -576,12 +579,14 @@ def export_vacation_data(form):
         # 검색 조건 적용 (엑셀 출력용)
         
         # 1. 년도/월 검색 (우선순위 높음)
-        if hasattr(form, 'year') and form.year.data != 0:
-            query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+        if hasattr(form, 'year') and form.year.data and form.year.data != 0:
+            from sqlalchemy import func
+            query = query.filter(func.strftime('%Y', VacationRequest.start_date) == str(form.year.data))
             
             # 월이 선택된 경우 해당 월만 검색
-            if hasattr(form, 'month') and form.month.data != 0:
-                query = query.filter(db.extract('month', VacationRequest.start_date) == form.month.data)
+            if hasattr(form, 'month') and form.month.data and form.month.data != 0:
+                month_str = f'{form.month.data:02d}'  # 01, 02, ..., 12 형식
+                query = query.filter(func.strftime('%m', VacationRequest.start_date) == month_str)
         
         # 2. 기간 검색 (년도가 선택되지 않은 경우에만 적용)
         elif (hasattr(form, 'start_date') and form.start_date.data) or (hasattr(form, 'end_date') and form.end_date.data):
