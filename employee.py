@@ -213,19 +213,27 @@ def my_vacations():
         if form.export.data:
             return export_my_vacation_data(form)
         
-        # 검색 필터 적용
-        if form.start_date.data:
-            query = query.filter(VacationRequest.start_date >= form.start_date.data)
+        # 검색 필터 적용 (우선순위: 년도/월 > 기간 > 기타)
         
-        if form.end_date.data:
-            query = query.filter(VacationRequest.end_date <= form.end_date.data)
-        
-        if form.status.data != 'all':
-            query = query.filter(VacationRequest.status == form.status.data)
-        
+        # 1. 년도/월 검색 (우선순위 높음)
         if form.year.data != 0:
             query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
             search_year = form.year.data
+            
+            # 월이 선택된 경우 해당 월만 검색
+            if hasattr(form, 'month') and form.month.data != 0:
+                query = query.filter(db.extract('month', VacationRequest.start_date) == form.month.data)
+        
+        # 2. 기간 검색 (년도가 선택되지 않은 경우에만 적용)
+        elif form.start_date.data or form.end_date.data:
+            if form.start_date.data:
+                query = query.filter(VacationRequest.start_date >= form.start_date.data)
+            if form.end_date.data:
+                query = query.filter(VacationRequest.end_date <= form.end_date.data)
+        
+        # 3. 상태 검색
+        if form.status.data != 'all':
+            query = query.filter(VacationRequest.status == form.status.data)
     else:
         # URL 파라미터로부터 필터 적용 (기존 호환성)
         year = request.args.get('year', current_year, type=int)
@@ -298,18 +306,26 @@ def export_my_vacation_data(form):
         # 쿼리 생성
         query = VacationRequest.query.filter_by(user_id=current_user.id)
         
-        # 검색 조건 적용
-        if hasattr(form, 'start_date') and form.start_date.data:
-            query = query.filter(VacationRequest.start_date >= form.start_date.data)
+        # 검색 조건 적용 (엑셀 출력용)
         
-        if hasattr(form, 'end_date') and form.end_date.data:
-            query = query.filter(VacationRequest.end_date <= form.end_date.data)
-        
-        if hasattr(form, 'status') and form.status.data != 'all':
-            query = query.filter(VacationRequest.status == form.status.data)
-        
+        # 1. 년도/월 검색 (우선순위 높음)
         if hasattr(form, 'year') and form.year.data != 0:
             query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+            
+            # 월이 선택된 경우 해당 월만 검색
+            if hasattr(form, 'month') and form.month.data != 0:
+                query = query.filter(db.extract('month', VacationRequest.start_date) == form.month.data)
+        
+        # 2. 기간 검색 (년도가 선택되지 않은 경우에만 적용)
+        elif (hasattr(form, 'start_date') and form.start_date.data) or (hasattr(form, 'end_date') and form.end_date.data):
+            if hasattr(form, 'start_date') and form.start_date.data:
+                query = query.filter(VacationRequest.start_date >= form.start_date.data)
+            if hasattr(form, 'end_date') and form.end_date.data:
+                query = query.filter(VacationRequest.end_date <= form.end_date.data)
+        
+        # 3. 상태 검색
+        if hasattr(form, 'status') and form.status.data != 'all':
+            query = query.filter(VacationRequest.status == form.status.data)
         
         # 정렬
         query = query.order_by(VacationRequest.created_at.desc())
@@ -360,8 +376,6 @@ def export_my_vacation_data(form):
     except Exception as e:
         flash(f'엑셀 다운로드 중 오류가 발생했습니다: {str(e)}', 'danger')
         return redirect(url_for('employee.my_vacations'))
-    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'{current_user.name}_휴가현황_{current_time}.xlsx'
     
     # 임시 파일로 저장
     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:

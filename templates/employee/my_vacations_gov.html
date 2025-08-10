@@ -55,25 +55,47 @@
     <div class="gov-card-body">
         <form method="POST">
             {{ search_form.hidden_tag() }}
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <!-- 주요 검색 필터 (년도/월) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
-                    <label class="gov-form-label">{{ search_form.start_date.label }}</label>
-                    {{ search_form.start_date(class="gov-form-control") }}
+                    <label class="gov-form-label" style="font-weight: bold; color: #003d82;">{{ search_form.year.label }} *</label>
+                    {{ search_form.year(class="gov-form-control", style="border: 2px solid #003d82;") }}
+                    <small style="color: #6c757d; font-size: 11px;">년도 선택시 해당 년도 전체 검색</small>
                 </div>
                 
                 <div>
-                    <label class="gov-form-label">{{ search_form.end_date.label }}</label>
-                    {{ search_form.end_date(class="gov-form-control") }}
+                    <label class="gov-form-label" style="font-weight: bold; color: #003d82;">{{ search_form.month.label }}</label>
+                    {{ search_form.month(class="gov-form-control", style="border: 2px solid #003d82;") }}
+                    <small style="color: #6c757d; font-size: 11px;">년도 선택 후 월 지정 가능</small>
                 </div>
                 
                 <div>
                     <label class="gov-form-label">{{ search_form.status.label }}</label>
                     {{ search_form.status(class="gov-form-control") }}
                 </div>
+            </div>
+            
+            <!-- 상세 검색 필터 (접을 수 있는 섹션) -->
+            <div style="margin-bottom: 20px;">
+                <button type="button" onclick="toggleAdvancedSearch()" style="background: none; border: none; color: #003d82; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-chevron-down" id="advancedToggleIcon"></i>
+                    상세 검색 옵션
+                </button>
                 
-                <div>
-                    <label class="gov-form-label">{{ search_form.year.label }}</label>
-                    {{ search_form.year(class="gov-form-control") }}
+                <div id="advancedSearchOptions" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label class="gov-form-label">{{ search_form.start_date.label }}</label>
+                            {{ search_form.start_date(class="gov-form-control") }}
+                            <small style="color: #6c757d; font-size: 11px;">년도 미선택시에만 적용</small>
+                        </div>
+                        
+                        <div>
+                            <label class="gov-form-label">{{ search_form.end_date.label }}</label>
+                            {{ search_form.end_date(class="gov-form-control") }}
+                            <small style="color: #6c757d; font-size: 11px;">년도 미선택시에만 적용</small>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -166,4 +188,47 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function toggleAdvancedSearch() {
+    const options = document.getElementById('advancedSearchOptions');
+    const icon = document.getElementById('advancedToggleIcon');
+    
+    if (options.style.display === 'none') {
+        options.style.display = 'block';
+        icon.className = 'fas fa-chevron-up';
+    } else {
+        options.style.display = 'none';
+        icon.className = 'fas fa-chevron-down';
+    }
+}
+
+// 년도 선택시 안내 메시지
+document.addEventListener('DOMContentLoaded', function() {
+    const yearSelect = document.querySelector('select[name="year"]');
+    const monthSelect = document.querySelector('select[name="month"]');
+    
+    if (yearSelect && monthSelect) {
+        yearSelect.addEventListener('change', function() {
+            if (this.value !== '0') {
+                // 년도가 선택되면 월 선택 활성화
+                monthSelect.disabled = false;
+                monthSelect.style.opacity = '1';
+            } else {
+                // 년도가 전체면 월도 전체로 설정
+                monthSelect.value = '0';
+                monthSelect.disabled = true;
+                monthSelect.style.opacity = '0.6';
+            }
+        });
+        
+        // 초기 상태 설정
+        if (yearSelect.value === '0') {
+            monthSelect.disabled = true;
+            monthSelect.style.opacity = '0.6';
+        }
+    }
+});
+</script>
+
 {% endblock %}

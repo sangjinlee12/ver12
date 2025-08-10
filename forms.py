@@ -63,9 +63,14 @@ class AdminVacationForm(FlaskForm):
 
 class VacationSearchForm(FlaskForm):
     """휴가 검색 폼 (기간 검색용)"""
-    employee_name = StringField('직원명', render_kw={"placeholder": "직원명으로 검색"})
-    start_date = DateField('시작일', format='%Y-%m-%d')
-    end_date = DateField('종료일', format='%Y-%m-%d')
+    employee_name = StringField('직원명', render_kw={"placeholder": "직원명으로 검색 (선택사항)"})
+    year = SelectField('연도', choices=[], coerce=int)
+    month = SelectField('월', choices=[
+        (0, '전체'),
+        (1, '1월'), (2, '2월'), (3, '3월'), (4, '4월'),
+        (5, '5월'), (6, '6월'), (7, '7월'), (8, '8월'),
+        (9, '9월'), (10, '10월'), (11, '11월'), (12, '12월')
+    ], coerce=int)
     status = SelectField('상태', choices=[
         ('all', '전체'),
         ('대기중', '대기중'),
@@ -85,7 +90,8 @@ class VacationSearchForm(FlaskForm):
         ('기술팀', '기술팀'),
         ('관리팀', '관리팀')
     ])
-    year = SelectField('연도', choices=[], coerce=int)
+    start_date = DateField('시작일', format='%Y-%m-%d', render_kw={"placeholder": "YYYY-MM-DD (선택사항)"})
+    end_date = DateField('종료일', format='%Y-%m-%d', render_kw={"placeholder": "YYYY-MM-DD (선택사항)"})
     submit = SubmitField('검색')
     export = SubmitField('엑셀 다운로드')
 
