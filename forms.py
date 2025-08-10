@@ -239,3 +239,82 @@ class BulkUploadForm(FlaskForm):
         FileAllowed(['xlsx', 'xls'], '엑셀 파일만 업로드 가능합니다.')
     ])
     submit = SubmitField('업로드')
+
+class EmployeeRegistrationForm(FlaskForm):
+    """직원 등록 폼"""
+    username = StringField('아이디', validators=[
+        DataRequired('아이디를 입력하세요.'),
+        Length(min=3, max=20, message='아이디는 3-20자여야 합니다.')
+    ], render_kw={"placeholder": "영문, 숫자, 언더스코어만 사용"})
+    
+    name = StringField('이름', validators=[
+        DataRequired('이름을 입력하세요.'),
+        Length(min=2, max=10, message='이름은 2-10자여야 합니다.')
+    ], render_kw={"placeholder": "실명을 입력하세요"})
+    
+    email = StringField('이메일', validators=[
+        DataRequired('이메일을 입력하세요.'),
+        Email('올바른 이메일 형식이 아닙니다.')
+    ], render_kw={"placeholder": "예: hong@sspower.com"})
+    
+    password = PasswordField('초기 비밀번호', validators=[
+        DataRequired('초기 비밀번호를 입력하세요.'),
+        Length(min=6, message='비밀번호는 최소 6자 이상이어야 합니다.')
+    ], render_kw={"placeholder": "최소 6자 이상"})
+    
+    confirm_password = PasswordField('비밀번호 확인', validators=[
+        DataRequired('비밀번호 확인을 입력하세요.'),
+        EqualTo('password', message='비밀번호가 일치하지 않습니다.')
+    ])
+    
+    resident_id_first = StringField('주민번호 앞자리', validators=[
+        DataRequired('주민번호 앞자리를 입력하세요.'),
+        Length(min=6, max=6, message='주민번호 앞자리는 6자리입니다.')
+    ], render_kw={"placeholder": "예: 920315"})
+    
+    resident_id_last_digit = SelectField('주민번호 뒷자리 첫번째', choices=[
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4')
+    ], validators=[DataRequired('주민번호 뒷자리 첫번째 숫자를 선택하세요.')])
+    
+    department = SelectField('부서', choices=[
+        ('공사팀', '공사팀'),
+        ('영업팀', '영업팀'),
+        ('경리부', '경리부'),
+        ('안전팀', '안전팀'),
+        ('인사팀', '인사팀'),
+        ('기술팀', '기술팀'),
+        ('관리팀', '관리팀')
+    ], validators=[DataRequired('부서를 선택하세요.')])
+    
+    position = SelectField('직급', choices=[
+        ('사원', '사원'),
+        ('주임', '주임'),
+        ('대리', '대리'),
+        ('과장', '과장'),
+        ('차장', '차장'),
+        ('부장', '부장'),
+        ('이사', '이사')
+    ], validators=[DataRequired('직급을 선택하세요.')])
+    
+    hire_date = DateField('입사일', validators=[DataRequired('입사일을 선택하세요.')], format='%Y-%m-%d')
+    
+    submit = SubmitField('직원 등록')
+    
+    def validate_username(self, field):
+        from models import User
+        user = User.query.filter_by(username=field.data).first()
+        if user:
+            raise ValidationError('이미 사용 중인 아이디입니다.')
+    
+    def validate_email(self, field):
+        from models import User
+        user = User.query.filter_by(email=field.data).first()
+        if user:
+            raise ValidationError('이미 사용 중인 이메일입니다.')
+    
+    def validate_hire_date(self, field):
+        if field.data and field.data > date.today():
+            raise ValidationError('입사일은 오늘 이전이어야 합니다.')

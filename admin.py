@@ -5,7 +5,7 @@ import os
 from flask_login import login_required, current_user
 from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm, EmployeeRegistrationForm
 from functools import wraps
 from datetime import datetime
 import csv
@@ -249,6 +249,52 @@ def download_employee_template():
     response.headers['Content-Disposition'] = 'attachment; filename=employee_template.xlsx'
     
     return response
+
+@admin_bp.route('/employees/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_employee():
+    """직원 등록 페이지"""
+    form = EmployeeRegistrationForm()
+    
+    if form.validate_on_submit():
+        try:
+            # 새 직원 생성
+            new_employee = User(
+                username=form.username.data,
+                email=form.email.data,
+                name=form.name.data,
+                resident_id_first=form.resident_id_first.data,
+                resident_id_last_digit=form.resident_id_last_digit.data,
+                department=form.department.data,
+                position=form.position.data,
+                hire_date=form.hire_date.data,
+                role=Role.EMPLOYEE
+            )
+            new_employee.set_password(form.password.data)
+            db.session.add(new_employee)
+            db.session.flush()  # ID를 얻기 위해 flush
+            
+            # 현재 연도와 내년 휴가 일수 설정
+            current_year = datetime.now().year
+            for year in [current_year, current_year + 1]:
+                vacation_days = VacationDays(
+                    user_id=new_employee.id,
+                    year=year,
+                    total_days=15,  # 기본 15일
+                    used_days=0
+                )
+                db.session.add(vacation_days)
+            
+            db.session.commit()
+            flash(f'{form.name.data}님이 성공적으로 등록되었습니다.', 'success')
+            return redirect(url_for('admin.manage_employees'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'직원 등록 중 오류가 발생했습니다: {str(e)}', 'danger')
+    
+    return render_template('admin/add_employee.html', form=form)
 
 @admin_bp.route('/add_vacation', methods=['GET', 'POST'])
 @login_required
