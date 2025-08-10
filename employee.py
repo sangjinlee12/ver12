@@ -294,46 +294,72 @@ def cancel_vacation(request_id):
 
 def export_my_vacation_data(form):
     """개인 휴가 데이터 엑셀 다운로드"""
-    # 쿼리 생성
-    query = VacationRequest.query.filter_by(user_id=current_user.id)
-    
-    # 검색 조건 적용
-    if form.start_date.data:
-        query = query.filter(VacationRequest.start_date >= form.start_date.data)
-    
-    if form.end_date.data:
-        query = query.filter(VacationRequest.end_date <= form.end_date.data)
-    
-    if form.status.data != 'all':
-        query = query.filter(VacationRequest.status == form.status.data)
-    
-    if form.year.data != 0:
-        query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
-    
-    # 정렬
-    query = query.order_by(VacationRequest.created_at.desc())
-    
-    # 결과 가져오기
-    results = query.all()
-    
-    # 엑셀 파일 생성 (pandas 이용)
-    data = []
-    for vacation_request in results:
-        data.append({
-            '휴가시작일': vacation_request.start_date.strftime('%Y-%m-%d'),
-            '휴가종료일': vacation_request.end_date.strftime('%Y-%m-%d'),
-            '휴가일수': vacation_request.days,
-            '휴가유형': vacation_request.type,
-            '휴가사유': vacation_request.reason or '',
-            '상태': vacation_request.status,
-            '신청일시': vacation_request.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            '승인일시': vacation_request.approval_date.strftime('%Y-%m-%d %H:%M:%S') if vacation_request.approval_date else ''
-        })
-    
-    # DataFrame 생성
-    df = pd.DataFrame(data)
-    
-    # 파일명 생성
+    try:
+        # 쿼리 생성
+        query = VacationRequest.query.filter_by(user_id=current_user.id)
+        
+        # 검색 조건 적용
+        if hasattr(form, 'start_date') and form.start_date.data:
+            query = query.filter(VacationRequest.start_date >= form.start_date.data)
+        
+        if hasattr(form, 'end_date') and form.end_date.data:
+            query = query.filter(VacationRequest.end_date <= form.end_date.data)
+        
+        if hasattr(form, 'status') and form.status.data != 'all':
+            query = query.filter(VacationRequest.status == form.status.data)
+        
+        if hasattr(form, 'year') and form.year.data != 0:
+            query = query.filter(db.extract('year', VacationRequest.start_date) == form.year.data)
+        
+        # 정렬
+        query = query.order_by(VacationRequest.created_at.desc())
+        
+        # 결과 가져오기
+        results = query.all()
+        
+        if not results:
+            # 데이터가 없는 경우 빈 엑셀 파일 생성
+            data = [{'메시지': '검색 조건에 맞는 휴가 데이터가 없습니다.'}]
+        else:
+            # 엑셀 파일 생성 (pandas 이용)
+            data = []
+            for vacation_request in results:
+                data.append({
+                    '휴가시작일': vacation_request.start_date.strftime('%Y-%m-%d'),
+                    '휴가종료일': vacation_request.end_date.strftime('%Y-%m-%d'),
+                    '휴가일수': float(vacation_request.days),
+                    '휴가유형': vacation_request.type,
+                    '휴가사유': vacation_request.reason or '',
+                    '상태': vacation_request.status,
+                    '신청일시': vacation_request.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    '승인일시': vacation_request.approval_date.strftime('%Y-%m-%d %H:%M:%S') if vacation_request.approval_date else ''
+                })
+        
+        # DataFrame 생성
+        df = pd.DataFrame(data)
+        
+        # 파일명 생성
+        current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'my_vacation_data_{current_time}.xlsx'
+        
+        # BytesIO를 사용하여 메모리에서 엑셀 파일 생성
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='나의휴가현황')
+        
+        output.seek(0)
+        excel_data = output.getvalue()
+        
+        # 응답 생성
+        response = make_response(excel_data)
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except Exception as e:
+        flash(f'엑셀 다운로드 중 오류가 발생했습니다: {str(e)}', 'danger')
+        return redirect(url_for('employee.my_vacations'))
     current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'{current_user.name}_휴가현황_{current_time}.xlsx'
     
