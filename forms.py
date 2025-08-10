@@ -54,7 +54,7 @@ class AdminVacationForm(FlaskForm):
     submit = SubmitField('휴가 등록')
 
     def validate_start_date(self, field):
-        if field.data < date.today():
+        if field.data and field.data < date.today():
             raise ValidationError('시작일은 오늘 이후여야 합니다.')
 
     def validate_end_date(self, field):
@@ -157,9 +157,9 @@ class VacationRequestForm(FlaskForm):
     submit = SubmitField('휴가 신청')
 
     def validate_end_date(self, field):
-        if field.data < self.start_date.data:
+        if self.start_date.data and field.data and field.data < self.start_date.data:
             raise ValidationError('종료일은 시작일보다 빠를 수 없습니다.')
-        if self.start_date.data < date.today():
+        if self.start_date.data and self.start_date.data < date.today():
             raise ValidationError('과거 날짜로는 휴가를 신청할 수 없습니다.')
 
 

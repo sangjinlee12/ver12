@@ -11,10 +11,14 @@ def is_holiday(date):
     holiday = Holiday.query.filter_by(date=date).first()
     return holiday is not None
 
-def get_vacation_days_count(start_date, end_date):
+def get_vacation_days_count(start_date, end_date, vacation_type=None):
     """휴가 일수 계산 (주말, 공휴일 제외)"""
     if start_date > end_date:
         return 0
+    
+    # 반차 처리
+    if vacation_type and '반차' in vacation_type:
+        return 0.5
     
     # 같은 날짜면 1일
     if start_date == end_date:

@@ -308,7 +308,7 @@ def add_vacation():
                 ).first()
                 
                 if user_vacation_days:
-                    user_vacation_days.used_days += vacation_days
+                    user_vacation_days.used_days = (user_vacation_days.used_days or 0) + vacation_days
                 else:
                     # 휴가 일수 레코드가 없으면 생성
                     new_vacation_days = VacationDays(
