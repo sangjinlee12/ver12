@@ -207,8 +207,8 @@ def my_vacations():
     current_year = datetime.now().year
     search_year = current_year
     
-    # 폼 처리
-    if form.validate_on_submit():
+    # 폼 처리 (POST 요청 모두 처리)
+    if request.method == 'POST':
         # 엑셀 다운로드 요청
         if form.export.data:
             return export_my_vacation_data(form)

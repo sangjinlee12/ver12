@@ -460,8 +460,8 @@ def manage_vacations():
         User.position
     ).join(User, User.id == VacationRequest.user_id)
     
-    # 폼 처리
-    if form.validate_on_submit():
+    # 폼 처리 (POST 요청 모두 처리)
+    if request.method == 'POST':
         # 엑셀 다운로드 요청
         if form.export.data:
             return export_vacation_data(form)
@@ -500,7 +500,7 @@ def manage_vacations():
     
     # URL 파라미터로부터 필터 적용 (기존 호환성)
     status_filter = request.args.get('status', 'all')
-    if status_filter != 'all' and not form.validate_on_submit():
+    if status_filter != 'all' and request.method != 'POST':
         query = query.filter(VacationRequest.status == status_filter)
         form.status.data = status_filter
     
