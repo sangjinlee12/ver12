@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 import pandas as pd
 import tempfile
 import os
+import tempfile
 from flask_login import login_required, current_user
 from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
@@ -466,6 +467,9 @@ def manage_vacations():
             return export_vacation_data(form)
         
         # 검색 필터 적용
+        if form.employee_name.data and form.employee_name.data.strip():
+            query = query.filter(User.name.contains(form.employee_name.data.strip()))
+        
         if form.start_date.data:
             query = query.filter(VacationRequest.start_date >= form.start_date.data)
         
@@ -559,6 +563,9 @@ def export_vacation_data(form):
     ).join(User, User.id == VacationRequest.user_id)
     
     # 검색 조건 적용
+    if form.employee_name.data and form.employee_name.data.strip():
+        query = query.filter(User.name.contains(form.employee_name.data.strip()))
+    
     if form.start_date.data:
         query = query.filter(VacationRequest.start_date >= form.start_date.data)
     

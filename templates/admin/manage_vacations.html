@@ -24,7 +24,12 @@
     <div class="gov-card-body">
         <form method="POST">
             {{ search_form.hidden_tag() }}
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label class="gov-form-label">{{ search_form.employee_name.label }}</label>
+                    {{ search_form.employee_name(class="gov-form-control") }}
+                </div>
+                
                 <div>
                     <label class="gov-form-label">{{ search_form.start_date.label }}</label>
                     {{ search_form.start_date(class="gov-form-control") }}

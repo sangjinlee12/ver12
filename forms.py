@@ -63,6 +63,7 @@ class AdminVacationForm(FlaskForm):
 
 class VacationSearchForm(FlaskForm):
     """휴가 검색 폼 (기간 검색용)"""
+    employee_name = StringField('직원명', render_kw={"placeholder": "직원명으로 검색"})
     start_date = DateField('시작일', format='%Y-%m-%d')
     end_date = DateField('종료일', format='%Y-%m-%d')
     status = SelectField('상태', choices=[
@@ -80,7 +81,9 @@ class VacationSearchForm(FlaskForm):
         ('총무팀', '총무팀'),
         ('영업팀', '영업팀'),
         ('안전팀', '안전팀'),
-        ('품질팀', '품질팀')
+        ('품질팀', '품질팀'),
+        ('기술팀', '기술팀'),
+        ('관리팀', '관리팀')
     ])
     year = SelectField('연도', choices=[], coerce=int)
     submit = SubmitField('검색')
