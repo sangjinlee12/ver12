@@ -124,8 +124,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if employee.current_vacation_days %}
-                                <strong style="color: #00b894;">{{ employee.current_vacation_days.remaining_days() }}일</strong>
+                            {% if employee.remaining_vacation_days is defined %}
+                                <strong style="color: #00b894;">{{ employee.remaining_vacation_days }}일</strong>
                             {% else %}
                                 <span style="color: #f39c12;">미설정</span>
                             {% endif %}
@@ -134,7 +134,7 @@
                             {% if employee.current_vacation_days %}
                                 <span style="color: #636e72;">{{ employee.current_vacation_days.used_days }}일</span>
                             {% else %}
-                                <span style="color: #f39c12;">미설정</span>
+                                <span style="color: #f39c12;">0일</span>
                             {% endif %}
                         </td>
                         <td>

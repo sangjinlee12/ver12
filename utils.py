@@ -46,17 +46,65 @@ def check_overlapping_vacation(user_id, start_date, end_date):
     
     return overlapping is not None
 
+def calculate_remaining_vacation_days(user_id, year=None):
+    """사용자의 잔여 휴가일수 계산"""
+    from models import User, VacationDays
+    
+    if year is None:
+        year = datetime.now().year
+    
+    # 사용자 정보 조회
+    user = User.query.get(user_id)
+    if not user:
+        return 0
+    
+    # 해당 연도의 휴가 일수 설정 조회
+    vacation_days = VacationDays.query.filter_by(
+        user_id=user_id,
+        year=year
+    ).first()
+    
+    # 없으면 기본값으로 생성
+    if not vacation_days:
+        vacation_days = VacationDays(
+            user_id=user_id,
+            year=year,
+            total_days=15,  # 기본값
+            used_days=0
+        )
+        db.session.add(vacation_days)
+        db.session.commit()
+    
+    # 해당 연도의 승인된 휴가 총 일수 계산
+    from sqlalchemy import func
+    used_days = db.session.query(
+        func.coalesce(func.sum(VacationRequest.days), 0)
+    ).filter(
+        VacationRequest.user_id == user_id,
+        VacationRequest.status == '승인됨',
+        func.strftime('%Y', VacationRequest.start_date) == str(year)
+    ).scalar()
+    
+    # VacationDays 테이블의 used_days도 업데이트
+    vacation_days.used_days = used_days or 0
+    db.session.commit()
+    
+    # 잔여 휴가일수 = 총 휴가일수 - 사용한 휴가일수
+    remaining = vacation_days.total_days - (used_days or 0)
+    return max(0, remaining)  # 음수가 되지 않도록
+
 def get_current_year_vacations(year=None):
     """연도별 휴가 통계 조회"""
     if year is None:
         year = datetime.now().year
     
-    # 연도별 휴가 통계 쿼리
+    # SQLite 환경에서는 strftime 사용
+    from sqlalchemy import func
     stats = db.session.query(
-        db.func.sum(VacationRequest.days).label('total_used_days'),
-        db.func.count(VacationRequest.id).label('total_requests')
+        func.coalesce(func.sum(VacationRequest.days), 0).label('total_used_days'),
+        func.count(VacationRequest.id).label('total_requests')
     ).filter(
-        db.extract('year', VacationRequest.start_date) == year
+        func.strftime('%Y', VacationRequest.start_date) == str(year)
     ).first()
     
     return stats

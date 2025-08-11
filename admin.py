@@ -98,10 +98,15 @@ def manage_employees():
     ).filter(User.role == Role.EMPLOYEE).all()
     
     # 직원 목록을 위한 데이터 구조 생성
+    from utils import calculate_remaining_vacation_days
     employees = []
     for user, vacation_days in employees_query:
+        # 실시간 휴가 잔여일수 계산 및 업데이트
+        remaining_days = calculate_remaining_vacation_days(user.id, current_year)
+        
         # 사용자 객체에 현재 연도 휴가 데이터 추가
         user.current_vacation_days = vacation_days
+        user.remaining_vacation_days = remaining_days  # 실시간 계산된 잔여일수
         employees.append(user)
     
     return render_template(

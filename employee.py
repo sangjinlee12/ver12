@@ -53,6 +53,10 @@ def dashboard():
         db.session.add(vacation_days)
         db.session.commit()
     
+    # 실시간 잔여 휴가일수 계산
+    from utils import calculate_remaining_vacation_days
+    remaining_days = calculate_remaining_vacation_days(current_user.id, current_year)
+    
     # 최근 휴가 신청 내역 (5개)
     recent_requests = VacationRequest.query.filter_by(
         user_id=current_user.id
@@ -70,8 +74,8 @@ def dashboard():
         status=VacationStatus.APPROVED
     ).count()
     
-    # 추가 통계 데이터
-    remaining_vacation_days = vacation_days.remaining_days()
+    # 추가 통계 데이터 (실시간 계산된 값 사용)
+    remaining_vacation_days = remaining_days  # 실시간 계산된 잔여일수
     total_vacation_days = vacation_days.total_days
     
     # 대기중인 모든 신청 (휴가 + 증명서)
