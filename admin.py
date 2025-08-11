@@ -797,6 +797,139 @@ def process_certificate(certificate_id):
     )
 
 
+@admin_bp.route('/employees/<int:user_id>/vacation-report')
+@login_required
+@admin_required
+def employee_vacation_report(user_id):
+    """직원별 휴가 사용 보고서"""
+    user = User.query.get_or_404(user_id)
+    
+    # 관리자는 보고서를 볼 수 없음
+    if user.role == Role.ADMIN:
+        flash('관리자 계정의 휴가 보고서는 조회할 수 없습니다.', 'danger')
+        return redirect(url_for('admin.manage_employees'))
+    
+    # 연도별 휴가 데이터 조회 (최근 3년)
+    current_year = datetime.now().year
+    years_data = []
+    
+    for year in range(current_year - 2, current_year + 1):
+        # VacationDays 데이터 조회
+        vacation_days = VacationDays.query.filter_by(user_id=user.id, year=year).first()
+        
+        # 해당 연도 휴가 신청 내역
+        from sqlalchemy import func
+        vacation_requests = VacationRequest.query.filter(
+            VacationRequest.user_id == user.id,
+            func.strftime('%Y', VacationRequest.start_date) == str(year)
+        ).order_by(VacationRequest.start_date).all()
+        
+        # 승인된 휴가 총 일수
+        approved_days = sum(req.days for req in vacation_requests if req.status == '승인됨')
+        
+        # 실시간 잔여 휴가 계산
+        from utils import calculate_remaining_vacation_days
+        remaining_days = calculate_remaining_vacation_days(user.id, year)
+        
+        years_data.append({
+            'year': year,
+            'vacation_days': vacation_days,
+            'vacation_requests': vacation_requests,
+            'approved_days': approved_days,
+            'remaining_days': remaining_days,
+            'total_days': vacation_days.total_days if vacation_days else 15
+        })
+    
+    return render_template(
+        'admin/employee_vacation_report.html',
+        user=user,
+        years_data=years_data,
+        current_year=current_year
+    )
+
+
+@admin_bp.route('/employees/<int:user_id>/vacation-report/export')
+@login_required
+@admin_required
+def export_employee_vacation_report(user_id):
+    """직원별 휴가 보고서 엑셀 출력"""
+    user = User.query.get_or_404(user_id)
+    
+    if user.role == Role.ADMIN:
+        flash('관리자 계정의 휴가 보고서는 출력할 수 없습니다.', 'danger')
+        return redirect(url_for('admin.manage_employees'))
+    
+    # 데이터 준비
+    current_year = datetime.now().year
+    all_requests = []
+    
+    # 최근 3년간 휴가 신청 내역
+    from sqlalchemy import func
+    vacation_requests = VacationRequest.query.filter(
+        VacationRequest.user_id == user.id,
+        func.strftime('%Y', VacationRequest.start_date).between(str(current_year - 2), str(current_year))
+    ).order_by(VacationRequest.start_date).all()
+    
+    for req in vacation_requests:
+        all_requests.append({
+            '연도': req.start_date.year,
+            '신청일': req.created_at.strftime('%Y-%m-%d'),
+            '시작일': req.start_date.strftime('%Y-%m-%d'),
+            '종료일': req.end_date.strftime('%Y-%m-%d'),
+            '일수': req.days,
+            '휴가종류': req.type,
+            '사유': req.reason or '-',
+            '상태': req.status,
+            '승인일': req.approval_date.strftime('%Y-%m-%d') if req.approval_date else '-',
+            '승인자': req.approver.name if req.approver else '-'
+        })
+    
+    # DataFrame 생성
+    df = pd.DataFrame(all_requests)
+    
+    # 엑셀 파일 생성
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # 상세 내역 시트
+        df.to_excel(writer, sheet_name='휴가신청내역', index=False)
+        
+        # 연도별 요약 시트
+        summary_data = []
+        for year in range(current_year - 2, current_year + 1):
+            vacation_days = VacationDays.query.filter_by(user_id=user.id, year=year).first()
+            year_requests = [req for req in vacation_requests if req.start_date.year == year]
+            approved_days = sum(req.days for req in year_requests if req.status == '승인됨')
+            
+            from utils import calculate_remaining_vacation_days
+            remaining_days = calculate_remaining_vacation_days(user.id, year)
+            
+            summary_data.append({
+                '연도': year,
+                '총휴가일수': vacation_days.total_days if vacation_days else 15,
+                '사용일수': approved_days,
+                '잔여일수': remaining_days,
+                '신청건수': len(year_requests),
+                '승인건수': len([req for req in year_requests if req.status == '승인됨']),
+                '대기건수': len([req for req in year_requests if req.status == '대기중']),
+                '반려건수': len([req for req in year_requests if req.status == '반려됨'])
+            })
+        
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_excel(writer, sheet_name='연도별요약', index=False)
+    
+    output.seek(0)
+    
+    # 파일명 생성
+    filename = f"{user.name}_휴가보고서_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
+    )
+
+
 @admin_bp.route('/employees/delete/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required

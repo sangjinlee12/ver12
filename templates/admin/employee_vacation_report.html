@@ -1,0 +1,239 @@
+{% extends "base_gov.html" %}
+
+{% block title %}에스에스전력 - {{ user.name }} 휴가 보고서{% endblock %}
+
+{% block content %}
+<div class="gov-breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">홈</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('admin.manage_employees') }}">직원 관리</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>휴가 보고서</span>
+</div>
+
+<div class="gov-page-header">
+    <h1 class="gov-page-title">
+        <i class="fas fa-chart-bar"></i> {{ user.name }} 직원 휴가 보고서
+    </h1>
+    <p class="gov-page-subtitle">{{ user.department or '미지정' }} | {{ user.position or '미지정' }} | {{ user.email }}</p>
+</div>
+
+<!-- 보고서 액션 버튼 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="font-size: 16px; margin: 0; color: #003d82;">
+                    <i class="fas fa-calendar-alt"></i> 최근 3년간 휴가 사용 현황
+                </h3>
+                <p style="font-size: 14px; color: #6c757d; margin: 5px 0 0 0;">
+                    {{ current_year - 2 }}년 ~ {{ current_year }}년 휴가 신청 및 사용 내역
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url_for('admin.export_employee_vacation_report', user_id=user.id) }}" 
+                   class="gov-btn gov-btn-success">
+                    <i class="fas fa-file-excel"></i> 엑셀 출력
+                </a>
+                <a href="{{ url_for('admin.manage_employees') }}" class="gov-btn">
+                    <i class="fas fa-arrow-left"></i> 목록으로
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 연도별 요약 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-chart-pie"></i> 연도별 휴가 요약
+    </div>
+    <div class="gov-card-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            {% for year_data in years_data %}
+            <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; text-align: center;">
+                <h3 style="color: #003d82; font-size: 18px; margin: 0 0 15px 0; font-weight: 700;">
+                    {{ year_data.year }}년
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <div style="color: #6c757d; font-size: 12px; margin-bottom: 5px;">총 휴가</div>
+                        <div style="color: #003d82; font-size: 20px; font-weight: 700;">{{ year_data.total_days }}일</div>
+                    </div>
+                    <div>
+                        <div style="color: #6c757d; font-size: 12px; margin-bottom: 5px;">사용 휴가</div>
+                        <div style="color: #e74c3c; font-size: 20px; font-weight: 700;">{{ year_data.approved_days }}일</div>
+                    </div>
+                </div>
+                
+                <div style="padding: 10px; background: white; border-radius: 6px; border: 1px solid #e9ecef;">
+                    <div style="color: #6c757d; font-size: 12px; margin-bottom: 5px;">잔여 휴가</div>
+                    <div style="color: #00b894; font-size: 22px; font-weight: 700;">{{ year_data.remaining_days }}일</div>
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6c757d;">
+                        <span>신청건수: {{ year_data.vacation_requests|length }}건</span>
+                        <span>승인률: 
+                            {% set total_requests = year_data.vacation_requests|length %}
+                            {% if total_requests > 0 %}
+                                {% set approved_requests = year_data.vacation_requests|selectattr('status', 'eq', '승인됨')|list|length %}
+                                {{ "%.0f"|format((approved_requests / total_requests * 100)) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 상세 휴가 신청 내역 -->
+{% for year_data in years_data %}
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-list-alt"></i> {{ year_data.year }}년 휴가 신청 내역
+        <small style="margin-left: 15px; color: #6c757d;">
+            총 {{ year_data.vacation_requests|length }}건 신청
+        </small>
+    </div>
+    <div class="gov-card-body">
+        {% if year_data.vacation_requests %}
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">신청일</th>
+                        <th style="width: 200px;">휴가 기간</th>
+                        <th style="width: 60px;">일수</th>
+                        <th style="width: 80px;">종류</th>
+                        <th style="width: 200px;">사유</th>
+                        <th style="width: 80px;">상태</th>
+                        <th style="width: 100px;">승인일</th>
+                        <th style="width: 80px;">승인자</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in year_data.vacation_requests %}
+                    <tr>
+                        <td>{{ request.created_at.strftime('%m-%d') }}</td>
+                        <td>
+                            <div style="font-weight: 600;">{{ request.start_date.strftime('%Y-%m-%d') }}</div>
+                            {% if request.start_date != request.end_date %}
+                                <div style="font-size: 12px; color: #6c757d;">~ {{ request.end_date.strftime('%Y-%m-%d') }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <strong>{{ request.days }}일</strong>
+                        </td>
+                        <td>
+                            <span class="gov-badge" style="background: #6c5ce7; color: white; font-size: 11px;">
+                                {{ request.type }}
+                            </span>
+                        </td>
+                        <td style="font-size: 13px;">
+                            {{ request.reason or '-' }}
+                        </td>
+                        <td>
+                            {% if request.status == '승인됨' %}
+                                <span class="gov-badge" style="background: #00b894; color: white;">{{ request.status }}</span>
+                            {% elif request.status == '대기중' %}
+                                <span class="gov-badge" style="background: #fdcb6e; color: white;">{{ request.status }}</span>
+                            {% else %}
+                                <span class="gov-badge" style="background: #e74c3c; color: white;">{{ request.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 12px;">
+                            {% if request.approval_date %}
+                                {{ request.approval_date.strftime('%m-%d') }}
+                            {% else %}
+                                <span style="color: #6c757d;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 12px;">
+                            {% if request.approver %}
+                                {{ request.approver.name }}
+                            {% else %}
+                                <span style="color: #6c757d;">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 16px; margin: 0;">{{ year_data.year }}년에 신청한 휴가가 없습니다.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- 통계 차트 영역 (선택사항) -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-chart-line"></i> 휴가 사용 통계
+    </div>
+    <div class="gov-card-body">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+            <div>
+                <h4 style="font-size: 14px; margin-bottom: 15px; color: #003d82;">월별 휴가 사용 현황 ({{ current_year }}년)</h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    {% for month in range(1, 13) %}
+                    {% set month_requests = years_data[-1].vacation_requests|selectattr('start_date')|selectattr('start_date.month', 'eq', month)|list %}
+                    {% set month_days = month_requests|selectattr('status', 'eq', '승인됨')|sum(attribute='days', start=0) %}
+                    <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <div style="font-size: 11px; color: #6c757d;">{{ month }}월</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #003d82;">{{ month_days }}일</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                <h4 style="font-size: 14px; margin-bottom: 15px; color: #003d82;">휴가 종류별 사용 현황 ({{ current_year }}년)</h4>
+                {% set current_year_requests = years_data[-1].vacation_requests %}
+                {% set vacation_types = {} %}
+                {% for req in current_year_requests %}
+                    {% if req.status == '승인됨' %}
+                        {% if req.type in vacation_types %}
+                            {% set _ = vacation_types.update({req.type: vacation_types[req.type] + req.days}) %}
+                        {% else %}
+                            {% set _ = vacation_types.update({req.type: req.days}) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% for type, days in vacation_types.items() %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                    <span style="font-size: 13px; color: #495057;">{{ type }}</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #003d82;">{{ days }}일</span>
+                </div>
+                {% endfor %}
+                
+                {% if not vacation_types %}
+                <div style="text-align: center; padding: 20px; color: #6c757d; font-size: 13px;">
+                    승인된 휴가가 없습니다.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.gov-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+}
+</style>
+{% endblock %}
