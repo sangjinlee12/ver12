@@ -982,9 +982,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 큰 공백들
-    doc.add_paragraph()
-    doc.add_paragraph()
+    # 적당한 공백들
     doc.add_paragraph()
     doc.add_paragraph()
     
@@ -995,16 +993,8 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 아래 공백들
+    # 발급일 아래 공백들 (줄임)
     doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    doc.add_paragraph()
-    
     # 회사명 - 15pt, 주식회사 에스에스전력
     company_para = doc.add_paragraph()
     company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
