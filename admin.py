@@ -909,13 +909,13 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # Word 문서 생성
     doc = Document()
     
-    # 페이지 여백 설정
+    # 페이지 여백 설정 (A4 용지에 맞게 조정)
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(3)
-        section.bottom_margin = Cm(3)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
+        section.top_margin = Cm(2)
+        section.bottom_margin = Cm(2)
+        section.left_margin = Cm(2)
+        section.right_margin = Cm(2)
     
     # 제목
     title = doc.add_heading('재 직 증 명 서', level=1)
@@ -955,14 +955,13 @@ def generate_certificate_pdf(certificate, employee, company_info):
     
     # 공백
     doc.add_paragraph()
-    doc.add_paragraph()
     
     # 증명 내용
     content_para = doc.add_paragraph()
     content_para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     content_run = content_para.add_run('위 사람은 본 회사의 직원으로 재직 중임을 증명합니다.')
     content_run.font.name = '맑은 고딕'
-    content_run.font.size = Inches(0.16)
+    content_run.font.size = Inches(0.15)
     
     doc.add_paragraph()
     
@@ -971,17 +970,15 @@ def generate_certificate_pdf(certificate, employee, company_info):
     purpose_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     purpose_run = purpose_para.add_run(f'사용목적: {certificate.purpose}')
     purpose_run.font.name = '맑은 고딕'
-    purpose_run.font.size = Inches(0.14)
+    purpose_run.font.size = Inches(0.13)
     purpose_run.bold = True
-    
-    doc.add_paragraph()
     
     # 제한사항
     limit_para = doc.add_paragraph()
     limit_para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     limit_run = limit_para.add_run(f'본 증명서는 {certificate.purpose}에 한하여 사용되며, 다른 용도로 사용할 수 없습니다.')
     limit_run.font.name = '맑은 고딕'
-    limit_run.font.size = Inches(0.14)
+    limit_run.font.size = Inches(0.13)
     
     doc.add_paragraph()
     doc.add_paragraph()
@@ -991,10 +988,9 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     date_run = date_para.add_run(f'발급일: {certificate.issued_date.strftime("%Y년 %m월 %d일")}')
     date_run.font.name = '맑은 고딕'
-    date_run.font.size = Inches(0.16)
+    date_run.font.size = Inches(0.15)
     date_run.bold = True
     
-    doc.add_paragraph()
     doc.add_paragraph()
     
     # 회사 정보
@@ -1005,35 +1001,37 @@ def generate_certificate_pdf(certificate, employee, company_info):
     company_run.font.size = Inches(0.18)
     company_run.bold = True
     
-    ceo_para = doc.add_paragraph()
-    ceo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    ceo_run = ceo_para.add_run(f'대표이사: {company_info.ceo_name}')
+    # 대표이사와 직인을 한 줄에 배치
+    ceo_stamp_para = doc.add_paragraph()
+    ceo_stamp_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    ceo_run = ceo_stamp_para.add_run(f'대표이사: 김세인')
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Inches(0.16)
     
-    # 회사 연락처
+    # 공백 추가
+    space_run = ceo_stamp_para.add_run('    ')
+    
+    # 직인 (회사도장 표현)
+    stamp_run = ceo_stamp_para.add_run('㊞')
+    stamp_run.font.name = '맑은 고딕'
+    stamp_run.font.size = Inches(0.2)
+    stamp_run.font.color.rgb = RGBColor(255, 0, 0)  # 빨간색
+    
+    # 회사 연락처 (간소화)
     if company_info.address:
         addr_para = doc.add_paragraph()
         addr_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        addr_run = addr_para.add_run(f'주소: {company_info.address}')
+        addr_run = addr_para.add_run(f'{company_info.address}')
         addr_run.font.name = '맑은 고딕'
-        addr_run.font.size = Inches(0.12)
+        addr_run.font.size = Inches(0.1)
     
     if company_info.phone:
         phone_para = doc.add_paragraph()
         phone_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        phone_run = phone_para.add_run(f'전화: {company_info.phone}')
+        phone_run = phone_para.add_run(f'TEL: {company_info.phone}')
         phone_run.font.name = '맑은 고딕'
-        phone_run.font.size = Inches(0.12)
-    
-    doc.add_paragraph()
-    
-    # 직인
-    stamp_para = doc.add_paragraph()
-    stamp_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    stamp_run = stamp_para.add_run('(직인)')
-    stamp_run.font.name = '맑은 고딕'
-    stamp_run.font.size = Inches(0.14)
+        phone_run.font.size = Inches(0.1)
     
     # 메모리 버퍼에 저장
     buffer = io.BytesIO()
