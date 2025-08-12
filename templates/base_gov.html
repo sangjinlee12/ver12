@@ -13,6 +13,9 @@
     <!-- 정부 표준 아이콘 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- 성능 최적화 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/performance.css') }}">
+    
     <!-- 정부 웹사이트 표준 CSS -->
     <style>
         /* 정부 표준 색상 팔레트 */
@@ -592,6 +595,26 @@
         });
     </script>
 
+    <!-- 성능 최적화 스크립트 -->
+    <script src="{{ url_for('static', filename='js/performance.js') }}"></script>
+    
+    <script>
+        // 페이지 성능 모니터링
+        window.addEventListener('load', function() {
+            if (performance.getEntriesByType) {
+                const navigationEntries = performance.getEntriesByType('navigation');
+                if (navigationEntries.length > 0) {
+                    const loadTime = navigationEntries[0].loadEventEnd - navigationEntries[0].fetchStart;
+                    console.log(`페이지 로드 시간: ${loadTime.toFixed(2)}ms`);
+                    
+                    if (loadTime > 5000) {
+                        console.warn('페이지 로딩이 느립니다.');
+                    }
+                }
+            }
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

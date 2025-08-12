@@ -66,8 +66,14 @@ print(f"🗄️  데이터베이스: {database_url}")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_size": 10,  # 연결 풀 크기 증가
+    "max_overflow": 20,  # 최대 오버플로우 연결
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# 성능 최적화 설정
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 정적 파일 캐시 1년
+app.config["PERMANENT_SESSION_LIFETIME"] = 1800  # 세션 30분
 
 # 데이터베이스 초기화
 db.init_app(app)

@@ -29,6 +29,18 @@ echo "🗄️  데이터베이스 초기 설정 중..."
 python3 create_admin.py
 python3 add_holidays.py
 
-echo "🎯 애플리케이션 시작..."
-# Gunicorn으로 애플리케이션 시작
-exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --keepalive 5 main:app
+echo "🎯 성능 최적화된 애플리케이션 시작..."
+# 성능 최적화된 Gunicorn 설정
+exec gunicorn \
+    --bind 0.0.0.0:$PORT \
+    --workers 2 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --timeout 30 \
+    --keep-alive 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --preload \
+    --access-logfile - \
+    --error-logfile - \
+    main:app

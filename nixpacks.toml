@@ -2,10 +2,20 @@
 nixPkgs = ["python311"]
 
 [phases.install]
-cmds = ["pip install -r requirements-railway.txt"]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements-railway.txt --no-cache-dir"
+]
 
 [phases.build]
-cmds = ["chmod +x start.sh"]
+cmds = [
+    "chmod +x start.sh",
+    "python optimize_performance.py"
+]
 
 [start]
 cmd = "./start.sh"
+
+[variables]
+PYTHONUNBUFFERED = "1"
+FLASK_ENV = "production"

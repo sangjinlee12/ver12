@@ -1,0 +1,225 @@
+/* 성능 최적화를 위한 CSS */
+
+/* 하드웨어 가속 활성화 */
+.gov-btn,
+.gov-card,
+.gov-table tr {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* 애니메이션 최적화 */
+.gov-btn {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gov-btn:hover {
+    transform: translateY(-1px) translateZ(0);
+}
+
+/* 테이블 성능 최적화 */
+.gov-table {
+    table-layout: fixed;
+    contain: layout style paint;
+}
+
+.gov-table tbody {
+    contain: layout style paint;
+}
+
+/* 큰 목록의 가상 스크롤링을 위한 컨테이너 */
+.virtual-scroll-container {
+    height: 400px;
+    overflow: auto;
+    contain: strict;
+    position: relative;
+}
+
+.virtual-scroll-viewport {
+    position: relative;
+    contain: layout style paint;
+}
+
+/* 로딩 스피너 최적화 */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--gov-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    will-change: transform;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 이미지 지연 로딩 */
+img[data-src] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 폼 제출 시 비활성화 상태 */
+.form-submitting {
+    opacity: 0.7;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.form-submitting button[type="submit"] {
+    background-color: #6c757d !important;
+    cursor: not-allowed;
+}
+
+/* 페이지 전환 효과 최적화 */
+.page-transition {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 스크롤 성능 최적화 */
+.scroll-optimized {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    contain: layout style paint;
+}
+
+/* 메모리 사용량 최적화를 위한 컨테인먼트 */
+.gov-card,
+.gov-table-container,
+.gov-form-container {
+    contain: layout style paint;
+}
+
+/* 렌더링 최적화 */
+.render-optimized {
+    contain: layout style paint;
+    content-visibility: auto;
+    contain-intrinsic-size: 300px;
+}
+
+/* 큰 데이터셋 처리용 */
+.large-dataset {
+    height: 500px;
+    overflow: auto;
+    contain: strict;
+}
+
+.large-dataset .item {
+    height: 50px;
+    contain: layout style paint;
+}
+
+/* 반응형 최적화 */
+@media (max-width: 768px) {
+    .gov-table {
+        font-size: 14px;
+    }
+    
+    .gov-card-body {
+        padding: 15px;
+    }
+    
+    /* 모바일에서 애니메이션 감소 */
+    .gov-btn {
+        transition: none;
+    }
+    
+    .gov-btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* 프린트 최적화 */
+@media print {
+    .gov-btn,
+    .gov-navbar,
+    .gov-footer {
+        display: none !important;
+    }
+    
+    .gov-main {
+        margin-top: 0 !important;
+    }
+    
+    .gov-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .gov-btn-primary {
+        border: 2px solid #000;
+    }
+    
+    .gov-table {
+        border: 2px solid #000;
+    }
+    
+    .gov-table th,
+    .gov-table td {
+        border: 1px solid #000;
+    }
+}
+
+/* 애니메이션 감소 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 성능 모니터링을 위한 스타일 */
+.performance-warning {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #ff6b6b;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 10000;
+    display: none;
+}
+
+.performance-warning.show {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
