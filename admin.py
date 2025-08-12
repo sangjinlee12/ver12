@@ -904,33 +904,32 @@ def download_certificate(certificate_id):
 
 
 def generate_certificate_pdf(certificate, employee, company_info):
-    """재직증명서 Word 문서 생성 - 첨부파일 형식과 동일"""
+    """재직증명서 Word 문서 생성"""
     
     # Word 문서 생성
     doc = Document()
     
-    # 페이지 여백 설정
+    # 페이지 여백 설정 (A4 용지에 맞게)
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(3)
-        section.bottom_margin = Cm(3)
-        section.left_margin = Cm(3)
-        section.right_margin = Cm(3)
+        section.top_margin = Cm(2.5)
+        section.bottom_margin = Cm(2.5)
+        section.left_margin = Cm(2.5)
+        section.right_margin = Cm(2.5)
     
-    # 제목 - 첨부파일과 동일한 크기
+    # 제목 (24pt)
     title_para = doc.add_paragraph()
     title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title_para.add_run('재 직 증 명 서')
     title_run.font.name = '맑은 고딕'
-    title_run.font.size = Inches(0.5)  # 약 36pt
+    title_run.font.size = Inches(0.33)  # 24pt
     title_run.bold = True
     
-    # 제목 아래 큰 공백
-    doc.add_paragraph()
+    # 제목 아래 공백
     doc.add_paragraph()
     doc.add_paragraph()
     
-    # 직원 정보 테이블 - 첨부파일과 동일한 형식
+    # 직원 정보 테이블
     table = doc.add_table(rows=4, cols=2)
     table.style = 'Table Grid'
     
@@ -947,16 +946,13 @@ def generate_certificate_pdf(certificate, employee, company_info):
         row.cells[0].text = label
         row.cells[1].text = value
         
-        # 셀 스타일링 - 첨부파일과 동일
-        for j, cell in enumerate(row.cells):
+        # 셀 스타일링
+        for cell in row.cells:
             for paragraph in cell.paragraphs:
-                if j == 0:  # 첫 번째 열 (라벨)
-                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                else:  # 두 번째 열 (값)
-                    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
-                    run.font.size = Inches(0.125)  # 약 9pt
+                    run.font.size = Inches(0.14)  # 테이블 폰트
     
     # 테이블 아래 공백
     doc.add_paragraph()
@@ -1009,12 +1005,12 @@ def generate_certificate_pdf(certificate, employee, company_info):
     doc.add_paragraph()
     doc.add_paragraph()
     
-    # 회사명 - 첨부파일과 동일한 크기
+    # 회사명 - 15pt, 주식회사 에스에스전력
     company_para = doc.add_paragraph()
     company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    company_run = company_para.add_run(company_info.name)
+    company_run = company_para.add_run('주식회사 에스에스전력')
     company_run.font.name = '맑은 고딕'
-    company_run.font.size = Inches(0.14)  # 약 10pt
+    company_run.font.size = Inches(0.21)  # 15pt
     company_run.bold = True
     
     # 대표이사와 직인을 한 줄에 - 첨부파일과 동일
@@ -1023,7 +1019,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     
     ceo_run = ceo_stamp_para.add_run('대표이사: 김세인')
     ceo_run.font.name = '맑은 고딕'
-    ceo_run.font.size = Inches(0.125)  # 약 9pt
+    ceo_run.font.size = Inches(0.19)  # 14pt
     
     # 공백 추가
     space_run = ceo_stamp_para.add_run('    ')
@@ -1044,7 +1040,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     if company_info.address and company_info.phone:
         contact_run = contact_para.add_run(f'{company_info.address} TEL: {company_info.phone}')
         contact_run.font.name = '맑은 고딕'
-        contact_run.font.size = Inches(0.08)  # 약 6pt
+        contact_run.font.size = Inches(0.17)  # 12pt
     
     # 메모리 버퍼에 저장
     buffer = io.BytesIO()
