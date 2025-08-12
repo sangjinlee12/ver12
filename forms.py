@@ -221,6 +221,17 @@ class CertificateApprovalForm(FlaskForm):
     submit = SubmitField('처리')
 
 
+class AdminCertificateIssueForm(FlaskForm):
+    """관리자 직접 증명서 발행 폼"""
+    user_id = SelectField('직원 선택', coerce=int, validators=[DataRequired('직원을 선택하세요.')])
+    purpose = StringField('사용 목적', validators=[
+        DataRequired('사용 목적을 입력하세요.'), 
+        Length(max=200, message='사용 목적은 200자를 초과할 수 없습니다.')
+    ], render_kw={"placeholder": "예: 대출신청용, 입찰참가용 등"})
+    comments = TextAreaField('관리자 메모', render_kw={"placeholder": "내부 기록용 메모 (선택사항)"})
+    submit = SubmitField('즉시 발급')
+
+
 class CompanyInfoForm(FlaskForm):
     """회사 정보 관리 폼"""
     name = StringField('회사명', validators=[DataRequired('회사명을 입력하세요.')])

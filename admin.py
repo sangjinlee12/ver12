@@ -6,7 +6,7 @@ import tempfile
 from flask_login import login_required, current_user
 from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
-from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm, EmployeeRegistrationForm
+from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm, EmployeeRegistrationForm, AdminCertificateIssueForm
 from functools import wraps
 from datetime import datetime
 import csv
@@ -754,11 +754,62 @@ def manage_certificates():
     # 정렬 (최신순)
     certificates = query.order_by(EmploymentCertificate.created_at.desc()).all()
     
+    # 관리자 직접 발행 폼
+    issue_form = AdminCertificateIssueForm()
+    
+    # 직원 목록 (관리자 제외)
+    employees = User.query.filter_by(role=Role.EMPLOYEE).order_by(User.name).all()
+    issue_form.user_id.choices = [(emp.id, f"{emp.name} ({emp.department or '미지정'})") for emp in employees]
+    
     return render_template(
         'admin/manage_certificates.html',
         certificates=certificates,
-        status_filter=status_filter
+        status_filter=status_filter,
+        issue_form=issue_form
     )
+
+
+@admin_bp.route('/certificates/direct-issue', methods=['POST'])
+@login_required
+@admin_required
+def direct_issue_certificate():
+    """관리자 직접 증명서 발행"""
+    form = AdminCertificateIssueForm()
+    
+    # 직원 목록 설정
+    employees = User.query.filter_by(role=Role.EMPLOYEE).order_by(User.name).all()
+    form.user_id.choices = [(emp.id, f"{emp.name} ({emp.department or '미지정'})") for emp in employees]
+    
+    if form.validate_on_submit():
+        # 직원 정보 확인
+        employee = User.query.get(form.user_id.data)
+        if not employee or employee.role != Role.EMPLOYEE:
+            flash('유효하지 않은 직원입니다.', 'danger')
+            return redirect(url_for('admin.manage_certificates'))
+        
+        # 증명서 즉시 발급
+        certificate = EmploymentCertificate(
+            user_id=employee.id,
+            purpose=form.purpose.data,
+            status=CertificateStatus.ISSUED,  # 즉시 발급완료 상태
+            comments=form.comments.data or f"관리자({current_user.name})가 직접 발급",
+            approved_by=current_user.id,
+            approval_date=datetime.now(),
+            issued_date=datetime.now().date()
+        )
+        
+        db.session.add(certificate)
+        db.session.commit()
+        
+        flash(f'{employee.name} 직원의 재직증명서가 즉시 발급되었습니다.', 'success')
+        return redirect(url_for('admin.manage_certificates'))
+    
+    # 폼 에러가 있는 경우
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'{form[field].label.text}: {error}', 'danger')
+    
+    return redirect(url_for('admin.manage_certificates'))
 
 
 @admin_bp.route('/certificates/<int:certificate_id>', methods=['GET', 'POST'])

@@ -16,6 +16,39 @@
     <p class="gov-page-subtitle">직원들의 재직증명서 발급 요청을 처리합니다.</p>
 </div>
 
+<!-- 관리자 직접 발행 -->
+<div class="gov-card" style="margin-bottom: 25px;">
+    <div class="gov-card-header">
+        <i class="fas fa-plus-circle"></i> 관리자 직접 발행
+    </div>
+    <div class="gov-card-body">
+        <form method="POST" action="{{ url_for('admin.direct_issue_certificate') }}">
+            {{ issue_form.hidden_tag() }}
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 15px; align-items: end;">
+                <div>
+                    {{ issue_form.user_id.label(class="gov-form-label") }}
+                    {{ issue_form.user_id(class="gov-form-control") }}
+                </div>
+                <div>
+                    {{ issue_form.purpose.label(class="gov-form-label") }}
+                    {{ issue_form.purpose(class="gov-form-control") }}
+                </div>
+                <div>
+                    {{ issue_form.comments.label(class="gov-form-label") }}
+                    {{ issue_form.comments(class="gov-form-control", rows="2", style="resize: vertical;") }}
+                </div>
+                <div>
+                    {{ issue_form.submit(class="gov-btn", style="background: #6c5ce7; color: white; padding: 12px 20px;") }}
+                </div>
+            </div>
+        </form>
+        <div style="margin-top: 10px; padding: 10px; background: #e6f7ff; border-left: 4px solid #1890ff; font-size: 13px; color: #0050b3;">
+            <i class="fas fa-info-circle"></i> 
+            <strong>안내:</strong> 이 기능을 사용하면 직원의 신청 없이 관리자가 직접 증명서를 발급합니다. 발급 즉시 '발급완료' 상태가 됩니다.
+        </div>
+    </div>
+</div>
+
 <!-- 상태 필터 -->
 <div class="gov-card" style="margin-bottom: 25px;">
     <div class="gov-card-header">
@@ -47,74 +80,90 @@
     </div>
 </div>
     
-    <!-- 재직증명서 목록 -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">신청일</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">부서</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">직급</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사용 목적</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% if certificates %}
-                    {% for cert_tuple in certificates %}
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ cert_tuple.EmploymentCertificate.created_at.strftime('%Y-%m-%d') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ cert_tuple.name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ cert_tuple.department or '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ cert_tuple.position or '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ cert_tuple.EmploymentCertificate.purpose }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        {{ cert_tuple.EmploymentCertificate.status }}
-                                    </span>
-                                {% elif cert_tuple.EmploymentCertificate.status == '발급완료' %}
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        {{ cert_tuple.EmploymentCertificate.status }}
-                                    </span>
-                                {% elif cert_tuple.EmploymentCertificate.status == '반려됨' %}
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                        {{ cert_tuple.EmploymentCertificate.status }}
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
-                                    <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" class="text-primary hover:text-primary-dark">처리</a>
-                                {% else %}
-                                    <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" class="text-gray-500 hover:text-gray-700">상세</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                {% else %}
+<!-- 재직증명서 목록 -->
+<div class="gov-card">
+    <div class="gov-card-header">
+        <i class="fas fa-list"></i> 증명서 발급 내역
+        <small style="margin-left: 15px; color: #6c757d;">
+            총 {{ certificates|length }}건
+        </small>
+    </div>
+    <div class="gov-card-body" style="padding: 0;">
+        {% if certificates %}
+            <table class="gov-table">
+                <thead>
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
-                            요청된 재직증명서가 없습니다.
+                        <th style="width: 100px;">신청일</th>
+                        <th style="width: 80px;">이름</th>
+                        <th style="width: 100px;">부서</th>
+                        <th style="width: 80px;">직급</th>
+                        <th style="width: 200px;">사용 목적</th>
+                        <th style="width: 80px;">상태</th>
+                        <th style="width: 100px;">발급일</th>
+                        <th style="width: 100px;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert_tuple in certificates %}
+                    <tr>
+                        <td>{{ cert_tuple.EmploymentCertificate.created_at.strftime('%m-%d') }}</td>
+                        <td>
+                            <strong>{{ cert_tuple.name }}</strong>
+                        </td>
+                        <td>{{ cert_tuple.department or '-' }}</td>
+                        <td>{{ cert_tuple.position or '-' }}</td>
+                        <td style="font-size: 13px;">{{ cert_tuple.EmploymentCertificate.purpose }}</td>
+                        <td>
+                            {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
+                                <span class="gov-badge" style="background: #fdcb6e; color: white;">{{ cert_tuple.EmploymentCertificate.status }}</span>
+                            {% elif cert_tuple.EmploymentCertificate.status == '발급완료' %}
+                                <span class="gov-badge" style="background: #00b894; color: white;">{{ cert_tuple.EmploymentCertificate.status }}</span>
+                            {% else %}
+                                <span class="gov-badge" style="background: #e74c3c; color: white;">{{ cert_tuple.EmploymentCertificate.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 12px;">
+                            {% if cert_tuple.EmploymentCertificate.issued_date %}
+                                {{ cert_tuple.EmploymentCertificate.issued_date.strftime('%m-%d') }}
+                            {% else %}
+                                <span style="color: #6c757d;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
+                                <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                   class="gov-btn gov-btn-primary" style="font-size: 11px; padding: 4px 8px;">
+                                    <i class="fas fa-edit"></i> 처리
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                   class="gov-btn" style="background: #6c757d; color: white; font-size: 11px; padding: 4px 8px;">
+                                    <i class="fas fa-eye"></i> 상세
+                                </a>
+                            {% endif %}
                         </td>
                     </tr>
-                {% endif %}
-            </tbody>
-        </table>
-        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-certificate" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 16px; margin: 0;">발급된 재직증명서가 없습니다.</p>
+                <p style="font-size: 14px; margin-top: 5px;">위의 '관리자 직접 발행' 기능을 사용해보세요.</p>
+            </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+.gov-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+}
+</style>
 {% endblock %}
