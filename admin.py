@@ -8,9 +8,17 @@ from app import db
 from models import User, VacationDays, VacationRequest, VacationStatus, Holiday, Role, EmploymentCertificate, CertificateStatus, CompanyInfo
 from forms import EmployeeVacationDaysForm, VacationApprovalForm, HolidayForm, CertificateApprovalForm, CompanyInfoForm, EmployeeHireDateForm, BulkUploadForm, VacationSearchForm, AdminVacationForm, EmployeeRegistrationForm, AdminCertificateIssueForm
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, date
 import csv
 import io
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import os
 import tempfile
 import pandas as pd
@@ -846,6 +854,177 @@ def process_certificate(certificate_id):
         certificate=certificate,
         user=user
     )
+
+
+@admin_bp.route('/certificates/<int:certificate_id>/download')
+@login_required
+@admin_required
+def download_certificate(certificate_id):
+    """재직증명서 PDF 다운로드"""
+    certificate = EmploymentCertificate.query.get_or_404(certificate_id)
+    
+    # 발급완료 상태만 다운로드 가능
+    if certificate.status != CertificateStatus.ISSUED:
+        flash('발급완료된 증명서만 다운로드할 수 있습니다.', 'warning')
+        return redirect(url_for('admin.manage_certificates'))
+    
+    # 직원 정보 조회
+    employee = User.query.get(certificate.user_id)
+    if not employee:
+        flash('직원 정보를 찾을 수 없습니다.', 'danger')
+        return redirect(url_for('admin.manage_certificates'))
+    
+    # 회사 정보 조회
+    company_info = CompanyInfo.query.first()
+    if not company_info:
+        # 기본 회사 정보 설정
+        company_info = CompanyInfo(
+            name="에스에스전력 주식회사",
+            ceo_name="이상진",
+            registration_number="123-45-67890",
+            address="서울특별시 강남구 테헤란로 123",
+            phone="02-1234-5678",
+            fax="02-1234-5679"
+        )
+    
+    try:
+        # PDF 생성
+        pdf_buffer = generate_certificate_pdf(certificate, employee, company_info)
+        
+        # 파일명 생성
+        filename = f"재직증명서_{employee.name}_{certificate.issued_date.strftime('%Y%m%d')}.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+    
+    except Exception as e:
+        flash(f'PDF 생성 중 오류가 발생했습니다: {str(e)}', 'danger')
+        return redirect(url_for('admin.manage_certificates'))
+
+
+def generate_certificate_pdf(certificate, employee, company_info):
+    """재직증명서 PDF 생성"""
+    buffer = io.BytesIO()
+    
+    # PDF 문서 생성
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=20*mm,
+        leftMargin=20*mm,
+        topMargin=25*mm,
+        bottomMargin=25*mm
+    )
+    
+    # 스타일 설정
+    styles = getSampleStyleSheet()
+    
+    # 한글 제목 스타일
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    
+    # 본문 스타일
+    body_style = ParagraphStyle(
+        'CustomBody',
+        parent=styles['Normal'],
+        fontSize=12,
+        spaceAfter=12,
+        alignment=TA_LEFT,
+        fontName='Helvetica'
+    )
+    
+    # 중앙 정렬 스타일
+    center_style = ParagraphStyle(
+        'Center',
+        parent=styles['Normal'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        fontName='Helvetica'
+    )
+    
+    # 콘텐츠 생성
+    story = []
+    
+    # 제목
+    story.append(Paragraph("재 직 증 명 서", title_style))
+    story.append(Spacer(1, 20))
+    
+    # 직원 정보 테이블
+    employee_data = [
+        ['성 명', employee.name or ''],
+        ['부 서', employee.department or '미지정'],
+        ['직 급', employee.position or '미지정'],
+        ['입사일', employee.hire_date.strftime('%Y년 %m월 %d일') if employee.hire_date else '정보없음']
+    ]
+    
+    employee_table = Table(employee_data, colWidths=[40*mm, 100*mm])
+    employee_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    
+    story.append(employee_table)
+    story.append(Spacer(1, 30))
+    
+    # 증명 내용
+    content_text = f"""
+위 사람은 본 회사의 직원으로 재직 중임을 증명합니다.
+
+사용목적: {certificate.purpose}
+
+본 증명서는 {certificate.purpose}에 한하여 사용되며, 
+다른 용도로 사용할 수 없습니다.
+"""
+    
+    for line in content_text.strip().split('\n'):
+        if line.strip():
+            story.append(Paragraph(line.strip(), body_style))
+    
+    story.append(Spacer(1, 40))
+    
+    # 발급일
+    issued_date_text = f"발급일: {certificate.issued_date.strftime('%Y년 %m월 %d일')}"
+    story.append(Paragraph(issued_date_text, center_style))
+    story.append(Spacer(1, 30))
+    
+    # 회사 정보
+    company_text = f"""
+{company_info.name}
+대표이사: {company_info.ceo_name}
+"""
+    
+    for line in company_text.strip().split('\n'):
+        if line.strip():
+            story.append(Paragraph(line.strip(), center_style))
+    
+    # 주소 및 연락처
+    if company_info.address:
+        story.append(Paragraph(f"주소: {company_info.address}", center_style))
+    if company_info.phone:
+        story.append(Paragraph(f"전화: {company_info.phone}", center_style))
+    
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("(직인)", center_style))
+    
+    # PDF 생성
+    doc.build(story)
+    buffer.seek(0)
+    
+    return buffer
 
 
 @admin_bp.route('/employees/<int:user_id>/vacation-report')
