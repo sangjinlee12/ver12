@@ -11,8 +11,11 @@ from functools import wraps
 from datetime import datetime, date
 import csv
 import io
-from weasyprint import HTML, CSS
-from flask import render_template_string
+from docx import Document
+from docx.shared import Inches, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.shared import RGBColor
 import os
 import tempfile
 import pandas as pd
@@ -886,215 +889,155 @@ def download_certificate(certificate_id):
         pdf_buffer = generate_certificate_pdf(certificate, employee, company_info)
         
         # 파일명 생성
-        filename = f"재직증명서_{employee.name}_{certificate.issued_date.strftime('%Y%m%d')}.pdf"
+        filename = f"재직증명서_{employee.name}_{certificate.issued_date.strftime('%Y%m%d')}.docx"
         
         return send_file(
             pdf_buffer,
             as_attachment=True,
             download_name=filename,
-            mimetype='application/pdf'
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
     
     except Exception as e:
-        flash(f'PDF 생성 중 오류가 발생했습니다: {str(e)}', 'danger')
+        flash(f'문서 생성 중 오류가 발생했습니다: {str(e)}', 'danger')
         return redirect(url_for('admin.manage_certificates'))
 
 
 def generate_certificate_pdf(certificate, employee, company_info):
-    """재직증명서 PDF 생성 (WeasyPrint 사용)"""
+    """재직증명서 Word 문서 생성"""
     
-    # HTML 템플릿 생성
-    html_template = """
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <title>재직증명서</title>
-        <style>
-            @page {
-                size: A4;
-                margin: 2cm;
-            }
-            
-            body {
-                font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-                line-height: 1.6;
-                color: #333;
-                margin: 0;
-                padding: 0;
-            }
-            
-            .certificate-container {
-                max-width: 100%;
-                margin: 0 auto;
-                padding: 40px 20px;
-            }
-            
-            .certificate-title {
-                text-align: center;
-                font-size: 32px;
-                font-weight: bold;
-                margin-bottom: 50px;
-                letter-spacing: 8px;
-                border-bottom: 3px solid #1a365d;
-                padding-bottom: 20px;
-            }
-            
-            .employee-info {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 40px 0;
-                font-size: 16px;
-            }
-            
-            .employee-info th,
-            .employee-info td {
-                border: 2px solid #333;
-                padding: 15px 20px;
-                text-align: left;
-            }
-            
-            .employee-info th {
-                background-color: #f8f9fa;
-                font-weight: bold;
-                width: 25%;
-            }
-            
-            .certificate-content {
-                font-size: 16px;
-                line-height: 2;
-                margin: 50px 0;
-                text-align: justify;
-            }
-            
-            .purpose-section {
-                margin: 30px 0;
-                padding: 20px;
-                background-color: #f8f9fa;
-                border-left: 5px solid #1a365d;
-            }
-            
-            .issue-date {
-                text-align: center;
-                font-size: 18px;
-                font-weight: bold;
-                margin: 50px 0 30px 0;
-            }
-            
-            .company-info {
-                text-align: center;
-                font-size: 18px;
-                line-height: 1.8;
-                margin: 40px 0;
-            }
-            
-            .company-name {
-                font-size: 24px;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
-            
-            .ceo-name {
-                font-size: 20px;
-                margin: 15px 0;
-            }
-            
-            .company-details {
-                font-size: 14px;
-                color: #666;
-                margin-top: 20px;
-            }
-            
-            .stamp {
-                text-align: center;
-                font-size: 16px;
-                margin-top: 40px;
-                border: 2px solid #333;
-                width: 100px;
-                height: 100px;
-                line-height: 96px;
-                margin: 40px auto;
-                border-radius: 50%;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="certificate-container">
-            <h1 class="certificate-title">재 직 증 명 서</h1>
-            
-            <table class="employee-info">
-                <tr>
-                    <th>성 명</th>
-                    <td>{{ employee_name }}</td>
-                </tr>
-                <tr>
-                    <th>부 서</th>
-                    <td>{{ employee_department }}</td>
-                </tr>
-                <tr>
-                    <th>직 급</th>
-                    <td>{{ employee_position }}</td>
-                </tr>
-                <tr>
-                    <th>입 사 일</th>
-                    <td>{{ hire_date }}</td>
-                </tr>
-            </table>
-            
-            <div class="certificate-content">
-                <p>위 사람은 본 회사의 직원으로 <strong>재직 중임을 증명</strong>합니다.</p>
-                
-                <div class="purpose-section">
-                    <strong>사용목적:</strong> {{ purpose }}
-                </div>
-                
-                <p>본 증명서는 {{ purpose }}에 한하여 사용되며, 다른 용도로 사용할 수 없습니다.</p>
-            </div>
-            
-            <div class="issue-date">
-                발급일: {{ issue_date }}
-            </div>
-            
-            <div class="company-info">
-                <div class="company-name">{{ company_name }}</div>
-                <div class="ceo-name">대표이사: {{ ceo_name }}</div>
-                
-                <div class="company-details">
-                    {% if company_address %}
-                    <div>주소: {{ company_address }}</div>
-                    {% endif %}
-                    {% if company_phone %}
-                    <div>전화: {{ company_phone }}</div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="stamp">(직인)</div>
-        </div>
-    </body>
-    </html>
-    """
+    # Word 문서 생성
+    doc = Document()
     
-    # 템플릿 데이터 준비
-    template_data = {
-        'employee_name': employee.name or '',
-        'employee_department': employee.department or '미지정',
-        'employee_position': employee.position or '미지정',
-        'hire_date': employee.hire_date.strftime('%Y년 %m월 %d일') if employee.hire_date else '정보없음',
-        'purpose': certificate.purpose,
-        'issue_date': certificate.issued_date.strftime('%Y년 %m월 %d일'),
-        'company_name': company_info.name,
-        'ceo_name': company_info.ceo_name,
-        'company_address': company_info.address,
-        'company_phone': company_info.phone
-    }
+    # 페이지 여백 설정
+    sections = doc.sections
+    for section in sections:
+        section.top_margin = Cm(3)
+        section.bottom_margin = Cm(3)
+        section.left_margin = Cm(2.5)
+        section.right_margin = Cm(2.5)
     
-    # HTML 렌더링
-    html_content = render_template_string(html_template, **template_data)
+    # 제목
+    title = doc.add_heading('재 직 증 명 서', level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.runs[0]
+    title_run.font.size = Inches(0.6)
+    title_run.font.name = '맑은 고딕'
     
-    # PDF 생성
+    # 공백
+    doc.add_paragraph()
+    
+    # 직원 정보 테이블
+    table = doc.add_table(rows=4, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.style = 'Table Grid'
+    
+    # 테이블 내용
+    table_data = [
+        ('성    명', employee.name or ''),
+        ('부    서', employee.department or '미지정'),
+        ('직    급', employee.position or '미지정'),
+        ('입 사 일', employee.hire_date.strftime('%Y년 %m월 %d일') if employee.hire_date else '정보없음')
+    ]
+    
+    for i, (label, value) in enumerate(table_data):
+        row = table.rows[i]
+        row.cells[0].text = label
+        row.cells[1].text = value
+        
+        # 셀 스타일링
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for run in paragraph.runs:
+                    run.font.name = '맑은 고딕'
+                    run.font.size = Inches(0.14)
+    
+    # 공백
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 증명 내용
+    content_para = doc.add_paragraph()
+    content_para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    content_run = content_para.add_run('위 사람은 본 회사의 직원으로 재직 중임을 증명합니다.')
+    content_run.font.name = '맑은 고딕'
+    content_run.font.size = Inches(0.16)
+    
+    doc.add_paragraph()
+    
+    # 사용목적
+    purpose_para = doc.add_paragraph()
+    purpose_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    purpose_run = purpose_para.add_run(f'사용목적: {certificate.purpose}')
+    purpose_run.font.name = '맑은 고딕'
+    purpose_run.font.size = Inches(0.14)
+    purpose_run.bold = True
+    
+    doc.add_paragraph()
+    
+    # 제한사항
+    limit_para = doc.add_paragraph()
+    limit_para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    limit_run = limit_para.add_run(f'본 증명서는 {certificate.purpose}에 한하여 사용되며, 다른 용도로 사용할 수 없습니다.')
+    limit_run.font.name = '맑은 고딕'
+    limit_run.font.size = Inches(0.14)
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 발급일
+    date_para = doc.add_paragraph()
+    date_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    date_run = date_para.add_run(f'발급일: {certificate.issued_date.strftime("%Y년 %m월 %d일")}')
+    date_run.font.name = '맑은 고딕'
+    date_run.font.size = Inches(0.16)
+    date_run.bold = True
+    
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 회사 정보
+    company_para = doc.add_paragraph()
+    company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_run = company_para.add_run(company_info.name)
+    company_run.font.name = '맑은 고딕'
+    company_run.font.size = Inches(0.18)
+    company_run.bold = True
+    
+    ceo_para = doc.add_paragraph()
+    ceo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ceo_run = ceo_para.add_run(f'대표이사: {company_info.ceo_name}')
+    ceo_run.font.name = '맑은 고딕'
+    ceo_run.font.size = Inches(0.16)
+    
+    # 회사 연락처
+    if company_info.address:
+        addr_para = doc.add_paragraph()
+        addr_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        addr_run = addr_para.add_run(f'주소: {company_info.address}')
+        addr_run.font.name = '맑은 고딕'
+        addr_run.font.size = Inches(0.12)
+    
+    if company_info.phone:
+        phone_para = doc.add_paragraph()
+        phone_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        phone_run = phone_para.add_run(f'전화: {company_info.phone}')
+        phone_run.font.name = '맑은 고딕'
+        phone_run.font.size = Inches(0.12)
+    
+    doc.add_paragraph()
+    
+    # 직인
+    stamp_para = doc.add_paragraph()
+    stamp_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    stamp_run = stamp_para.add_run('(직인)')
+    stamp_run.font.name = '맑은 고딕'
+    stamp_run.font.size = Inches(0.14)
+    
+    # 메모리 버퍼에 저장
     buffer = io.BytesIO()
-    HTML(string=html_content).write_pdf(buffer)
+    doc.save(buffer)
     buffer.seek(0)
     
     return buffer
