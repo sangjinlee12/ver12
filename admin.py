@@ -921,7 +921,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     title = doc.add_heading('재 직 증 명 서', level=1)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title.runs[0]
-    title_run.font.size = Inches(0.6)
+    title_run.font.size = Inches(0.33)  # 24pt = 0.33 inches
     title_run.font.name = '맑은 고딕'
     
     # 공백
