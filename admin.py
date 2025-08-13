@@ -1036,11 +1036,11 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 회사명 위 공백
-    para = doc.add_paragraph()
-    para.space_after = 0
+    # 회사명 위 공백 증가
+    doc.add_paragraph()
+    doc.add_paragraph()
     
-    # 회사명 - 발급일 바로 아래로 위치 조정
+    # 회사명 - 위치 조정
     company_para = doc.add_paragraph()
     company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     company_para.space_after = 0
@@ -1058,7 +1058,10 @@ def generate_certificate_pdf(certificate, employee, company_info):
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Inches(0.19)  # 14pt
     
-    # 회사 연락처를 한 줄에 - 공백 줄임
+    # 회사 연락처 위 공백 추가
+    doc.add_paragraph()
+    
+    # 회사 연락처
     contact_para = doc.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     contact_para.space_after = 0
