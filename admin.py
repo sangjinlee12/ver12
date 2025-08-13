@@ -1024,9 +1024,9 @@ def generate_certificate_pdf(certificate, employee, company_info):
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 위 공백
-    para = doc.add_paragraph()
-    para.space_after = 0
+    # 발급일 위 공백 2칸
+    doc.add_paragraph()
+    doc.add_paragraph()
     
     # 발급일 - 첨부파일과 동일한 위치
     date_para = doc.add_paragraph()
@@ -1036,7 +1036,8 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 회사명 위 공백 증가
+    # 회사명 위 공백 3칸
+    doc.add_paragraph()
     doc.add_paragraph()
     doc.add_paragraph()
     
@@ -1069,19 +1070,11 @@ def generate_certificate_pdf(certificate, employee, company_info):
     if company_info.address and company_info.phone:
         contact_run = contact_para.add_run(f'{company_info.address} TEL: {company_info.phone}')
         contact_run.font.name = '맑은 고딕'
-        contact_run.font.size = Inches(0.17)  # 12pt
+        contact_run.font.size = Inches(0.15)  # 11pt
     
-    # 전자문서 표시와 바코드 추가 - 공백 최소화
+    # 바코드 추가 - 전자문서 표시 제거
     para = doc.add_paragraph()
     para.space_after = 0
-    
-    # 전자문서 발급용 표시
-    electronic_para = doc.add_paragraph()
-    electronic_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    electronic_run = electronic_para.add_run('[전자문서 발급용]')
-    electronic_run.font.name = '맑은 고딕'
-    electronic_run.font.size = Inches(0.125)  # 9pt
-    electronic_run.font.color.rgb = RGBColor(128, 128, 128)  # 회색
     
     # 바코드 생성 및 추가
     try:
