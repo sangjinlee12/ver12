@@ -1014,11 +1014,17 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # 공백 추가
     space_run = ceo_stamp_para.add_run('    ')
     
-    # 직인
-    stamp_run = ceo_stamp_para.add_run('㊞')
-    stamp_run.font.name = '맑은 고딕'
-    stamp_run.font.size = Inches(0.14)  # 약 10pt
-    stamp_run.font.color.rgb = RGBColor(255, 0, 0)  # 빨간색
+    # 직인 - 도장 이미지 사용
+    stamp_image_path = os.path.join(os.path.dirname(__file__), 'attached_assets', 'prix-signature (21)_1755046814924.png')
+    if os.path.exists(stamp_image_path):
+        run = ceo_stamp_para.add_run()
+        run.add_picture(stamp_image_path, width=Inches(0.4))  # 도장 크기 조정
+    else:
+        # 도장 이미지가 없으면 기본 직인 문자 사용
+        stamp_run = ceo_stamp_para.add_run('㊞')
+        stamp_run.font.name = '맑은 고딕'
+        stamp_run.font.size = Inches(0.14)
+        stamp_run.font.color.rgb = RGBColor(255, 0, 0)
     
     doc.add_paragraph()
     doc.add_paragraph()
