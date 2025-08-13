@@ -130,29 +130,39 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
-                                <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
-                                   class="gov-btn gov-btn-primary" style="font-size: 11px; padding: 4px 8px; margin-right: 5px;">
-                                    <i class="fas fa-edit"></i> 처리
-                                </a>
-                            {% elif cert_tuple.EmploymentCertificate.status == '발급완료' %}
-                                <div style="display: flex; gap: 5px;">
-                                    <a href="{{ url_for('admin.download_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
-                                       class="gov-btn" style="background: #00b894; color: white; font-size: 11px; padding: 4px 8px;"
-                                       title="Word 문서 다운로드">
-                                        <i class="fas fa-download"></i> Word
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                {% if cert_tuple.EmploymentCertificate.status == '대기중' %}
+                                    <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                       class="gov-btn gov-btn-primary" style="font-size: 11px; padding: 4px 8px;">
+                                        <i class="fas fa-edit"></i> 처리
                                     </a>
+                                {% elif cert_tuple.EmploymentCertificate.status == '발급완료' %}
+                                    <div style="display: flex; gap: 5px;">
+                                        <a href="{{ url_for('admin.download_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                           class="gov-btn" style="background: #00b894; color: white; font-size: 11px; padding: 4px 8px;"
+                                           title="Word 문서 다운로드">
+                                            <i class="fas fa-download"></i> Word
+                                        </a>
+                                        <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                           class="gov-btn" style="background: #6c757d; color: white; font-size: 11px; padding: 4px 8px;">
+                                            <i class="fas fa-eye"></i> 상세
+                                        </a>
+                                    </div>
+                                {% else %}
                                     <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
                                        class="gov-btn" style="background: #6c757d; color: white; font-size: 11px; padding: 4px 8px;">
                                         <i class="fas fa-eye"></i> 상세
                                     </a>
-                                </div>
-                            {% else %}
-                                <a href="{{ url_for('admin.process_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
-                                   class="gov-btn" style="background: #6c757d; color: white; font-size: 11px; padding: 4px 8px;">
-                                    <i class="fas fa-eye"></i> 상세
-                                </a>
-                            {% endif %}
+                                {% endif %}
+                                
+                                <form method="POST" action="{{ url_for('admin.delete_certificate', certificate_id=cert_tuple.EmploymentCertificate.id) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('정말 이 증명서 발급 기록을 삭제하시겠습니까?')">
+                                    <button type="submit" class="gov-btn" style="background: #dc3545; color: white; font-size: 11px; padding: 4px 8px;">
+                                        <i class="fas fa-trash"></i> 삭제
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

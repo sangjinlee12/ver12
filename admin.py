@@ -307,6 +307,9 @@ def add_employee():
     
     return render_template('admin/add_employee.html', form=form)
 
+
+
+
 @admin_bp.route('/add_vacation', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -670,6 +673,39 @@ def export_vacation_data(form):
     except Exception as e:
         flash(f'엑셀 다운로드 중 오류가 발생했습니다: {str(e)}', 'danger')
         return redirect(url_for('admin.manage_vacations'))
+
+
+@admin_bp.route('/vacation/<int:request_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_vacation_request(request_id):
+    """휴가 신청 삭제"""
+    vacation_request = VacationRequest.query.get_or_404(request_id)
+    
+    try:
+        # 승인된 휴가인 경우 휴가 일수 복구
+        if vacation_request.status == VacationStatus.APPROVED:
+            year = vacation_request.start_date.year
+            user_vacation_days = VacationDays.query.filter_by(
+                user_id=vacation_request.user_id, 
+                year=year
+            ).first()
+            
+            if user_vacation_days:
+                user_vacation_days.used_days = max(0, user_vacation_days.used_days - vacation_request.days)
+        
+        employee_name = vacation_request.user.name
+        vacation_period = f"{vacation_request.start_date.strftime('%Y-%m-%d')} ~ {vacation_request.end_date.strftime('%Y-%m-%d')}"
+        
+        db.session.delete(vacation_request)
+        db.session.commit()
+        
+        flash(f'{employee_name}님의 휴가 신청({vacation_period})이 삭제되었습니다.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'휴가 신청 삭제 중 오류가 발생했습니다: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.manage_vacations'))
 
 
 @admin_bp.route('/vacations/export')
@@ -1300,3 +1336,25 @@ def set_hire_date():
         )
     
     return redirect(url_for('admin.manage_employees'))
+
+
+@admin_bp.route('/certificates/<int:certificate_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_certificate(certificate_id):
+    """증명서 발급 기록 삭제"""
+    certificate = EmploymentCertificate.query.get_or_404(certificate_id)
+    
+    try:
+        employee_name = certificate.user.name
+        purpose = certificate.purpose
+        
+        db.session.delete(certificate)
+        db.session.commit()
+        
+        flash(f'{employee_name}님의 재직증명서 발급 기록({purpose})이 삭제되었습니다.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'증명서 삭제 중 오류가 발생했습니다: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.manage_certificates'))
