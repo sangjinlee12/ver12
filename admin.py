@@ -1024,8 +1024,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 위 공백 3칸
-    doc.add_paragraph()
+    # 발급일 위 공백 2칸
     doc.add_paragraph()
     doc.add_paragraph()
     
