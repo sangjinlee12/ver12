@@ -1034,7 +1034,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_para.space_after = 0
     date_run = date_para.add_run(f'발급일: {certificate.issued_date.strftime("%Y년 %m월 %d일")}')
     date_run.font.name = '맑은 고딕'
-    date_run.font.size = Inches(0.17)  # 12pt
+    date_run.font.size = Inches(0.14)  # 10pt
     
     # 회사명 위 공백 2칸
     doc.add_paragraph()
