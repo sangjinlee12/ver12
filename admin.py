@@ -945,13 +945,13 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # Word 문서 생성
     doc = Document()
     
-    # 페이지 여백 설정 (A4 용지에 맞게)
+    # 페이지 여백 설정 (A4 용지에 맞게 - 여백 줄임)
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(2.5)
-        section.bottom_margin = Cm(2.5)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
+        section.top_margin = Cm(1.5)
+        section.bottom_margin = Cm(1.5)
+        section.left_margin = Cm(2.0)
+        section.right_margin = Cm(2.0)
     
     # 제목 (24pt)
     title_para = doc.add_paragraph()
@@ -961,8 +961,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     title_run.font.size = Inches(0.33)  # 24pt
     title_run.bold = True
     
-    # 제목 아래 공백
-    doc.add_paragraph()
+    # 제목 아래 공백 최소화
     doc.add_paragraph()
     
     # 직원 정보 테이블
@@ -990,8 +989,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
                     run.font.name = '맑은 고딕'
                     run.font.size = Inches(0.14)  # 테이블 폰트
     
-    # 테이블 아래 공백
-    doc.add_paragraph()
+    # 테이블 아래 공백 최소화
     doc.add_paragraph()
     
     # 증명 내용 - 첨부파일과 동일한 형식
@@ -1001,7 +999,6 @@ def generate_certificate_pdf(certificate, employee, company_info):
     content_run.font.name = '맑은 고딕'
     content_run.font.size = Inches(0.125)  # 약 9pt
     
-    doc.add_paragraph()
     doc.add_paragraph()
     
     # 사용목적 - 첨부파일과 동일한 형식
@@ -1018,8 +1015,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 적당한 공백들
-    doc.add_paragraph()
+    # 발급일 - 공백 줄임
     doc.add_paragraph()
     
     # 발급일 - 첨부파일과 동일한 위치
@@ -1029,9 +1025,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 아래 공백들 (줄임)
-    doc.add_paragraph()
-    # 회사명 - 15pt, 주식회사 에스에스전력
+    # 회사명 - 발급일 바로 아래로 위치 조정
     company_para = doc.add_paragraph()
     company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     company_run = company_para.add_run('주식회사 에스에스전력')
@@ -1047,10 +1041,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Inches(0.19)  # 14pt
     
-    doc.add_paragraph()
-    doc.add_paragraph()
-    
-    # 회사 연락처를 한 줄에 - 첨부파일과 동일
+    # 회사 연락처를 한 줄에 - 공백 줄임
     contact_para = doc.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
@@ -1059,8 +1050,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
         contact_run.font.name = '맑은 고딕'
         contact_run.font.size = Inches(0.17)  # 12pt
     
-    # 전자문서 표시와 바코드 추가
-    doc.add_paragraph()
+    # 전자문서 표시와 바코드 추가 - 공백 최소화
     doc.add_paragraph()
     
     # 전자문서 발급용 표시
@@ -1089,11 +1079,11 @@ def generate_certificate_pdf(certificate, employee, company_info):
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
             barcode_instance.save(tmp_file.name)
             
-            # Word 문서에 바코드 이미지 추가
+            # Word 문서에 바코드 이미지 추가 - 크기 줄임
             barcode_para = doc.add_paragraph()
             barcode_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             barcode_run = barcode_para.add_run()
-            barcode_run.add_picture(tmp_file.name + '.png', width=Inches(2.5), height=Inches(0.8))
+            barcode_run.add_picture(tmp_file.name + '.png', width=Inches(2.0), height=Inches(0.6))
             
             # 임시 파일 삭제
             import os
