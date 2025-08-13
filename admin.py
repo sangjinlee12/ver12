@@ -1024,7 +1024,8 @@ def generate_certificate_pdf(certificate, employee, company_info):
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 위 공백 2칸
+    # 발급일 위 공백 3칸
+    doc.add_paragraph()
     doc.add_paragraph()
     doc.add_paragraph()
     
@@ -1034,10 +1035,9 @@ def generate_certificate_pdf(certificate, employee, company_info):
     date_para.space_after = 0
     date_run = date_para.add_run(f'발급일: {certificate.issued_date.strftime("%Y년 %m월 %d일")}')
     date_run.font.name = '맑은 고딕'
-    date_run.font.size = Inches(0.125)  # 약 9pt
+    date_run.font.size = Inches(0.17)  # 12pt
     
-    # 회사명 위 공백 3칸
-    doc.add_paragraph()
+    # 회사명 위 공백 2칸
     doc.add_paragraph()
     doc.add_paragraph()
     
