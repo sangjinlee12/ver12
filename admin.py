@@ -1090,13 +1090,8 @@ def generate_certificate_pdf(certificate, employee, company_info):
             os.unlink(tmp_file.name + '.png')
             
     except Exception as e:
-        # 바코드 생성 실패 시 텍스트로 대체
-        barcode_para = doc.add_paragraph()
-        barcode_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        barcode_run = barcode_para.add_run(f'문서번호: CERT-{certificate.id}-{certificate.issued_date.strftime("%Y%m%d")}')
-        barcode_run.font.name = '맑은 고딕'
-        barcode_run.font.size = Inches(0.1)  # 7pt
-        barcode_run.font.color.rgb = RGBColor(128, 128, 128)
+        # 바코드 생성 실패 시 아무것도 추가하지 않음
+        pass
     
     # 메모리 버퍼에 저장
     buffer = io.BytesIO()
