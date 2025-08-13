@@ -130,7 +130,7 @@ with app.app_context():
         
         # 공휴일 등록 (2025, 2026년)
         from models import Holiday
-        existing_holidays = Holiday.query.filter_by(year=2025).first()
+        existing_holidays = Holiday.query.filter(db.extract('year', Holiday.date) == 2025).first()
         if not existing_holidays:
             add_korean_holidays(2025)
             add_korean_holidays(2026)
