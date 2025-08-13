@@ -20,3 +20,5 @@ python-barcode
 qrcode
 barcode
 docx
+python-barcode
+qrcode

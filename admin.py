@@ -1039,28 +1039,13 @@ def generate_certificate_pdf(certificate, employee, company_info):
     company_run.font.size = Inches(0.21)  # 15pt
     company_run.bold = True
     
-    # 대표이사와 직인을 한 줄에 - 첨부파일과 동일
-    ceo_stamp_para = doc.add_paragraph()
-    ceo_stamp_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # 대표이사 정보 - 도장 이미지 제거
+    ceo_para = doc.add_paragraph()
+    ceo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    ceo_run = ceo_stamp_para.add_run('대표이사: 김세인')
+    ceo_run = ceo_para.add_run('대표이사: 김세인')
     ceo_run.font.name = '맑은 고딕'
     ceo_run.font.size = Inches(0.19)  # 14pt
-    
-    # 공백 추가
-    space_run = ceo_stamp_para.add_run('    ')
-    
-    # 직인 - 도장 이미지 사용
-    stamp_image_path = os.path.join(os.path.dirname(__file__), 'attached_assets', 'prix-signature (21)_1755046814924.png')
-    if os.path.exists(stamp_image_path):
-        run = ceo_stamp_para.add_run()
-        run.add_picture(stamp_image_path, width=Inches(0.4))  # 도장 크기 조정
-    else:
-        # 도장 이미지가 없으면 기본 직인 문자 사용
-        stamp_run = ceo_stamp_para.add_run('㊞')
-        stamp_run.font.name = '맑은 고딕'
-        stamp_run.font.size = Inches(0.14)
-        stamp_run.font.color.rgb = RGBColor(255, 0, 0)
     
     doc.add_paragraph()
     doc.add_paragraph()
@@ -1073,6 +1058,55 @@ def generate_certificate_pdf(certificate, employee, company_info):
         contact_run = contact_para.add_run(f'{company_info.address} TEL: {company_info.phone}')
         contact_run.font.name = '맑은 고딕'
         contact_run.font.size = Inches(0.17)  # 12pt
+    
+    # 전자문서 표시와 바코드 추가
+    doc.add_paragraph()
+    doc.add_paragraph()
+    
+    # 전자문서 발급용 표시
+    electronic_para = doc.add_paragraph()
+    electronic_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    electronic_run = electronic_para.add_run('[전자문서 발급용]')
+    electronic_run.font.name = '맑은 고딕'
+    electronic_run.font.size = Inches(0.125)  # 9pt
+    electronic_run.font.color.rgb = RGBColor(128, 128, 128)  # 회색
+    
+    # 바코드 생성 및 추가
+    try:
+        import barcode
+        from barcode.writer import ImageWriter
+        from PIL import Image
+        
+        # 증명서 고유 ID로 바코드 생성
+        barcode_data = f"CERT-{certificate.id}-{certificate.issued_date.strftime('%Y%m%d')}"
+        
+        # Code128 바코드 생성
+        code128 = barcode.get_barcode_class('code128')
+        barcode_instance = code128(barcode_data, writer=ImageWriter())
+        
+        # 임시 파일로 바코드 이미지 저장
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+            barcode_instance.save(tmp_file.name)
+            
+            # Word 문서에 바코드 이미지 추가
+            barcode_para = doc.add_paragraph()
+            barcode_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            barcode_run = barcode_para.add_run()
+            barcode_run.add_picture(tmp_file.name + '.png', width=Inches(2.5), height=Inches(0.8))
+            
+            # 임시 파일 삭제
+            import os
+            os.unlink(tmp_file.name + '.png')
+            
+    except Exception as e:
+        # 바코드 생성 실패 시 텍스트로 대체
+        barcode_para = doc.add_paragraph()
+        barcode_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        barcode_run = barcode_para.add_run(f'문서번호: CERT-{certificate.id}-{certificate.issued_date.strftime("%Y%m%d")}')
+        barcode_run.font.name = '맑은 고딕'
+        barcode_run.font.size = Inches(0.1)  # 7pt
+        barcode_run.font.color.rgb = RGBColor(128, 128, 128)
     
     # 메모리 버퍼에 저장
     buffer = io.BytesIO()
