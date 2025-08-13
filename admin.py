@@ -961,8 +961,9 @@ def generate_certificate_pdf(certificate, employee, company_info):
     title_run.font.size = Inches(0.33)  # 24pt
     title_run.bold = True
     
-    # 제목 아래 공백 최소화
-    doc.add_paragraph()
+    # 제목 아래 공백 더 줄임
+    para = doc.add_paragraph()
+    para.space_after = 0
     
     # 직원 정보 테이블
     table = doc.add_table(rows=4, cols=2)
@@ -978,6 +979,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     
     for i, (label, value) in enumerate(table_data):
         row = table.rows[i]
+        row.height = Cm(0.8)  # 행 높이 설정 (컴팩트하게)
         row.cells[0].text = label
         row.cells[1].text = value
         
@@ -985,25 +987,31 @@ def generate_certificate_pdf(certificate, employee, company_info):
         for cell in row.cells:
             for paragraph in cell.paragraphs:
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                paragraph.space_after = 0  # 문단 간격 제거
                 for run in paragraph.runs:
                     run.font.name = '맑은 고딕'
-                    run.font.size = Inches(0.14)  # 테이블 폰트
+                    run.font.size = Inches(0.125)  # 테이블 폰트 크기 조정
     
-    # 테이블 아래 공백 최소화
-    doc.add_paragraph()
+    # 테이블 아래 공백 더 줄임
+    para = doc.add_paragraph()
+    para.space_after = 0
     
     # 증명 내용 - 첨부파일과 동일한 형식
     content_para = doc.add_paragraph()
     content_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    content_para.space_after = 0
     content_run = content_para.add_run('위 사람은 본 회사의 직원으로 재직 중임을 증명합니다.')
     content_run.font.name = '맑은 고딕'
     content_run.font.size = Inches(0.125)  # 약 9pt
     
-    doc.add_paragraph()
+    # 공백 추가
+    para = doc.add_paragraph()
+    para.space_after = 0
     
     # 사용목적 - 첨부파일과 동일한 형식
     purpose_para = doc.add_paragraph()
     purpose_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    purpose_para.space_after = 0
     purpose_run = purpose_para.add_run(f'사용목적: {certificate.purpose}')
     purpose_run.font.name = '맑은 고딕'
     purpose_run.font.size = Inches(0.125)  # 약 9pt
@@ -1011,23 +1019,31 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # 제한사항
     limit_para = doc.add_paragraph()
     limit_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    limit_para.space_after = 0
     limit_run = limit_para.add_run(f'본 증명서는 {certificate.purpose}에 한하여 사용되며, 다른 용도로 사용할 수 없습니다.')
     limit_run.font.name = '맑은 고딕'
     limit_run.font.size = Inches(0.125)  # 약 9pt
     
-    # 발급일 - 공백 줄임
-    doc.add_paragraph()
+    # 발급일 위 공백
+    para = doc.add_paragraph()
+    para.space_after = 0
     
     # 발급일 - 첨부파일과 동일한 위치
     date_para = doc.add_paragraph()
     date_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    date_para.space_after = 0
     date_run = date_para.add_run(f'발급일: {certificate.issued_date.strftime("%Y년 %m월 %d일")}')
     date_run.font.name = '맑은 고딕'
     date_run.font.size = Inches(0.125)  # 약 9pt
     
+    # 회사명 위 공백
+    para = doc.add_paragraph()
+    para.space_after = 0
+    
     # 회사명 - 발급일 바로 아래로 위치 조정
     company_para = doc.add_paragraph()
     company_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    company_para.space_after = 0
     company_run = company_para.add_run('주식회사 에스에스전력')
     company_run.font.name = '맑은 고딕'
     company_run.font.size = Inches(0.21)  # 15pt
@@ -1036,6 +1052,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # 대표이사 정보 - 도장 이미지 제거
     ceo_para = doc.add_paragraph()
     ceo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ceo_para.space_after = 0
     
     ceo_run = ceo_para.add_run('대표이사: 김세인')
     ceo_run.font.name = '맑은 고딕'
@@ -1044,6 +1061,7 @@ def generate_certificate_pdf(certificate, employee, company_info):
     # 회사 연락처를 한 줄에 - 공백 줄임
     contact_para = doc.add_paragraph()
     contact_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    contact_para.space_after = 0
     
     if company_info.address and company_info.phone:
         contact_run = contact_para.add_run(f'{company_info.address} TEL: {company_info.phone}')
@@ -1051,7 +1069,8 @@ def generate_certificate_pdf(certificate, employee, company_info):
         contact_run.font.size = Inches(0.17)  # 12pt
     
     # 전자문서 표시와 바코드 추가 - 공백 최소화
-    doc.add_paragraph()
+    para = doc.add_paragraph()
+    para.space_after = 0
     
     # 전자문서 발급용 표시
     electronic_para = doc.add_paragraph()
