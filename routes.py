@@ -36,6 +36,11 @@ def internal_server_error(e):
     """500 에러 핸들러"""
     return render_template('error.html', error_code=500, error_message='서버 내부 오류가 발생했습니다.'), 500
 
+@main_bp.route('/manual')
+def manual():
+    """시스템 사용설명서"""
+    return render_template('manual.html')
+
 @main_bp.app_context_processor
 def inject_today():
     """템플릿에서 사용할 전역 변수"""

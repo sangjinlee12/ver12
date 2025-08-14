@@ -156,8 +156,17 @@
                             </li>
                         {% endif %}
 
+                        <!-- 공통 메뉴 -->
+                        <li class="mt-8 mb-1">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">도움말</p>
+                            <a href="{{ url_for('main.manual') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'main.manual' %}active{% endif %}">
+                                <i class="fas fa-book w-5 mr-2"></i>
+                                <span>사용설명서</span>
+                            </a>
+                        </li>
+
                         <!-- 로그아웃 -->
-                        <li class="mt-8">
+                        <li class="mt-4">
                             <a href="{{ url_for('auth.logout') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary text-red-600">
                                 <i class="fas fa-sign-out-alt w-5 mr-2"></i>
                                 <span>로그아웃</span>
@@ -175,6 +184,15 @@
                             <a href="{{ url_for('auth.register') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'auth.register' %}active{% endif %}">
                                 <i class="fas fa-user-plus w-5 mr-2"></i>
                                 <span>회원가입</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 공통 메뉴 -->
+                        <li class="mt-8 mb-1">
+                            <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">도움말</p>
+                            <a href="{{ url_for('main.manual') }}" class="sidebar-link flex items-center py-2 px-3 rounded-md hover:bg-secondary {% if request.endpoint == 'main.manual' %}active{% endif %}">
+                                <i class="fas fa-book w-5 mr-2"></i>
+                                <span>사용설명서</span>
                             </a>
                         </li>
                     {% endif %}
